@@ -14,7 +14,10 @@
     html, body {
       width: 100%; height: 100%; overflow: hidden; background-color: #EDE8DC;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif, sans-serif;
-      color: #0D0D10; user-select: none; -webkit-user-select: none; touch-action: none;
+      color: #0D0D10; user-select: none; -webkit-user-select: none;
+      /* Not `none`: an ancestor of `none` would also block the overlay from
+         scrolling on touch. Gameplay surfaces opt into `none` individually. */
+      touch-action: manipulation; overscroll-behavior: none;
     }
     #game-container {
       position: relative; width: 100vw; height: 100vh; overflow: hidden;
@@ -22,7 +25,9 @@
     }
     canvas#gameCanvas {
       display: block; width: 100%; height: 100%; image-rendering: auto;
+      touch-action: none;
     }
+    .grain, #hud, #touch-controls, #damage-flash { touch-action: none; }
 
     /* Immersive UI Grain Texture */
     .grain {
@@ -126,16 +131,24 @@
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       font-size: 14px; font-weight: 600; outline: none; transition: all 0.2s ease;
     }
-    .icon-btn:hover { background: #0D0D10; color: #EDE8DC; border-color: #0D0D10; }
+    @media (hover: hover) and (pointer: fine) {
+      .icon-btn:hover { background: #0D0D10; color: #EDE8DC; border-color: #0D0D10; }
+    }
     .icon-btn:active { transform: scale(0.94); }
     
     /* Immersive UI Overlay Screen */
     #overlay {
       position: absolute; inset: 0; background: rgba(237, 232, 220, 0.88);
       backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      display: flex; flex-direction: column; align-items: center;
       padding: 32px 24px; text-align: center; z-index: 50; transition: opacity 0.3s ease;
+      /* Short screens (phone landscape) must be able to reach the lower cards */
+      overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y;
     }
+    /* Auto margins centre the stack when it fits and collapse to 0 when it does
+       not, so overflowing content scrolls from the top instead of being clipped */
+    #overlay > *:first-child { margin-top: auto; }
+    #overlay::after { content: ''; margin-top: auto; }
     #overlay.hidden { display: none; }
     .overlay-kanji {
       font-size: 40px; font-weight: 900; color: #0D0D10; line-height: 1;
@@ -157,10 +170,12 @@
       background: transparent; color: #0D0D10; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       outline: none; margin: 0 auto;
     }
-    .btn-action:hover {
-      background: #0D0D10; color: #EDE8DC; transform: scale(1.05);
+    @media (hover: hover) and (pointer: fine) {
+      .btn-action:hover {
+        background: #0D0D10; color: #EDE8DC; transform: scale(1.05);
+      }
     }
-    .btn-action:active { transform: scale(0.96); }
+    .btn-action:active { background: #0D0D10; color: #EDE8DC; transform: scale(0.96); }
     .play-triangle {
       width: 0; height: 0; border-top: 9px solid transparent;
       border-left: 16px solid currentColor; border-bottom: 9px solid transparent;
@@ -188,6 +203,10 @@
     }
 
     /* ---- Map Select ---- */
+    /* Kept out of the tag as an inline style so `.hidden` can actually win —
+       inline display would otherwise override it and leak the play button
+       onto the map and result screens */
+    #overlayActions { display: flex; flex-direction: column; align-items: center; }
     #mapSelect.hidden, #resultPanel.hidden, #overlayActions.hidden,
     #overlayBtnRow.hidden { display: none; }
 
@@ -202,11 +221,17 @@
       border: 1px solid rgba(13, 13, 16, 0.18);
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .map-card:hover:not(.locked) {
-      background: #0D0D10; color: #EDE8DC; transform: translateY(-3px);
-      border-color: #0D0D10;
+    /* Guarded: on touch, :hover sticks to the last-tapped card after the tap */
+    @media (hover: hover) and (pointer: fine) {
+      .map-card:hover:not(.locked) {
+        background: #0D0D10; color: #EDE8DC; transform: translateY(-3px);
+        border-color: #0D0D10;
+      }
     }
-    .map-card:active:not(.locked) { transform: translateY(-1px); }
+    .map-card:active:not(.locked), .map-card.pressed:not(.locked) {
+      background: #0D0D10; color: #EDE8DC; border-color: #0D0D10;
+      transform: translateY(-1px);
+    }
     .map-card.locked { cursor: not-allowed; opacity: 0.45; background: transparent; }
     .map-card.cleared { border-color: rgba(217, 180, 92, 0.8); }
 
@@ -255,7 +280,7 @@
     .result-verdict.fail { color: #E03B3B; }
 
     /* ---- Text buttons shared by result + map screens ---- */
-    .overlay-btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .overlay-btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
     .overlay-btn-row.hidden { display: none; }
     .btn-text {
       background: transparent; border: 1px solid rgba(13, 13, 16, 0.3); color: #0D0D10;
@@ -263,7 +288,10 @@
       padding: 11px 20px 11px 25px; cursor: pointer; text-transform: uppercase;
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .btn-text:hover { background: #0D0D10; color: #EDE8DC; border-color: #0D0D10; }
+    @media (hover: hover) and (pointer: fine) {
+      .btn-text:hover { background: #0D0D10; color: #EDE8DC; border-color: #0D0D10; }
+    }
+    .btn-text:active { background: #0D0D10; color: #EDE8DC; border-color: #0D0D10; }
     .btn-text.hidden { display: none; }
 
     /* On-Screen Mobile Touch Controls (Immersive UI Glass Styling) */
@@ -272,17 +300,18 @@
     }
     #touch-controls.active { display: block; }
     .touch-dpad {
-      position: absolute; bottom: 48px; left: 14px; width: 140px; height: 110px;
+      position: absolute; bottom: 72px; left: 14px; width: 180px; height: 110px;
       pointer-events: auto; display: flex; gap: 12px; align-items: center; justify-content: center;
 
     }
     .touch-btn-dir {
-      width: 58px; height: 58px; border-radius: 50%;
+      width: 100px; height: 80px; border-radius: 30%;
       background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(13, 13, 16, 0.25);
       display: flex; align-items: center; justify-content: center;
       font-size: 22px; font-weight: 300; color: #0D0D10; user-select: none;
       transition: background 0.15s;
+      padding:20px;
     }
     .touch-btn-dir.pressed { background: #0D0D10; color: #EDE8DC; }
     .touch-actions {
@@ -290,7 +319,7 @@
       pointer-events: auto; display: flex; gap: 14px; align-items: flex-end;
     }
     .touch-action-btn {
-      width: 60px; height: 60px; border-radius: 50%;
+      width: 70px; height: 70px; border-radius: 50%;
       background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(13, 13, 16, 0.25);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -308,6 +337,96 @@
       background: radial-gradient(circle at center, transparent 40%, rgba(224, 59, 59, 0.45) 100%);
       opacity: 0; transition: opacity 0.1s ease-out;
     }
+
+    /* =================================================================
+       MOBILE / SMALL SCREEN OVERLAY LAYOUT
+       The map grid, the splash and the result panel all share #overlay,
+       so these blocks tighten the whole stack rather than the grid alone.
+       ================================================================= */
+
+    /* Notched phones: keep the stack clear of the home bar and the cutout */
+    #overlay {
+      padding-top: max(32px, env(safe-area-inset-top));
+      padding-bottom: max(32px, env(safe-area-inset-bottom));
+      padding-left: max(24px, env(safe-area-inset-left));
+      padding-right: max(24px, env(safe-area-inset-right));
+    }
+
+    /* --- Narrow screens: two cards per row, tighter type --- */
+    @media (max-width: 640px) {
+      #overlay {
+        padding-top: max(24px, env(safe-area-inset-top));
+        padding-bottom: max(24px, env(safe-area-inset-bottom));
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+      }
+      .overlay-kanji { font-size: 32px; }
+      .overlay-title.compact { font-size: 24px; letter-spacing: 0.2em; margin-left: 0.2em; }
+      .overlay-subtitle {
+        font-size: 10px; letter-spacing: 0.3em; margin-left: 0.3em;
+        margin-bottom: 22px; max-width: 320px;
+      }
+
+      .map-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px; max-width: 420px; margin-bottom: 16px;
+      }
+      .map-card { padding: 14px 8px 12px; gap: 4px; min-height: 108px; justify-content: center; }
+      .map-card-kanji { font-size: 26px; }
+      .map-card-no { font-size: 8px; letter-spacing: 0.25em; margin-left: 0.25em; }
+      .map-card-name { font-size: 11px; letter-spacing: 0.06em; }
+      .map-card-meta { font-size: 8px; letter-spacing: 0.06em; line-height: 1.5; }
+      .map-foot { font-size: 9px; letter-spacing: 0.18em; margin-left: 0.18em; }
+
+      #resultPanel { margin-bottom: 20px; }
+      .overlay-btn-row { gap: 8px; }
+      .btn-text { padding: 12px 14px 12px 18px; letter-spacing: 0.16em; font-size: 10px; }
+    }
+
+    /* --- Very narrow (≤380px): hold two columns, shrink the type instead --- */
+    @media (max-width: 380px) {
+      .map-grid { gap: 8px; }
+      .map-card { padding: 12px 6px 10px; min-height: 100px; }
+      .map-card-kanji { font-size: 23px; }
+      .map-card-name { font-size: 10px; letter-spacing: 0.02em; line-height: 1.3; }
+      .map-card-meta { font-size: 8px; letter-spacing: 0; }
+    }
+
+    /* --- Phone landscape: height is the scarce axis, so flatten everything --- */
+    @media (max-height: 500px) and (orientation: landscape) {
+      #overlay {
+        padding-top: max(14px, env(safe-area-inset-top));
+        padding-bottom: max(14px, env(safe-area-inset-bottom));
+      }
+      .overlay-kanji { font-size: 22px; margin-bottom: 2px; }
+      .overlay-title { font-size: clamp(40px, 9vw, 70px); }
+      .overlay-title.compact { font-size: 20px; letter-spacing: 0.2em; margin-left: 0.2em; }
+      .overlay-subtitle {
+        font-size: 9px; letter-spacing: 0.28em; margin-left: 0.28em;
+        margin-bottom: 12px; max-width: none;
+      }
+
+      .map-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px; max-width: 620px; margin-bottom: 10px;
+      }
+      .map-card { padding: 10px 6px 9px; gap: 2px; min-height: 0; }
+      .map-card-kanji { font-size: 22px; }
+      .map-card-no { font-size: 8px; letter-spacing: 0.2em; margin-left: 0.2em; }
+      .map-card-name { font-size: 10px; letter-spacing: 0.04em; line-height: 1.25; }
+      .map-card-meta { font-size: 8px; letter-spacing: 0.04em; line-height: 1.4; margin-top: 1px; }
+      .map-card-seal { top: 4px; right: 5px; font-size: 9px; }
+      .map-foot { font-size: 8px; letter-spacing: 0.14em; margin-left: 0.14em; line-height: 1.5; }
+
+      .btn-action { width: 58px; height: 58px; }
+      .play-caption { margin-top: 8px; }
+      .controls-hint { margin-top: 14px; padding-top: 10px; line-height: 1.7; }
+      #resultPanel { margin-bottom: 12px; }
+      .result-row { padding: 4px 0; font-size: 10px; }
+      .result-gauge { margin-top: 10px; }
+      .result-verdict { margin-top: 10px; font-size: 10px; letter-spacing: 0.2em; }
+      .btn-text { padding: 9px 14px 9px 18px; }
+    }
   </style>
 </head>
 <body>
@@ -324,7 +443,6 @@
             <div class="ink-dot hp-dot" id="dot1"></div>
             <div class="ink-dot hp-dot" id="dot2"></div>
             <div class="ink-dot hp-dot" id="dot3"></div>
-            <span class="life-essence-label">Life Essence</span>
           </div>
           <div class="combo-badge" id="comboBadge">
             <span class="combo-x">x</span> 1.0 <span class="combo-lbl">Combo</span>
@@ -387,7 +505,7 @@
         <p class="result-verdict" id="resultVerdict"></p>
       </div>
 
-      <div id="overlayActions" style="display: flex; flex-direction: column; align-items: center;">
+      <div id="overlayActions">
         <button class="btn-action" id="startBtn" aria-label="Play">
           <div class="play-triangle"></div>
         </button>
@@ -2344,6 +2462,11 @@
 
           if (isOpen) {
             card.addEventListener('click', () => { audio.init(); this.startStage(i); });
+            // iOS only paints :active on some elements, so mirror it explicitly
+            card.addEventListener('touchstart', () => card.classList.add('pressed'), { passive: true });
+            ['touchend', 'touchcancel', 'touchmove'].forEach((ev) => {
+              card.addEventListener(ev, () => card.classList.remove('pressed'), { passive: true });
+            });
           }
           grid.appendChild(card);
         });
