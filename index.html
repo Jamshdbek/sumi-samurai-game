@@ -1,0 +1,2922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Sumi - Ink Wash Samurai Platformer</title>
+  <meta name="description" content="A 2D sumi-e ink wash precision platformer featuring a lone samurai running, wall-jumping, air-dashing, and slashing through handcrafted stages." />
+  <meta property="og:title" content="Sumi" />
+  <meta property="og:description" content="A 2D sumi-e ink wash precision platformer featuring a lone samurai running, wall-jumping, air-dashing, and slashing through handcrafted stages." />
+  <meta property="og:type" content="website" />
+  <script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      width: 100%; height: 100%; overflow: hidden; background-color: #EDE8DC;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif, sans-serif;
+      color: #0D0D10; user-select: none; -webkit-user-select: none; touch-action: none;
+    }
+    #game-container {
+      position: relative; width: 100vw; height: 100vh; overflow: hidden;
+      display: flex; align-items: center; justify-content: center; background: #EDE8DC;
+    }
+    canvas#gameCanvas {
+      display: block; width: 100%; height: 100%; image-rendering: auto;
+    }
+
+    /* Immersive UI Grain Texture */
+    .grain {
+      pointer-events: none; position: absolute; inset: 0; opacity: 0.05; z-index: 25;
+      background-image: url('data:image/svg+xml,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
+    }
+
+    /* Immersive UI Minimal HUD */
+    #hud {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; padding: 24px 32px; display: flex; flex-direction: column;
+      justify-content: space-between; font-size: 16px; z-index: 30;
+    }
+    .hud-top {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      width: 100%; max-width: 1280px; margin: 0 auto;
+    }
+    .hud-left {
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .health-bar {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .hp-dot, .ink-dot {
+      width: 12px; height: 12px; background: #E03B3B; border-radius: 20%;
+      filter: blur(0.5px); box-shadow: 0 0 6px rgba(224, 59, 59, 0.45);
+      transition: transform 0.25s ease, opacity 0.25s ease, background 0.25s ease;
+    }
+    .hp-dot.lost, .ink-dot.lost {
+      background: #8A8A96; opacity: 0.2; transform: scale(0.75); filter: none; box-shadow: none;
+    }
+    .life-essence-label {
+      margin-left: 12px; font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.3em; font-weight: 700; opacity: 0.6;
+    }
+    .combo-badge {
+      font-size: 34px; font-weight: 300; letter-spacing: -0.04em; color: #0D0D10;
+      line-height: 1; opacity: 0; transition: opacity 0.25s, transform 0.25s;
+      transform: scale(0.95); margin-top: 4px;
+    }
+    .combo-badge.active {
+      opacity: 1; transform: scale(1);
+    }
+    .combo-x {
+      opacity: 0.4; font-size: 22px; font-weight: 300;
+    }
+    .combo-lbl {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em;
+      margin-left: 6px; opacity: 0.5; font-weight: 700;
+    }
+
+    .hud-center {
+      text-align: center;
+    }
+    .stage-title {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.25em;
+      opacity: 0.35; font-weight: 700; color: #0D0D10;
+    }
+    .powerup-pill {
+      margin-top: 6px; font-size: 11px; font-weight: 700; color: #E03B3B;
+      border: 1px solid rgba(224, 59, 59, 0.5); padding: 3px 12px; border-radius: 100px;
+      display: none; background: rgba(224, 59, 59, 0.08); letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .hud-right {
+      display: flex; flex-direction: column; align-items: flex-end;
+    }
+    .score-label {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.4em;
+      opacity: 0.4; margin-bottom: 2px;
+    }
+    .score-display {
+      font-size: 46px; font-weight: 300; letter-spacing: -0.03em;
+      color: #0D0D10; line-height: 1;
+    }
+    .high-score {
+      margin-top: 4px; font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.2em; color: #D9B45C; font-weight: 700;
+    }
+
+    /* Bottom HUD bar */
+    .hud-bottom {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      width: 100%; max-width: 1280px; margin: 0 auto; pointer-events: none;
+    }
+    .hud-controls-hint-bar {
+      display: flex; gap: 24px; opacity: 0.4; font-size: 10px;
+      text-transform: uppercase; letter-spacing: 0.3em; font-weight: 700;
+    }
+    @media (max-width: 640px) {
+      .hud-controls-hint-bar { display: none; }
+    }
+    .hud-bottom-right {
+      pointer-events: auto; display: flex; gap: 10px; align-items: center;
+    }
+    .icon-btn {
+      background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(13, 13, 16, 0.2);
+      color: #0D0D10; width: 38px; height: 38px; border-radius: 50%;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 600; outline: none; transition: all 0.2s ease;
+    }
+    .icon-btn:hover { background: #0D0D10; color: #EDE8DC; border-color: #0D0D10; }
+    .icon-btn:active { transform: scale(0.94); }
+    
+    /* Immersive UI Overlay Screen */
+    #overlay {
+      position: absolute; inset: 0; background: rgba(237, 232, 220, 0.88);
+      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 32px 24px; text-align: center; z-index: 50; transition: opacity 0.3s ease;
+    }
+    #overlay.hidden { display: none; }
+    .overlay-kanji {
+      font-size: 40px; font-weight: 900; color: #0D0D10; line-height: 1;
+      margin-bottom: 6px; letter-spacing: 0.2em; opacity: 0.75;
+    }
+    .overlay-title {
+      font-size: clamp(60px, 12vw, 130px); font-weight: 300; line-height: 1;
+      letter-spacing: 0.2em; margin-left: 0.2em; color: #0D0D10; margin-bottom: 6px;
+    }
+    .overlay-subtitle {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.9em;
+      margin-left: 0.9em; opacity: 0.6; max-width: 520px; line-height: 1.6; margin-bottom: 36px;
+    }
+
+    /* Circular Ink Ring Play Button */
+    .btn-action {
+      width: 76px; height: 76px; border: 1px solid #0D0D10; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      background: transparent; color: #0D0D10; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      outline: none; margin: 0 auto;
+    }
+    .btn-action:hover {
+      background: #0D0D10; color: #EDE8DC; transform: scale(1.05);
+    }
+    .btn-action:active { transform: scale(0.96); }
+    .play-triangle {
+      width: 0; height: 0; border-top: 9px solid transparent;
+      border-left: 16px solid currentColor; border-bottom: 9px solid transparent;
+      margin-left: 4px;
+    }
+    .play-caption {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.4em;
+      opacity: 0.4; margin-top: 14px; margin-left: 0.4em; font-weight: 600;
+    }
+
+    .controls-hint {
+      margin-top: 32px; font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.2em; color: #4A4A55; line-height: 2;
+      border-top: 1px solid rgba(42, 42, 48, 0.12); padding-top: 18px; max-width: 460px;
+    }
+    .controls-hint kbd {
+      background: rgba(13, 13, 16, 0.05); border: 1px solid rgba(13, 13, 16, 0.15);
+      border-radius: 3px; padding: 2px 6px; font-size: 10px; font-family: inherit;
+      font-weight: 700; color: #0D0D10;
+    }
+
+    /* On-Screen Mobile Touch Controls (Immersive UI Glass Styling) */
+    #touch-controls {
+      position: absolute; inset: 0; pointer-events: none; display: none; z-index: 35;
+    }
+    #touch-controls.active { display: block; }
+    .touch-dpad {
+      position: absolute; bottom: 48px; left: 14px; width: 140px; height: 110px;
+      pointer-events: auto; display: flex; gap: 12px; align-items: center; justify-content: center;
+
+    }
+    .touch-btn-dir {
+      width: 58px; height: 58px; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(13, 13, 16, 0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 300; color: #0D0D10; user-select: none;
+      transition: background 0.15s;
+    }
+    .touch-btn-dir.pressed { background: #0D0D10; color: #EDE8DC; }
+    .touch-actions {
+      position: absolute; bottom: 28px; right: 24px;
+      pointer-events: auto; display: flex; gap: 14px; align-items: flex-end;
+    }
+    .touch-action-btn {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(13, 13, 16, 0.25);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: #0D0D10; font-weight: 700; font-size: 14px; letter-spacing: 0.1em;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05); user-select: none; transition: background 0.15s;
+    }
+    .touch-action-btn.dash-btn { width: 50px; height: 50px; margin-bottom: 5px; font-size: 11px; }
+    .touch-action-btn.slash-btn { border-color: rgba(224, 59, 59, 0.6); color: #E03B3B; }
+    .touch-action-btn.pressed { background: #0D0D10; color: #EDE8DC; }
+    .touch-action-btn.slash-btn.pressed { background: #E03B3B; color: #EDE8DC; }
+
+    /* Damage Crimson Flash */
+    #damage-flash {
+      position: absolute; inset: 0; pointer-events: none; z-index: 40;
+      background: radial-gradient(circle at center, transparent 40%, rgba(224, 59, 59, 0.45) 100%);
+      opacity: 0; transition: opacity 0.1s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+    <div class="grain"></div>
+    <div id="damage-flash"></div>
+
+    <!-- Heads Up Display -->
+    <div id="hud">
+      <div class="hud-top">
+        <div class="hud-left">
+          <div class="health-bar" id="healthBar">
+            <div class="ink-dot hp-dot" id="dot1"></div>
+            <div class="ink-dot hp-dot" id="dot2"></div>
+            <div class="ink-dot hp-dot" id="dot3"></div>
+            <span class="life-essence-label">Life Essence</span>
+          </div>
+          <div class="combo-badge" id="comboBadge">
+            <span class="combo-x">x</span> 1.0 <span class="combo-lbl">Combo</span>
+          </div>
+        </div>
+        <div class="hud-center">
+        </div>
+        <div class="hud-right">
+          <div class="score-label">Mon Collected</div>
+          <div class="score-display" id="scoreDisplay">0</div>
+          <div class="high-score" id="highScoreDisplay">HIGH: 0</div>
+        </div>
+      </div>
+      <div class="hud-bottom">
+        <div class="hud-controls-hint-bar">
+          <span>[A/D] Move</span>
+          <span>[SPACE] Jump</span>
+          <span>[J] Slash</span>
+          <span>[K] Dash</span>
+        </div>
+        <div class="hud-bottom-right">
+          <button class="icon-btn" id="muteBtn" title="Toggle Sound (M)">♪</button>
+          <button class="icon-btn" id="pauseBtn" title="Pause Game (P)">❚❚</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Touch Controls -->
+    <div id="touch-controls">
+      <div class="touch-dpad">
+        <div class="touch-btn-dir" id="tBtnLeft">‹</div>
+        <div class="touch-btn-dir" id="tBtnRight">›</div>
+      </div>
+      <div class="touch-actions">
+        <div class="touch-action-btn dash-btn" id="tBtnDash">DASH</div>
+        <div class="touch-action-btn slash-btn" id="tBtnSlash">斬</div>
+        <div class="touch-action-btn" id="tBtnJump">跳</div>
+      </div>
+    </div>
+
+    <!-- Start / Pause / Win / Game Over Overlay -->
+    <div id="overlay">
+      <div class="overlay-kanji" id="overlayKanji">墨</div>
+      <h1 class="overlay-title" id="overlayTitle">SUMI</h1>
+      <p class="overlay-subtitle" id="overlaySubtitle">
+        Shadow of the Brush
+      </p>
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <button class="btn-action" id="startBtn" aria-label="Play">
+          <div class="play-triangle"></div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    'use strict';
+
+    // =====================================================================
+    // 0. PORTAL SDK CONTRACT & GAME EVENTS SEAM
+    // =====================================================================
+    window.GameEvents = {
+      gameplayStart: function() {
+        try {
+          if (window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.game) {
+            if (typeof window.CrazyGames.SDK.game.gameplayStart === 'function') {
+              window.CrazyGames.SDK.game.gameplayStart();
+            }
+          }
+        } catch (e) {}
+      },
+      gameplayStop: function() {
+        try {
+          if (window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.game) {
+            if (typeof window.CrazyGames.SDK.game.gameplayStop === 'function') {
+              window.CrazyGames.SDK.game.gameplayStop();
+            }
+          }
+        } catch (e) {}
+      },
+      levelComplete: function() {
+        try {
+          if (window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.game) {
+            if (typeof window.CrazyGames.SDK.game.happytime === 'function') {
+              window.CrazyGames.SDK.game.happytime();
+            }
+          }
+        } catch (e) {}
+      },
+      requestAd: function(callback, type = 'midgame') {
+        try {
+          if (window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.ad) {
+            if (typeof window.CrazyGames.SDK.ad.requestAd === 'function') {
+              window.CrazyGames.SDK.ad.requestAd(type, {
+                adStarted: () => {
+                  if (window.game && window.game.isRunning && !window.game.isPaused) {
+                    window.game.togglePause();
+                  }
+                },
+                adFinished: () => {
+                  if (typeof callback === 'function') callback();
+                },
+                adError: (err) => {
+                  if (typeof callback === 'function') callback();
+                }
+              });
+              return;
+            }
+          }
+        } catch (e) {}
+        if (typeof callback === 'function') callback();
+      }
+    };
+
+    // =====================================================================
+    // 1. CONFIGURATION & THREE-TIER STORAGE SYSTEM
+    // =====================================================================
+    const CONFIG = {
+      // Player Hitbox & Sprite Alignment Tunables
+      playerW: 22,
+      playerH: 50,
+      spriteScale: 0.64,      // world units per sprite pixel. Artwork fills 68 of the 96px
+                              // cell, so 68 * 0.64 = 43.5 world px tall - the same on-screen
+                              // size the old 128px sheets had (97 * 0.45). Raise to 0.74 to
+                              // make the samurai fill the 50px hitbox instead.
+      spriteAnchorY: 0,       // vertical offset in world units, sprite feet vs hitbox bottom
+      spriteAnchorX: 0,
+      DEBUG_HITBOX: false,    // outlines collision box in crimson over the sprite
+
+      // Physics & Movement
+      GRAVITY: 1350,             // Downward acceleration (px/s²)
+      MAX_FALL_SPEED: 720,       // Terminal falling speed (px/s)
+      GROUND_STICK_VEL: 40,      // Downward bias while standing, keeps feet overlapping the platform (px/s)
+      RUN_ACCEL: 2200,           // Acceleration when pressing run (px/s²)
+      RUN_DECEL: 2400,           // Friction deceleration when stopping (px/s²)
+      MAX_RUN_SPEED: 320,        // Top running speed (px/s)
+      SKID_DECEL: 3600,          // Deceleration when reversing direction on ground (px/s²)
+      
+      // Jump tuning: High precision variable jump
+      JUMP_INITIAL_VEL: -440,    // Instant upward velocity on jump press (px/s)
+      JUMP_HOLD_ACCEL: -880,     // Extra upward boost while holding jump key (px/s²)
+      JUMP_HOLD_MAX_TIME: 0.20,  // Maximum time variable jump boost applies (s)
+      DOUBLE_JUMP_VEL: -410,     // Upward impulse for air double jump (px/s)
+      COYOTE_TIME: 0.10,         // Grace period after walking off a ledge (s)
+      JUMP_BUFFER: 0.12,         // Window where jump press is remembered before landing (s)
+      
+      // Wall mechanics
+      WALL_SLIDE_SPEED: 110,     // Max downward slide velocity when clinging to wall (px/s)
+      WALL_JUMP_VEL_X: 300,      // Horizontal kick velocity away from wall (px/s)
+      WALL_JUMP_VEL_Y: -430,     // Upward impulse during wall jump (px/s)
+      WALL_JUMP_LOCKOUT: 0.14,   // Momentary horizontal input lockout during wall kick (s)
+      
+      // Signature Air Dash
+      DASH_SPEED: 720,           // High-velocity horizontal burst (px/s)
+      DASH_DURATION: 0.14,       // Duration of dash burst (s)
+      
+      // Katana Slash
+      SLASH_DURATION: 0.12,      // Duration of attack arc (s) - fades over ~120ms
+      SLASH_RANGE_NORMAL: 52,    // Forward reach of katana arc (px)
+      SLASH_RANGE_POWERED: 84,   // Forward reach with Crimson Edge power-up (px)
+      SLASH_BOUNCE_Y: -320,      // Upward hop granted when slicing an enemy mid-air (px/s)
+      
+      // Health & Combat Feel
+      MAX_HEALTH: 3,
+      INVULN_TIME: 1.0,          // Invulnerability time after taking damage (s)
+      HITSTOP_TIME: 0.06,        // World freeze duration on hit connection (s)
+      SCREEN_SHAKE_MAX: 6,       // Maximum camera shake displacement (px)
+      COMBO_DECAY_TIME: 2.5,     // Seconds before combo multiplier resets (s)
+
+      // Color Palette (Sumi-e modern ink wash)
+      INK_BLACK: '#0D0D10',
+      GREY_DARK: '#2A2A30',
+      GREY_MID:  '#4A4A55',
+      GREY_LIGHT:'#8A8A96',
+      PAPER_BG:  '#EDE8DC',
+      PAPER_DARK:'#E2DCCB',
+      CRIMSON:   '#E03B3B',
+      GOLD:      '#D9B45C'
+    };
+
+    // =====================================================================
+    // 1B. SPRITE ASSET MANIFEST & LOADER
+    // =====================================================================
+    // Every sheet is a horizontal strip of 96x96 cells, artwork bottom-aligned to
+    // the cell so the feet land exactly on the hitbox bottom (spriteAnchorY 0).
+    // Sheet sizes: idle/run/slash/slide 576px (6), jump 768px (8), dash/dead 384px
+    // (4), hurt 192px (2). Frame counts below must match, or neighbouring cells
+    // bleed into the drawn frame.
+    const SPRITES = {
+      idle:      { file: 'assets/samurai_idle.png',   frameW: 96, frameH: 96, frames: 6, fps: 8,  loop: true  },
+      run:       { file: 'assets/samurai_run.png',    frameW: 96, frameH: 96, frames: 6, fps: 12, loop: true  },
+      // The 8-frame jump strip covers the whole arc, so rise / fall / land are
+      // three windows onto it (there is no separate land sheet).
+      // 0-3 crouch->apex, 4 descend, 5-7 touchdown->settle
+      jumpRise:  { file: 'assets/samurai_jump.png',   frameW: 96, frameH: 96, frames: 4, fps: 16, loop: false },
+      jumpFall:  { file: 'assets/samurai_jump.png',   frameW: 96, frameH: 96, frames: 1, fps: 10, loop: false, startFrame: 4 },
+      land:      { file: 'assets/samurai_jump.png',   frameW: 96, frameH: 96, frames: 3, fps: 24, loop: false, startFrame: 5 },
+      wallSlide: { file: 'assets/samurai_slide.png',  frameW: 96, frameH: 96, frames: 6, fps: 8,  loop: true  },
+      dash:      { file: 'assets/samurai_dash.png',   frameW: 96, frameH: 96, frames: 4, fps: 16, loop: false },
+      slash:     { file: 'assets/samurai_attack.png', frameW: 96, frameH: 96, frames: 6, fps: 16, loop: false },
+      hurt:      { file: 'assets/samurai_hurt.png',   frameW: 96, frameH: 96, frames: 2, fps: 8,  loop: false },
+      dead:      { file: 'assets/samurai_dead.png',   frameW: 96, frameH: 96, frames: 4, fps: 6,  loop: false },
+    };
+
+    const spriteImages = {};
+    let spritesLoaded = false;
+
+    async function loadSprites() {
+      const startBtn = document.getElementById('startBtn');
+      const playCaption = document.getElementById('playCaption');
+      if (startBtn) {
+        startBtn.disabled = true;
+        startBtn.style.opacity = '0.5';
+        startBtn.style.pointerEvents = 'none';
+      }
+      if (playCaption) {
+        playCaption.textContent = 'Loading...';
+      }
+
+      const uniqueFiles = new Set();
+      for (const key in SPRITES) {
+        uniqueFiles.add(SPRITES[key].file);
+      }
+
+      const loadPromises = Array.from(uniqueFiles).map((file) => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.src = file;
+          img.onload = async () => {
+            try {
+              if (typeof img.decode === 'function') {
+                await img.decode();
+              }
+            } catch (e) {
+              console.warn(`[SpriteLoader] decode warning for ${file}:`, e);
+            }
+            spriteImages[file] = img;
+            resolve({ file, img, success: true });
+          };
+          img.onerror = () => {
+            console.warn(`[SpriteLoader] Failed to load image: ${file}. Falling back to silhouette.`);
+            spriteImages[file] = { failed: true };
+            resolve({ file, img: null, success: false });
+          };
+        });
+      });
+
+      await Promise.all(loadPromises);
+      spritesLoaded = true;
+
+      if (startBtn) {
+        startBtn.disabled = false;
+        startBtn.style.opacity = '1';
+        startBtn.style.pointerEvents = 'auto';
+      }
+      if (playCaption) {
+        playCaption.textContent = 'Click to Play';
+      }
+    }
+
+    // ---------------------------------------------------------------------
+    // THREE-TIER PERSISTENCE SYSTEM (CrazyGames SDK.data -> localStorage -> Memory)
+    // ---------------------------------------------------------------------
+    const createCrazyGamesTier = (cgData) => ({
+      name: 'CrazyGames.SDK.data',
+      getItem: (key) => {
+        try {
+          return Promise.resolve(cgData.getItem(key)).catch(() => null);
+        } catch (e) {
+          return Promise.resolve(null);
+        }
+      },
+      setItem: (key, value) => {
+        try {
+          return Promise.resolve(cgData.setItem(key, String(value))).catch(() => {});
+        } catch (e) {
+          return Promise.resolve();
+        }
+      },
+      removeItem: (key) => {
+        try {
+          return Promise.resolve(cgData.removeItem(key)).catch(() => {});
+        } catch (e) {
+          return Promise.resolve();
+        }
+      }
+    });
+
+    const createLocalStorageTier = () => ({
+      name: 'localStorage',
+      getItem: (key) => {
+        try {
+          return window.localStorage.getItem(key);
+        } catch (e) {
+          return null;
+        }
+      },
+      setItem: (key, value) => {
+        try {
+          window.localStorage.setItem(key, String(value));
+        } catch (e) {}
+      },
+      removeItem: (key) => {
+        try {
+          window.localStorage.removeItem(key);
+        } catch (e) {}
+      }
+    });
+
+    const createMemoryTier = () => {
+      const store = Object.create(null);
+      return {
+        name: 'memory',
+        getItem: (key) => (Object.prototype.hasOwnProperty.call(store, key) ? store[key] : null),
+        setItem: (key, value) => { store[key] = String(value); },
+        removeItem: (key) => { delete store[key]; }
+      };
+    };
+
+    function resolveStorageTier(sdkInitSuccess) {
+      // Tier 1: window.CrazyGames.SDK.data (used when SDK init succeeded)
+      if (sdkInitSuccess && window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.data) {
+        const d = window.CrazyGames.SDK.data;
+        if (typeof d.getItem === 'function' && typeof d.setItem === 'function') {
+          return createCrazyGamesTier(d);
+        }
+      }
+      // Tier 2: window.localStorage (wrapped in try/catch — can be blocked inside iframes)
+      try {
+        const probe = '__sumi_probe__';
+        window.localStorage.setItem(probe, '1');
+        window.localStorage.removeItem(probe);
+        return createLocalStorageTier();
+      } catch (e) {
+        // localStorage is unavailable or blocked in iframe
+      }
+      // Tier 3: plain in-memory object (final fallback, never throws)
+      return createMemoryTier();
+    }
+
+    const SAVE_KEY = 'sumi.save';
+    const DEFAULT_SAVE = {
+      v: 1,
+      highScore: 0,
+      stagesUnlocked: 1,
+      coinsTotal: 0,
+      muted: false,
+      seenControlHint: false
+    };
+
+    // Single unified Save wrapper
+    const Save = {
+      tier: createMemoryTier(),
+      data: { ...DEFAULT_SAVE },
+
+      // Immediate pre-read from localStorage/memory on module load
+      preLoad() {
+        try {
+          const testTier = resolveStorageTier(false);
+          this.tier = testTier;
+          const raw = testTier.getItem(SAVE_KEY);
+          if (raw) {
+            const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            if (parsed && typeof parsed === 'object') {
+              this.data = { ...DEFAULT_SAVE, ...parsed, v: 1 };
+            }
+          }
+        } catch (e) {}
+      },
+
+      // Resolved once after SDK init completes or times out
+      async init(sdkInitSuccess) {
+        const newTier = resolveStorageTier(sdkInitSuccess);
+        this.tier = newTier;
+
+        // Reads happen once at boot into an in-memory state object
+        try {
+          const raw = await this.tier.getItem(SAVE_KEY);
+          if (raw) {
+            const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            if (parsed && typeof parsed === 'object') {
+              this.data = { ...DEFAULT_SAVE, ...parsed, v: 1 };
+            }
+          } else if (newTier.name === 'CrazyGames.SDK.data') {
+            // Write initial synced snapshot if tier is cloud SDK
+            await this.write(this.data);
+          }
+        } catch (e) {
+          console.warn('[Save] Error reading save state:', e);
+        }
+        return this.data;
+      },
+
+      // Synchronous in-memory reads for game loop
+      get(key) {
+        return (this.data && this.data[key] !== undefined) ? this.data[key] : DEFAULT_SAVE[key];
+      },
+
+      // Uniform 3-tier API exposed for any external consumers
+      getItem(key) {
+        return this.tier ? this.tier.getItem(key) : null;
+      },
+      setItem(key, value) {
+        if (this.tier) return this.tier.setItem(key, value);
+      },
+      removeItem(key) {
+        if (this.tier) return this.tier.removeItem(key);
+      },
+
+      // Always read existing value and merge before writing — never blindly overwrite
+      async write(partialUpdates) {
+        if (!partialUpdates || typeof partialUpdates !== 'object') return;
+
+        // 1. Update in-memory state immediately so game reflects it
+        Object.assign(this.data, partialUpdates);
+        this.data.v = 1;
+
+        // 2. Read existing from disk/tier and merge before writing
+        try {
+          let existing = {};
+          const raw = await this.tier.getItem(SAVE_KEY);
+          if (raw) {
+            const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            if (parsed && typeof parsed === 'object') {
+              existing = parsed;
+            }
+          }
+          const merged = {
+            ...DEFAULT_SAVE,
+            ...existing,
+            ...this.data,
+            ...partialUpdates,
+            v: 1
+          };
+          this.data = merged;
+          await this.tier.setItem(SAVE_KEY, JSON.stringify(merged));
+        } catch (e) {
+          console.warn('[Save] Error writing save state:', e);
+        }
+      }
+    };
+    Save.preLoad();
+
+    // =====================================================================
+    // 2. AUDIO SYSTEM (100% Web Audio API Synthesis)
+    // =====================================================================
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = Save.get('muted');
+        this.masterGain = null;
+      }
+      init() {
+        if (this.ctx) {
+          if (this.ctx.state === 'suspended') this.ctx.resume();
+          return;
+        }
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        this.ctx = new AudioCtx();
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.gain.setValueAtTime(this.muted ? 0 : 0.7, this.ctx.currentTime);
+        this.masterGain.connect(this.ctx.destination);
+      }
+      toggleMute() {
+        this.muted = !this.muted;
+        Save.write({ muted: this.muted });
+        if (this.masterGain && this.ctx) {
+          this.masterGain.gain.setValueAtTime(this.muted ? 0 : 0.7, this.ctx.currentTime);
+        }
+        return this.muted;
+      }
+      setMuted(m) {
+        if (!this.ctx) return;
+        this.masterGain.gain.setValueAtTime(m ? 0 : (this.muted ? 0 : 0.7), this.ctx.currentTime);
+      }
+      // Jump sound: quick rising pitch
+      playJump(isDouble = false) {
+        if (!this.ctx || this.muted) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = isDouble ? 'triangle' : 'sine';
+        const startFreq = isDouble ? 340 : 220;
+        const endFreq = isDouble ? 620 : 440;
+        osc.frequency.setValueAtTime(startFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(endFreq, now + 0.12);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+        osc.connect(gain); gain.connect(this.masterGain);
+        osc.start(now); osc.stop(now + 0.14);
+      }
+      // Dash sound: rushing air noise
+      playDash() {
+        if (!this.ctx || this.muted) return;
+        const now = this.ctx.currentTime;
+        const bufferSize = this.ctx.sampleRate * 0.12;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(900, now);
+        filter.frequency.exponentialRampToValueAtTime(320, now + 0.12);
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+        noise.connect(filter); filter.connect(gain); gain.connect(this.masterGain);
+        noise.start(now);
+      }
+      // Katana slash sound: high resonant blade whistle
+      playSlash() {
+        if (!this.ctx || this.muted) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(980, now);
+        osc.frequency.exponentialRampToValueAtTime(260, now + 0.14);
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        osc.connect(gain); gain.connect(this.masterGain);
+        osc.start(now); osc.stop(now + 0.16);
+      }
+      // Hit / Damage: deep percussive taiko hit
+      playHit() {
+        if (!this.ctx || this.muted) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(140, now);
+        osc.frequency.exponentialRampToValueAtTime(45, now + 0.25);
+        gain.gain.setValueAtTime(0.6, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+        osc.connect(gain); gain.connect(this.masterGain);
+        osc.start(now); osc.stop(now + 0.3);
+      }
+      // Deflect chime: crisp metallic bell
+      playDeflect() {
+        if (!this.ctx || this.muted) return;
+        const now = this.ctx.currentTime;
+        [880, 1760, 2640].forEach((freq, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now);
+          gain.gain.setValueAtTime(0.2 / (i + 1), now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+          osc.connect(gain); gain.connect(this.masterGain);
+          osc.start(now); osc.stop(now + 0.36);
+        });
+      }
+      // Mon coin pluck: Japanese pentatonic koto note
+      playCoin(pitchIdx = 0) {
+        if (!this.ctx || this.muted) return;
+        const freqs = [587.33, 659.25, 783.99, 880.00, 1046.50]; // D, E, G, A, C
+        const freq = freqs[pitchIdx % freqs.length];
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.28, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+        osc.connect(gain); gain.connect(this.masterGain);
+        osc.start(now); osc.stop(now + 0.23);
+      }
+      // Koban golden bonus
+      playKoban() {
+        if (!this.ctx || this.muted) return;
+        [587.33, 880.00, 1174.66].forEach((f, i) => {
+          setTimeout(() => {
+            if (!this.ctx || this.muted) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(f, now);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+            osc.connect(gain); gain.connect(this.masterGain);
+            osc.start(now); osc.stop(now + 0.32);
+          }, i * 70);
+        });
+      }
+      // Checkpoint lighted: singing bowl
+      playCheckpoint() {
+        if (!this.ctx || this.muted) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(528, now);
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+        osc.connect(gain); gain.connect(this.masterGain);
+        osc.start(now); osc.stop(now + 0.85);
+      }
+      // Stage Torii Gate Clear: resonant gong
+      playStageClear() {
+        if (!this.ctx || this.muted) return;
+        const now = this.ctx.currentTime;
+        [164.8, 220, 329.6].forEach(f => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(f, now);
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
+          osc.connect(gain); gain.connect(this.masterGain);
+          osc.start(now); osc.stop(now + 1.5);
+        });
+      }
+    }
+    const audio = new SoundEngine();
+
+    // =====================================================================
+    // 3. INPUT HANDLING & TOUCH DUAL CONTROLS
+    // =====================================================================
+    class InputSystem {
+      constructor() {
+        this.left = false;
+        this.right = false;
+        this.jumpPressed = false;
+        this.jumpHeld = false;
+        this.slashPressed = false;
+        this.dashPressed = false;
+        this.touchActive = false;
+
+        this.setupKeyboard();
+        this.setupTouch();
+      }
+
+      setupKeyboard() {
+        window.addEventListener('keydown', (e) => {
+          audio.init();
+          if (e.repeat) return;
+          switch (e.code) {
+            case 'KeyA': case 'ArrowLeft': this.left = true; break;
+            case 'KeyD': case 'ArrowRight': this.right = true; break;
+            case 'Space': case 'KeyW': case 'ArrowUp':
+              this.jumpPressed = true; this.jumpHeld = true; e.preventDefault(); break;
+            case 'KeyJ': case 'KeyX': this.slashPressed = true; break;
+            case 'ShiftLeft': case 'ShiftRight': case 'KeyK': case 'KeyC':
+              this.dashPressed = true; break;
+            case 'KeyP': case 'Escape':
+              game.togglePause(); break;
+            case 'KeyM':
+              game.toggleMute(); break;
+          }
+        });
+
+        window.addEventListener('keyup', (e) => {
+          switch (e.code) {
+            case 'KeyA': case 'ArrowLeft': this.left = false; break;
+            case 'KeyD': case 'ArrowRight': this.right = false; break;
+            case 'Space': case 'KeyW': case 'ArrowUp': this.jumpHeld = false; break;
+          }
+        });
+      }
+
+      setupTouch() {
+        const touchArea = document.getElementById('touch-controls');
+        const enableTouchUI = () => {
+          if (!this.touchActive) {
+            this.touchActive = true;
+            touchArea.classList.add('active');
+          }
+          audio.init();
+        };
+
+        window.addEventListener('touchstart', enableTouchUI, { passive: true });
+
+        const bindBtn = (id, onDown, onUp) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.addEventListener('touchstart', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            el.classList.add('pressed');
+            onDown();
+          }, { passive: false });
+          el.addEventListener('touchend', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            el.classList.remove('pressed');
+            if (onUp) onUp();
+          }, { passive: false });
+          el.addEventListener('touchcancel', () => {
+            el.classList.remove('pressed');
+            if (onUp) onUp();
+          });
+        };
+
+        bindBtn('tBtnLeft', () => { this.left = true; }, () => { this.left = false; });
+        bindBtn('tBtnRight', () => { this.right = true; }, () => { this.right = false; });
+        bindBtn('tBtnJump', () => { this.jumpPressed = true; this.jumpHeld = true; }, () => { this.jumpHeld = false; });
+        bindBtn('tBtnSlash', () => { this.slashPressed = true; });
+        bindBtn('tBtnDash', () => { this.dashPressed = true; });
+      }
+
+      pollGamepad() {
+        if (!navigator.getGamepads) return;
+        const gamepads = navigator.getGamepads();
+        for (let i = 0; i < gamepads.length; i++) {
+          const gp = gamepads[i];
+          if (!gp) continue;
+          // Left stick & Dpad
+          const axisX = gp.axes[0] || 0;
+          const dpadLeft = gp.buttons[14] && gp.buttons[14].pressed;
+          const dpadRight = gp.buttons[15] && gp.buttons[15].pressed;
+          if (axisX < -0.3 || dpadLeft) this.left = true;
+          else if (!this.touchActive && !keysDown['ArrowLeft'] && !keysDown['KeyA']) this.left = false;
+
+          if (axisX > 0.3 || dpadRight) this.right = true;
+          else if (!this.touchActive && !keysDown['ArrowRight'] && !keysDown['KeyD']) this.right = false;
+
+          // A button (jump)
+          if (gp.buttons[0] && gp.buttons[0].pressed) {
+            if (!this.gpJumpPrev) { this.jumpPressed = true; this.jumpHeld = true; }
+            this.gpJumpPrev = true;
+          } else {
+            if (this.gpJumpPrev) { this.jumpHeld = false; this.gpJumpPrev = false; }
+          }
+          // X button (slash)
+          if (gp.buttons[2] && gp.buttons[2].pressed) {
+            if (!this.gpSlashPrev) this.slashPressed = true;
+            this.gpSlashPrev = true;
+          } else { this.gpSlashPrev = false; }
+          // B or R1 button (dash)
+          if ((gp.buttons[1] && gp.buttons[1].pressed) || (gp.buttons[5] && gp.buttons[5].pressed)) {
+            if (!this.gpDashPrev) this.dashPressed = true;
+            this.gpDashPrev = true;
+          } else { this.gpDashPrev = false; }
+          break;
+        }
+      }
+
+      consumeJump() {
+        const p = this.jumpPressed;
+        this.jumpPressed = false;
+        return p;
+      }
+      consumeSlash() {
+        const p = this.slashPressed;
+        this.slashPressed = false;
+        return p;
+      }
+      consumeDash() {
+        const p = this.dashPressed;
+        this.dashPressed = false;
+        return p;
+      }
+    }
+    const keysDown = {};
+    const input = new InputSystem();
+
+    // =====================================================================
+    // 4. PROCEDURAL SUMI-E GRAPHICS & PARTICLE POOL
+    // =====================================================================
+    // Offscreen cached paper texture pattern for authentic sumi-e wash look
+    let paperCanvas = null;
+    function createPaperTexture() {
+      paperCanvas = document.createElement('canvas');
+      paperCanvas.width = 256;
+      paperCanvas.height = 256;
+      const pctx = paperCanvas.getContext('2d');
+      pctx.fillStyle = CONFIG.PAPER_BG;
+      pctx.fillRect(0, 0, 256, 256);
+      // Delicate paper fibers and ink bleed dots
+      pctx.fillStyle = 'rgba(13, 13, 16, 0.025)';
+      for (let i = 0; i < 600; i++) {
+        const x = Math.random() * 256, y = Math.random() * 256;
+        const s = Math.random() * 2.2;
+        pctx.beginPath(); pctx.arc(x, y, s, 0, Math.PI * 2); pctx.fill();
+      }
+      pctx.strokeStyle = 'rgba(74, 74, 85, 0.02)';
+      pctx.lineWidth = 1;
+      for (let i = 0; i < 40; i++) {
+        pctx.beginPath();
+        pctx.moveTo(Math.random() * 256, Math.random() * 256);
+        pctx.lineTo(Math.random() * 256, Math.random() * 256);
+        pctx.stroke();
+      }
+    }
+    createPaperTexture();
+
+    // High performance particle system with static pool
+    class ParticlePool {
+      constructor(max = 240) {
+        this.particles = new Array(max).fill(null).map(() => ({
+          active: false, x: 0, y: 0, vx: 0, vy: 0,
+          radius: 2, color: CONFIG.INK_BLACK, life: 1, maxLife: 1, type: 'ink'
+        }));
+      }
+
+      spawn(x, y, vx, vy, radius, color, life, type = 'ink') {
+        const p = this.particles.find(pt => !pt.active);
+        if (!p) return;
+        p.active = true;
+        p.x = x; p.y = y; p.vx = vx; p.vy = vy;
+        p.radius = radius; p.color = color;
+        p.life = life; p.maxLife = life;
+        p.type = type;
+      }
+
+      burstInk(x, y, count = 12, color = CONFIG.INK_BLACK) {
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 40 + Math.random() * 180;
+          this.spawn(
+            x, y,
+            Math.cos(angle) * speed, Math.sin(angle) * speed,
+            2 + Math.random() * 4.5,
+            color,
+            0.3 + Math.random() * 0.45,
+            'ink'
+          );
+        }
+      }
+
+      dust(x, y, dir = 0) {
+        for (let i = 0; i < 4; i++) {
+          this.spawn(
+            x, y + 2,
+            (Math.random() * 40 - 20) + dir * 30, -15 - Math.random() * 30,
+            1.5 + Math.random() * 2.5,
+            'rgba(42, 42, 48, 0.4)',
+            0.25 + Math.random() * 0.2,
+            'dust'
+          );
+        }
+      }
+
+      update(dt) {
+        for (let i = 0; i < this.particles.length; i++) {
+          const p = this.particles[i];
+          if (!p.active) continue;
+          p.life -= dt;
+          if (p.life <= 0) { p.active = false; continue; }
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          if (p.type === 'ink') {
+            p.vy += 420 * dt; // ink gravity
+            p.vx *= 0.96;
+          } else {
+            p.vx *= 0.92;
+            p.vy *= 0.92;
+          }
+        }
+      }
+
+      draw(ctx) {
+        for (let i = 0; i < this.particles.length; i++) {
+          const p = this.particles[i];
+          if (!p.active) continue;
+          const alpha = p.life / p.maxLife;
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+    }
+    const particles = new ParticlePool();
+
+    // =====================================================================
+    // 5. CAMERA & ADAPTIVE DUAL VIEWPORT (LANDSCAPE + PORTRAIT)
+    // =====================================================================
+    class Camera {
+      constructor() {
+        this.x = 0;
+        this.y = 0;
+        this.targetX = 0;
+        this.targetY = 0;
+        this.zoom = 1;
+        this.viewportW = 960;
+        this.viewportH = 540;
+        this.shakeTime = 0;
+        this.shakeMag = 0;
+        this.isPortrait = false;
+      }
+
+      shake(mag = 4, time = 0.2) {
+        this.shakeMag = Math.min(mag, CONFIG.SCREEN_SHAKE_MAX);
+        this.shakeTime = time;
+      }
+
+      update(target, dt, stageWidth, stageHeight) {
+        if (this.shakeTime > 0) this.shakeTime -= dt;
+
+        // Dynamic orientation calculation
+        const aspect = window.innerWidth / Math.max(1, window.innerHeight);
+        this.isPortrait = aspect < 1.0;
+
+        // Portrait zooms in ~1.35x and frames higher vertical room
+        this.zoom = this.isPortrait ? 1.35 : 1.0;
+        const lookAheadX = this.isPortrait ? (target.facing * 40) : (target.facing * 110);
+        const offsetY = this.isPortrait ? -30 : -20;
+
+        this.targetX = target.x + lookAheadX;
+        this.targetY = target.y + offsetY;
+
+        // Smooth damped camera follow
+        const lerpFactor = 8.0 * dt;
+        this.x += (this.targetX - this.x) * Math.min(lerpFactor, 1.0);
+        this.y += (this.targetY - this.y) * Math.min(lerpFactor, 1.0);
+
+        // Clamp camera to stage borders
+        const halfW = (this.viewportW / 2) / this.zoom;
+        const halfH = (this.viewportH / 2) / this.zoom;
+        this.x = Math.max(halfW - 40, Math.min(stageWidth - halfW + 40, this.x));
+        this.y = Math.max(halfH - 80, Math.min(stageHeight - halfH + 80, this.y));
+      }
+
+      getShakeOffset() {
+        if (this.shakeTime <= 0) return { x: 0, y: 0 };
+        const mag = this.shakeMag * (this.shakeTime / 0.2);
+        return {
+          x: (Math.random() * 2 - 1) * mag,
+          y: (Math.random() * 2 - 1) * mag
+        };
+      }
+    }
+    const camera = new Camera();
+
+    // =====================================================================
+    // 6. STAGE LEVEL DATA (DETERMINISTIC CHUNK ARCHITECTURE)
+    // =====================================================================
+    // Stage 1: The Bamboo Path - Teaches run, jump, slash, coin lines, Oni patrol, checkpoints
+    // Stage 2: The Mist Ravine - Introduces wall-jump, dash over spikes, flying lanterns, crumbling bridges
+    // Stage 3: The Fortress Gates - Combines archers, saw traps, secret koban route, Crimson Edge shockwaves
+    const STAGE_CONFIGS = [
+      {
+        id: 1,
+        title: "STAGE 1: THE BAMBOO PATH",
+        width: 3800,
+        height: 600,
+        spawn: { x: 80, y: 440 },
+        platforms: [
+          // Ground segments with gaps
+          { x: 0, y: 500, w: 700, h: 100 },
+          { x: 820, y: 500, w: 650, h: 100 },
+          { x: 1600, y: 500, w: 600, h: 100 },
+          { x: 2320, y: 500, w: 700, h: 100 },
+          { x: 3140, y: 500, w: 660, h: 100 },
+          // Step-up platforms teaching variable jump
+          { x: 340, y: 420, w: 140, h: 24 },
+          { x: 520, y: 350, w: 130, h: 24 },
+          { x: 960, y: 420, w: 140, h: 24 },
+          { x: 1160, y: 350, w: 150, h: 24 },
+          { x: 1360, y: 280, w: 140, h: 24 },
+          // Wall training pillars
+          { x: 1820, y: 360, w: 50, h: 140 },
+          { x: 1980, y: 290, w: 50, h: 210 },
+          // High bridge
+          { x: 2450, y: 380, w: 200, h: 24 },
+          { x: 2750, y: 340, w: 220, h: 24 },
+          // Torii final plaza
+          { x: 3400, y: 450, w: 300, h: 50 }
+        ],
+        hazards: [
+          // Spikes in pits
+          { type: 'spike', x: 700, y: 560, w: 120, h: 40 },
+          { type: 'spike', x: 1470, y: 560, w: 130, h: 40 },
+          { type: 'spike', x: 2200, y: 560, w: 120, h: 40 }
+        ],
+        enemies: [
+          { type: 'oni', x: 420, y: 460, minX: 200, maxX: 680 },
+          { type: 'oni', x: 1000, y: 460, minX: 840, maxX: 1450 },
+          { type: 'oni', x: 2500, y: 460, minX: 2340, maxX: 2980 },
+          { type: 'lantern', x: 1750, y: 280, amp: 40, freq: 2 }
+        ],
+        destructibles: [
+          { x: 1500, y: 430, w: 30, h: 70 }, // Bamboo barricade
+          { x: 2960, y: 430, w: 30, h: 70 }
+        ],
+        coins: [
+          { x: 240, y: 460 }, { x: 280, y: 460 },
+          { x: 380, y: 380 }, { x: 580, y: 310 },
+          { x: 760, y: 370 }, // Over first gap
+          { x: 1020, y: 380 }, { x: 1220, y: 310 }, { x: 1420, y: 240 },
+          { x: 1900, y: 230 }, { x: 2520, y: 340 }, { x: 2850, y: 300 },
+          { x: 3300, y: 460 }, { x: 3360, y: 460 }
+        ],
+        koban: { x: 1430, y: 190 }, // Optional high jump reward
+        powerups: [
+          { type: 'charm', x: 1190, y: 310 } // Paper charm shields one hit
+        ],
+        checkpoints: [
+          { x: 1650, y: 450 },
+          { x: 2360, y: 450 }
+        ],
+        torii: { x: 3600, y: 500 }
+      },
+      {
+        id: 2,
+        title: "STAGE 2: THE MIST RAVINE",
+        width: 4400,
+        height: 660,
+        spawn: { x: 80, y: 450 },
+        platforms: [
+          { x: 0, y: 520, w: 500, h: 100 },
+          // Chasm with crumbling bridge
+          { x: 620, y: 460, w: 90, h: 20, crumbling: true },
+          { x: 770, y: 430, w: 90, h: 20, crumbling: true },
+          { x: 920, y: 400, w: 90, h: 20, crumbling: true },
+          // Moving platform across waterfall
+          { x: 1120, y: 380, w: 130, h: 22, moving: true, moveX: 200, moveSpeed: 1.2 },
+          { x: 1450, y: 520, w: 600, h: 100 },
+          // Wall climbing canyon
+          { x: 2150, y: 200, w: 45, h: 360 },
+          { x: 2350, y: 150, w: 45, h: 410 },
+          // Upper ledge
+          { x: 2400, y: 220, w: 400, h: 24 },
+          // Deep drop with spikes and air-dash island
+          { x: 2950, y: 480, w: 160, h: 24 },
+          { x: 3250, y: 420, w: 150, h: 24 },
+          { x: 3550, y: 380, w: 150, h: 24 },
+          { x: 3820, y: 520, w: 580, h: 100 }
+        ],
+        hazards: [
+          { type: 'spike', x: 500, y: 600, w: 950, h: 60 },
+          { type: 'saw', x: 1700, y: 460, startX: 1600, endX: 1900, speed: 120 },
+          { type: 'spike', x: 2800, y: 600, w: 1020, h: 60 }
+        ],
+        enemies: [
+          { type: 'lantern', x: 800, y: 320, amp: 50, freq: 2.2 },
+          { type: 'oni', x: 1650, y: 480, minX: 1480, maxX: 1980 },
+          { type: 'lantern', x: 2700, y: 200, amp: 45, freq: 2 },
+          { type: 'archer', x: 2700, y: 170 }
+        ],
+        destructibles: [
+          { x: 2000, y: 450, w: 30, h: 70 }
+        ],
+        coins: [
+          { x: 660, y: 410 }, { x: 810, y: 380 }, { x: 960, y: 350 },
+          { x: 1220, y: 330 }, { x: 1550, y: 480 }, { x: 1800, y: 480 },
+          // Wall jump coin arc
+          { x: 2250, y: 450 }, { x: 2250, y: 370 }, { x: 2250, y: 290 }, { x: 2250, y: 210 },
+          { x: 3020, y: 430 }, { x: 3320, y: 370 }, { x: 3620, y: 330 }
+        ],
+        koban: { x: 2250, y: 130 }, // High above the wall canyon
+        powerups: [
+          { type: 'zanshin', x: 1500, y: 470 } // Zanshin slows time
+        ],
+        checkpoints: [
+          { x: 1480, y: 470 },
+          { x: 2440, y: 170 }
+        ],
+        torii: { x: 4200, y: 520 }
+      },
+      {
+        id: 3,
+        title: "STAGE 3: THE FORTRESS GATES",
+        width: 4800,
+        height: 680,
+        spawn: { x: 80, y: 450 },
+        platforms: [
+          { x: 0, y: 520, w: 450, h: 100 },
+          // Saw blades and narrow pillars
+          { x: 550, y: 460, w: 110, h: 24 },
+          { x: 760, y: 400, w: 110, h: 24 },
+          { x: 980, y: 340, w: 110, h: 24 },
+          { x: 1200, y: 500, w: 500, h: 100 },
+          // Vertical fortress shaft with alternating spikes
+          { x: 1800, y: 120, w: 40, h: 480 },
+          { x: 2020, y: 180, w: 40, h: 420 },
+          // Upper rooftop run
+          { x: 2100, y: 220, w: 400, h: 24 },
+          { x: 2600, y: 260, w: 90, h: 20, crumbling: true },
+          { x: 2800, y: 300, w: 90, h: 20, crumbling: true },
+          { x: 3000, y: 350, w: 120, h: 24, moving: true, moveY: 100, moveSpeed: 1.5 },
+          { x: 3250, y: 440, w: 130, h: 24 },
+          { x: 3500, y: 520, w: 1300, h: 100 }
+        ],
+        hazards: [
+          { type: 'spike', x: 450, y: 620, w: 750, h: 60 },
+          { type: 'saw', x: 650, y: 380, startX: 600, endX: 850, speed: 140 },
+          { type: 'spike', x: 1840, y: 400, w: 20, h: 50 }, // Wall spikes
+          { type: 'spike', x: 1980, y: 280, w: 20, h: 50 },
+          { type: 'saw', x: 3700, y: 460, startX: 3600, endX: 4000, speed: 180 }
+        ],
+        enemies: [
+          { type: 'archer', x: 1550, y: 450 },
+          { type: 'oni', x: 1350, y: 460, minX: 1220, maxX: 1650 },
+          { type: 'lantern', x: 2300, y: 160, amp: 40, freq: 2.5 },
+          { type: 'archer', x: 3300, y: 390 },
+          { type: 'oni', x: 3800, y: 480, minX: 3600, maxX: 4200 }
+        ],
+        destructibles: [
+          { x: 1680, y: 430, w: 30, h: 70 },
+          { x: 2480, y: 150, w: 30, h: 70 }
+        ],
+        coins: [
+          { x: 600, y: 410 }, { x: 810, y: 350 }, { x: 1030, y: 290 },
+          { x: 1910, y: 480 }, { x: 1910, y: 380 }, { x: 1910, y: 280 }, { x: 1910, y: 180 },
+          { x: 2200, y: 170 }, { x: 2650, y: 210 }, { x: 2850, y: 250 },
+          { x: 3600, y: 470 }, { x: 4100, y: 470 }
+        ],
+        koban: { x: 1910, y: 90 }, // Crown of the fortress wall climb
+        powerups: [
+          { type: 'edge', x: 2150, y: 170 } // Crimson Edge: extended reach & shockwave
+        ],
+        checkpoints: [
+          { x: 1230, y: 450 },
+          { x: 2150, y: 170 },
+          { x: 3520, y: 470 }
+        ],
+        torii: { x: 4550, y: 520 }
+      }
+    ];
+
+    // =====================================================================
+    // 7. ENTITIES & LOGIC
+    // =====================================================================
+    class Animator {
+      constructor(sprites) {
+        this.sprites = sprites;
+        this.clip = 'idle';
+        this.frame = 0;
+        this.timer = 0;
+        this.done = false;
+      }
+
+      play(clipName) {
+        if (this.clip !== clipName) {
+          this.clip = clipName;
+          this.frame = 0;
+          this.timer = 0;
+          this.done = false;
+        }
+      }
+
+      update(dt) {
+        const config = this.sprites[this.clip];
+        if (!config) return;
+
+        if (this.done && !config.loop) return;
+
+        const frameDuration = 1 / (config.fps || 10);
+        this.timer += dt;
+
+        while (this.timer >= frameDuration) {
+          this.timer -= frameDuration;
+          if (this.frame + 1 < config.frames) {
+            this.frame += 1;
+          } else if (config.loop) {
+            this.frame = 0;
+          } else {
+            this.done = true;
+            this.frame = config.frames - 1; // hold last frame
+            break;
+          }
+        }
+      }
+
+      getCurrentFrame() {
+        const config = this.sprites[this.clip];
+        if (!config) return 0;
+        const start = config.startFrame || 0;
+        return start + this.frame;
+      }
+    }
+
+    class Player {
+      constructor() {
+        // Collision box stays exactly CONFIG.playerW x CONFIG.playerH world units
+        this.w = CONFIG.playerW;
+        this.h = CONFIG.playerH;
+        this.animator = new Animator(SPRITES);
+        this.reset(80, 440);
+      }
+
+      reset(x, y) {
+        this.x = x;
+        this.y = y;
+        this.vx = 0;
+        this.vy = 0;
+        this.facing = 1; // 1 = right, -1 = left
+        this.isGrounded = false;
+        this.isWallSliding = false;
+        this.wallDir = 0; // -1 wall left, 1 wall right
+        this.coyoteTimer = 0;
+        this.jumpBufferTimer = 0;
+        this.hasDoubleJump = true;
+        this.hasAirDash = true;
+        this.isDashing = false;
+        this.dashTimer = 0;
+        this.jumpHoldTimer = 0;
+        this.wallLockoutTimer = 0;
+
+        // Katana attack
+        this.isSlashing = false;
+        this.slashTimer = 0;
+
+        // Health & Invulnerability
+        this.health = CONFIG.MAX_HEALTH;
+        this.invulnTimer = 0;
+
+        // Animation state machine
+        this.scaleX = 1;
+        this.scaleY = 1;
+        this.animTime = 0;
+        this.runCycle = 0;
+        this.landTimer = 0;
+        this.animState = 'idle';
+        this.animator.play('idle');
+
+        // Active powerup
+        this.powerup = null; // 'zanshin' | 'edge' | 'charm'
+        this.powerupTimer = 0;
+      }
+
+      applyPowerup(type) {
+        this.powerup = type;
+        this.powerupTimer = 10.0;
+        audio.playPowerup();
+        const pill = document.getElementById('powerupPill');
+        if (pill) {
+          pill.style.display = 'block';
+          pill.textContent = type.toUpperCase() + ' 10s';
+        }
+      }
+
+      damage(amount = 1) {
+        if (this.invulnTimer > 0) return false;
+
+        // Charm absorbs hit
+        if (this.powerup === 'charm') {
+          this.powerup = null;
+          this.powerupTimer = 0;
+          this.invulnTimer = 0.6;
+          audio.playDeflect();
+          camera.shake(3, 0.15);
+          particles.burstInk(this.x, this.y, 16, CONFIG.GOLD);
+          const pill = document.getElementById('powerupPill');
+          if (pill) pill.style.display = 'none';
+          return false;
+        }
+
+        this.health -= amount;
+        this.invulnTimer = CONFIG.INVULN_TIME;
+        this.animState = 'hurt';
+        this.scaleX = 0.92; this.scaleY = 1.12;
+        audio.playHit();
+        camera.shake(6, 0.25);
+        particles.burstInk(this.x, this.y, 20, CONFIG.CRIMSON);
+
+        // Flash vignette
+        const flash = document.getElementById('damage-flash');
+        if (flash) {
+          flash.style.opacity = '1';
+          setTimeout(() => { flash.style.opacity = '0'; }, 180);
+        }
+
+        if (this.health <= 0) {
+          game.onPlayerDeath();
+        }
+        return true;
+      }
+
+      update(dt, platforms, destructibles) {
+        // Powerup timer countdown
+        if (this.powerupTimer > 0) {
+          this.powerupTimer -= dt;
+          const pill = document.getElementById('powerupPill');
+          if (pill) {
+            pill.textContent = this.powerup.toUpperCase() + ' ' + Math.ceil(this.powerupTimer) + 's';
+          }
+          if (this.powerupTimer <= 0) {
+            this.powerup = null;
+            if (pill) pill.style.display = 'none';
+          }
+        }
+
+        if (this.invulnTimer > 0) this.invulnTimer -= dt;
+        if (this.wallLockoutTimer > 0) this.wallLockoutTimer -= dt;
+
+        // 1. Air Dash state
+        if (this.isDashing) {
+          this.dashTimer -= dt;
+          this.vy = 0; // suspend gravity during dash
+          this.vx = this.facing * CONFIG.DASH_SPEED;
+          particles.dust(this.x - this.facing * 12, this.y, -this.facing);
+
+          if (this.dashTimer <= 0) {
+            this.isDashing = false;
+            this.vx = this.facing * CONFIG.MAX_RUN_SPEED;
+          }
+        } else {
+          // 2. Horizontal Run Acceleration & Friction
+          let moveInput = 0;
+          if (this.wallLockoutTimer <= 0) {
+            if (input.left) moveInput -= 1;
+            if (input.right) moveInput += 1;
+          }
+
+          if (moveInput !== 0) {
+            this.facing = moveInput > 0 ? 1 : -1;
+            // Skid check
+            const isSkidding = (this.vx > 60 && moveInput < 0) || (this.vx < -60 && moveInput > 0);
+            const accel = isSkidding ? CONFIG.SKID_DECEL : CONFIG.RUN_ACCEL;
+            this.vx += moveInput * accel * dt;
+
+            if (isSkidding && this.isGrounded) {
+              particles.dust(this.x, this.y + this.h / 2, this.facing);
+            }
+          } else {
+            // Deceleration to stop
+            if (this.vx > 0) {
+              this.vx = Math.max(0, this.vx - CONFIG.RUN_DECEL * dt);
+            } else if (this.vx < 0) {
+              this.vx = Math.min(0, this.vx + CONFIG.RUN_DECEL * dt);
+            }
+          }
+          // Clamp top speed
+          this.vx = Math.max(-CONFIG.MAX_RUN_SPEED, Math.min(CONFIG.MAX_RUN_SPEED, this.vx));
+
+          // 3. Vertical & Gravity
+          if (!this.isGrounded) {
+            this.coyoteTimer -= dt;
+
+            if (this.isWallSliding) {
+              // Wall slide drag
+              if (this.vy > CONFIG.WALL_SLIDE_SPEED) {
+                this.vy = CONFIG.WALL_SLIDE_SPEED;
+              } else {
+                this.vy += CONFIG.GRAVITY * 0.4 * dt;
+              }
+              if (Math.random() < 0.25) {
+                particles.dust(this.x + this.wallDir * (this.w / 2), this.y, 0);
+              }
+            } else {
+              // Variable jump boost while holding jump
+              if (input.jumpHeld && this.jumpHoldTimer > 0) {
+                this.vy += CONFIG.JUMP_HOLD_ACCEL * dt;
+                this.jumpHoldTimer -= dt;
+              }
+              this.vy += CONFIG.GRAVITY * dt;
+              if (this.vy > CONFIG.MAX_FALL_SPEED) this.vy = CONFIG.MAX_FALL_SPEED;
+            }
+          } else {
+            this.coyoteTimer = CONFIG.COYOTE_TIME;
+            this.hasDoubleJump = true;
+            this.hasAirDash = true;
+            this.isWallSliding = false;
+            // Landing snaps the feet to exactly plat.y, where the overlap test
+            // (bottom > rect.y) reads false. Without a downward bias the very
+            // next frame reports airborne, gravity re-lands the player, and the
+            // pose alternates jumpFall/land at 60Hz. Keep the feet biting in.
+            this.vy = CONFIG.GROUND_STICK_VEL;
+          }
+
+          // Dash Trigger (max 15% deformation)
+          if (input.consumeDash() && this.hasAirDash) {
+            this.hasAirDash = false;
+            this.isDashing = true;
+            this.dashTimer = CONFIG.DASH_DURATION;
+            this.scaleX = 1.15; this.scaleY = 0.88; // Sleek horizontal deformation
+            audio.playDash();
+            camera.shake(2.5, 0.1);
+          }
+
+          // Jump Input Buffer (squash & stretch within 15% max deformation)
+          if (input.consumeJump()) {
+            this.jumpBufferTimer = CONFIG.JUMP_BUFFER;
+          }
+          if (this.jumpBufferTimer > 0) {
+            this.jumpBufferTimer -= dt;
+            // A) Normal or Coyote Jump
+            if (this.coyoteTimer > 0) {
+              this.vy = CONFIG.JUMP_INITIAL_VEL;
+              this.jumpHoldTimer = CONFIG.JUMP_HOLD_MAX_TIME;
+              this.coyoteTimer = 0;
+              this.jumpBufferTimer = 0;
+              this.isGrounded = false;
+              this.scaleX = 0.88; this.scaleY = 1.15; // Vertical stretch on rise
+              audio.playJump(false);
+              particles.dust(this.x, this.y + this.h / 2, 0);
+            }
+            // B) Wall Jump
+            else if (this.isWallSliding) {
+              this.vy = CONFIG.WALL_JUMP_VEL_Y;
+              this.vx = -this.wallDir * CONFIG.WALL_JUMP_VEL_X;
+              this.facing = -this.wallDir;
+              this.wallLockoutTimer = CONFIG.WALL_JUMP_LOCKOUT;
+              this.isWallSliding = false;
+              this.jumpBufferTimer = 0;
+              this.hasAirDash = true; // Wall kick refreshes dash
+              this.scaleX = 0.88; this.scaleY = 1.15;
+              audio.playJump(false);
+              particles.burstInk(this.x + this.wallDir * (this.w / 2), this.y, 8, CONFIG.GREY_MID);
+            }
+            // C) Air Double Jump
+            else if (this.hasDoubleJump) {
+              this.hasDoubleJump = false;
+              this.vy = CONFIG.DOUBLE_JUMP_VEL;
+              this.jumpHoldTimer = CONFIG.JUMP_HOLD_MAX_TIME * 0.75;
+              this.jumpBufferTimer = 0;
+              this.scaleX = 0.88; this.scaleY = 1.15;
+              audio.playJump(true);
+              particles.burstInk(this.x, this.y + this.h / 2, 14, CONFIG.INK_BLACK);
+            }
+          }
+        }
+
+        // Katana Slash
+        if (input.consumeSlash() && !this.isSlashing) {
+          this.isSlashing = true;
+          this.slashTimer = CONFIG.SLASH_DURATION;
+          audio.playSlash();
+          camera.shake(1.5, 0.08);
+
+          // Test destructible blocks break
+          const reach = (this.powerup === 'edge') ? CONFIG.SLASH_RANGE_POWERED : CONFIG.SLASH_RANGE_NORMAL;
+          const slashBox = {
+            x: this.facing > 0 ? this.x : this.x - reach,
+            y: this.y - 20,
+            w: reach,
+            h: 44
+          };
+          for (let i = destructibles.length - 1; i >= 0; i--) {
+            const d = destructibles[i];
+            if (testAABB(slashBox, d)) {
+              particles.burstInk(d.x + d.w / 2, d.y + d.h / 2, 22, CONFIG.GREY_DARK);
+              audio.playHit();
+              destructibles.splice(i, 1);
+              game.addScore(100);
+            }
+          }
+        }
+        if (this.isSlashing) {
+          this.slashTimer -= dt;
+          if (this.slashTimer <= 0) this.isSlashing = false;
+        }
+
+        // 4. Move and Collide with Platforms
+        // Snapshot before the reset: the landing impact must fire on the
+        // air->ground transition, not on every frame the feet touch down.
+        const wasGrounded = this.isGrounded;
+        this.isGrounded = false;
+        this.isWallSliding = false;
+        this.wallDir = 0;
+
+        // Move X
+        this.x += this.vx * dt;
+        for (const plat of platforms) {
+          if (plat.isFallen) continue;
+          if (this.checkCollision(plat)) {
+            if (this.vx > 0) {
+              this.x = plat.x - this.w / 2;
+              this.vx = 0;
+              // Check wall slide
+              if (!wasGrounded && input.right && this.vy > 0) {
+                this.isWallSliding = true;
+                this.wallDir = 1;
+              }
+            } else if (this.vx < 0) {
+              this.x = plat.x + plat.w + this.w / 2;
+              this.vx = 0;
+              if (!wasGrounded && input.left && this.vy > 0) {
+                this.isWallSliding = true;
+                this.wallDir = -1;
+              }
+            }
+          }
+        }
+
+        // Move Y
+        this.y += this.vy * dt;
+        for (const plat of platforms) {
+          if (plat.isFallen) continue;
+          if (this.checkCollision(plat)) {
+            if (this.vy > 0) { // Landing
+              this.y = plat.y - this.h / 2;
+              this.vy = 0;
+              if (!wasGrounded) {
+                // Land squash (max 15% deformation: 0.85 scaleY, 1.15 scaleX)
+                this.scaleX = 1.15; this.scaleY = 0.85;
+                this.landTimer = 0.12;
+                particles.dust(this.x, this.y + this.h / 2, 0);
+              }
+              this.isGrounded = true;
+              this.hasAirDash = true;
+
+              // Step on crumbling platform
+              if (plat.crumbling && !plat.crumbleTimer) {
+                plat.crumbleTimer = 0.4;
+              }
+            } else if (this.vy < 0) { // Head bump
+              this.y = plat.y + plat.h + this.h / 2;
+              this.vy = 0;
+            }
+          }
+        }
+
+        // Smooth squash and stretch relaxation (capped strictly at max 15% deformation)
+        this.scaleX += (1 - this.scaleX) * 12 * dt;
+        this.scaleY += (1 - this.scaleY) * 12 * dt;
+        this.scaleX = Math.max(0.85, Math.min(1.15, this.scaleX));
+        this.scaleY = Math.max(0.85, Math.min(1.15, this.scaleY));
+
+        // 5. Animation State Determination by Strict Priority:
+        // dead > hurt > dash > slash > wallSlide > jumpRise/jumpFall > land > run > idle
+        this.animTime += dt;
+        if (this.health <= 0) {
+          this.animState = 'dead';
+        } else if (this.invulnTimer > 0.6) {
+          this.animState = 'hurt';
+        } else if (this.isDashing) {
+          this.animState = 'dash';
+        } else if (this.isSlashing) {
+          this.animState = 'slash';
+        } else if (this.isWallSliding) {
+          this.animState = 'wallSlide';
+        } else if (!this.isGrounded) {
+          this.animState = (this.vy < -20) ? 'jumpRise' : 'jumpFall';
+        } else if (this.landTimer > 0) {
+          this.animState = 'land';
+          this.landTimer -= dt;
+        } else if (Math.abs(this.vx) > 20) {
+          this.animState = 'run';
+          this.runCycle += dt * (Math.abs(this.vx) / 28);
+        } else {
+          this.animState = 'idle';
+        }
+
+        this.animator.play(this.animState);
+        this.animator.update(dt);
+      }
+
+      checkCollision(rect) {
+        const left = this.x - this.w / 2;
+        const right = this.x + this.w / 2;
+        const top = this.y - this.h / 2;
+        const bottom = this.y + this.h / 2;
+        return (
+          left < rect.x + rect.w &&
+          right > rect.x &&
+          top < rect.y + rect.h &&
+          bottom > rect.y
+        );
+      }
+
+      draw(ctx) {
+        const prevSmoothing = ctx.imageSmoothingEnabled;
+        ctx.imageSmoothingEnabled = false;
+
+        ctx.save();
+
+        // Invulnerable flicker: toggle ctx.globalAlpha, never skip drawing entirely
+        if (this.invulnTimer > 0) {
+          ctx.globalAlpha = (Math.floor(Date.now() / 70) % 2 === 0) ? 0.35 : 0.85;
+        }
+
+        const clipName = this.animator.clip || 'idle';
+        const clipConfig = SPRITES[clipName] || SPRITES.idle;
+        const imgObj = spriteImages[clipConfig.file];
+        const hasValidImage = imgObj && !imgObj.failed && imgObj.complete && imgObj.naturalWidth > 0;
+
+        // Position calculations rounded to whole device pixels to prevent shimmering
+        const cx = Math.round(this.x + (CONFIG.spriteAnchorX || 0));
+        const feetY = Math.round(this.y + this.h / 2 + (CONFIG.spriteAnchorY || 0));
+        const destW = Math.round(clipConfig.frameW * CONFIG.spriteScale);
+        const destH = Math.round(clipConfig.frameH * CONFIG.spriteScale);
+
+        ctx.translate(cx, feetY);
+        ctx.scale(this.facing, 1);
+
+        if (hasValidImage) {
+          const frameIndex = this.animator.getCurrentFrame();
+          const sx = frameIndex * clipConfig.frameW;
+          const sy = 0;
+          const dx = Math.round(-destW / 2);
+          const dy = Math.round(-destH);
+
+          ctx.drawImage(
+            imgObj,
+            sx,
+            sy,
+            clipConfig.frameW,
+            clipConfig.frameH,
+            dx,
+            dy,
+            destW,
+            destH
+          );
+        } else {
+          // Fallback to plain filled rectangle in player ink colour
+          ctx.fillStyle = CONFIG.INK_BLACK;
+          ctx.fillRect(
+            Math.round(-this.w / 2),
+            Math.round(-this.h),
+            this.w,
+            this.h
+          );
+        }
+
+        ctx.restore();
+
+        // Katana slash crescent stroke visualization
+        if (this.isSlashing) {
+          const progress = 1 - (this.slashTimer / CONFIG.SLASH_DURATION);
+          const reach = (this.powerup === 'edge') ? CONFIG.SLASH_RANGE_POWERED : CONFIG.SLASH_RANGE_NORMAL;
+          ctx.save();
+          ctx.translate(Math.round(this.x), Math.round(this.y));
+          ctx.scale(this.facing, 1);
+          ctx.globalAlpha = Math.max(0, 1 - progress * 0.85);
+          ctx.strokeStyle = (this.powerup === 'edge') ? CONFIG.CRIMSON : CONFIG.INK_BLACK;
+          ctx.lineWidth = 4.5;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          const startAngle = -1.1 + progress * 0.5;
+          const endAngle = 0.9 + progress * 0.4;
+          ctx.arc(6, -2, reach, startAngle, endAngle);
+          ctx.stroke();
+
+          // Crimson Edge shockwave aura
+          if (this.powerup === 'edge') {
+            ctx.strokeStyle = 'rgba(224, 59, 59, 0.45)';
+            ctx.lineWidth = 10;
+            ctx.beginPath();
+            ctx.arc(6, -2, reach + 8, startAngle - 0.1, endAngle + 0.1);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        // Debug Hitbox outline in crimson
+        if (CONFIG.DEBUG_HITBOX) {
+          ctx.save();
+          ctx.strokeStyle = CONFIG.CRIMSON;
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(
+            Math.round(this.x - this.w / 2),
+            Math.round(this.y - this.h / 2),
+            this.w,
+            this.h
+          );
+          ctx.restore();
+        }
+
+        ctx.imageSmoothingEnabled = prevSmoothing;
+      }
+    }
+
+    // AABB Collision Helper
+    function testAABB(r1, r2) {
+      return (
+        r1.x < r2.x + r2.w &&
+        r1.x + r1.w > r2.x &&
+        r1.y < r2.y + r2.h &&
+        r1.y + r1.h > r2.y
+      );
+    }
+
+    // =====================================================================
+    // 8. GAME LOOP & STATE MANAGEMENT
+    // =====================================================================
+    class Game {
+      constructor() {
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.stageIdx = 0;
+        this.player = new Player();
+        this.stage = null;
+        this.activeCheckpoint = null;
+
+        // Score, Coins & Combo
+        this.score = 0;
+        this.highScore = Save.get('highScore') || 0;
+        this.combo = 1.0;
+        this.comboTimer = 0;
+        this.runCoins = 0;
+
+        // State Flags
+        this.isRunning = false;
+        this.isPaused = false;
+        this.hitStopTimer = 0;
+
+        // Timing accumulator
+        this.lastTime = 0;
+        this.accumulatedTime = 0;
+        this.fixedStep = 1 / 60; // 60Hz deterministic physics tick
+
+        // Arrows, particles, platforms runtime
+        this.arrows = [];
+        this.runtimePlatforms = [];
+        this.runtimeEnemies = [];
+        this.runtimeCoins = [];
+        this.runtimePowerups = [];
+        this.runtimeHazards = [];
+        this.runtimeDestructibles = [];
+        this.runtimeKoban = null;
+
+        this.setupWindow();
+        this.loadStage(0);
+        this.updateHUD();
+      }
+
+      setupWindow() {
+        const resize = () => {
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          this.dpr = dpr;
+          const w = window.innerWidth;
+          const h = window.innerHeight;
+          this.canvas.width = w * dpr;
+          this.canvas.height = h * dpr;
+          this.ctx.resetTransform?.();
+          this.ctx.scale(dpr, dpr);
+          camera.viewportW = w;
+          camera.viewportH = h;
+        };
+        window.addEventListener('resize', resize);
+        window.addEventListener('orientationchange', resize);
+        resize();
+
+        // Pause on tab switch & save run high score
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden && this.isRunning && !this.isPaused) {
+            this.togglePause();
+            if (this.highScore > (Save.get('highScore') || 0)) {
+              Save.write({ highScore: this.highScore });
+            }
+          }
+        });
+        window.addEventListener('blur', () => {
+          if (this.isRunning && !this.isPaused) {
+            this.togglePause();
+          }
+        });
+
+        // UI Controls setup
+        document.getElementById('startBtn').addEventListener('click', () => {
+          audio.init();
+          this.startOrResume();
+        });
+        document.getElementById('muteBtn').addEventListener('click', () => {
+          audio.init();
+          this.toggleMute();
+        });
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+          this.togglePause();
+        });
+      }
+
+      toggleMute() {
+        const m = audio.toggleMute();
+        document.getElementById('muteBtn').textContent = m ? '🔇' : '♪';
+      }
+
+      togglePause() {
+        if (!this.isRunning) return;
+        this.isPaused = !this.isPaused;
+        audio.setMuted(this.isPaused);
+        const overlay = document.getElementById('overlay');
+        if (this.isPaused) {
+          window.GameEvents.gameplayStop();
+          document.getElementById('overlayKanji').textContent = '憩';
+          document.getElementById('overlayTitle').textContent = 'PAUSED';
+          document.getElementById('overlaySubtitle').textContent = 'The wind pauses in the bamboo grove.';
+          const playCaption = document.getElementById('playCaption');
+          if (playCaption) playCaption.textContent = 'Click to Resume';
+          overlay.classList.remove('hidden');
+        } else {
+          window.GameEvents.gameplayStart();
+          overlay.classList.add('hidden');
+          this.lastTime = performance.now();
+        }
+      }
+
+      loadStage(idx, respawnAtCheckpoint = false) {
+        this.stageIdx = idx;
+        const data = STAGE_CONFIGS[idx];
+        this.stage = data;
+
+        const stageTitleEl = document.getElementById('stageTitle');
+        if (stageTitleEl) {
+          stageTitleEl.textContent = `PHASE 0${idx + 1}: ${data.title.toUpperCase()}`;
+        }
+
+        // Clone runtime platforms
+        this.runtimePlatforms = data.platforms.map(p => ({
+          ...p,
+          baseX: p.x, baseY: p.y,
+          crumbleTimer: 0,
+          isFallen: false,
+          respawnTimer: 0
+        }));
+
+        // Clone hazards
+        this.runtimeHazards = data.hazards.map(h => ({
+          ...h,
+          curX: h.x, curY: h.y, dir: 1
+        }));
+
+        // Clone enemies
+        this.runtimeEnemies = data.enemies.map(e => ({
+          ...e,
+          curX: e.x, curY: e.y,
+          vx: e.type === 'oni' ? 80 : 0,
+          facing: 1,
+          shootTimer: 1.5,
+          active: true,
+          phase: Math.random() * 10
+        }));
+
+        // Clone destructibles
+        this.runtimeDestructibles = data.destructibles.map(d => ({ ...d }));
+
+        // Clone coins & items
+        this.runtimeCoins = data.coins.map(c => ({ ...c, collected: false }));
+        this.runtimeKoban = data.koban ? { ...data.koban, collected: false } : null;
+        this.runtimePowerups = (data.powerups || []).map(p => ({ ...p, collected: false }));
+
+        this.arrows = [];
+
+        // Spawn player
+        const spawnPoint = (respawnAtCheckpoint && this.activeCheckpoint)
+          ? this.activeCheckpoint
+          : data.spawn;
+        this.player.reset(spawnPoint.x, spawnPoint.y);
+        camera.x = this.player.x;
+        camera.y = this.player.y;
+      }
+
+      startOrResume() {
+        document.getElementById('overlay').classList.add('hidden');
+        this.isRunning = true;
+        this.isPaused = false;
+        window.GameEvents.gameplayStart();
+        this.lastTime = performance.now();
+        if (!Save.get('seenControlHint')) {
+          Save.write({ seenControlHint: true });
+        }
+      }
+
+      addScore(pts) {
+        this.score += Math.round(pts * this.combo);
+        this.comboTimer = CONFIG.COMBO_DECAY_TIME;
+        this.combo = Math.min(5.0, Number((this.combo + 0.2).toFixed(1)));
+        if (this.score > this.highScore) {
+          this.highScore = this.score;
+        }
+        this.updateHUD();
+      }
+
+      updateHUD() {
+        document.getElementById('scoreDisplay').textContent = this.score.toLocaleString();
+        document.getElementById('highScoreDisplay').textContent = 'HIGH: ' + this.highScore.toLocaleString();
+        const badge = document.getElementById('comboBadge');
+        if (this.combo > 1.0) {
+          badge.innerHTML = '<span class="combo-x">x</span> ' + this.combo.toFixed(1) + ' <span class="combo-lbl">Combo</span>';
+          badge.classList.add('active');
+        } else {
+          badge.classList.remove('active');
+        }
+        // Health dots
+        ['dot1', 'dot2', 'dot3'].forEach((id, i) => {
+          const el = document.getElementById(id);
+          if (i < this.player.health) el.classList.remove('lost');
+          else el.classList.add('lost');
+        });
+      }
+
+      onPlayerDeath() {
+        window.GameEvents.gameplayStop();
+        this.combo = 1.0;
+        this.updateHUD();
+
+        // Meaningful save moment: Run ended
+        const currentCoins = (Save.get('coinsTotal') || 0) + this.runCoins;
+        this.runCoins = 0;
+        const bestScore = Math.max(Save.get('highScore') || 0, this.highScore);
+        Save.write({
+          coinsTotal: currentCoins,
+          highScore: bestScore,
+          seenControlHint: true
+        });
+
+        // Instant checkpoint respawn
+        setTimeout(() => {
+          this.loadStage(this.stageIdx, true);
+          this.player.health = CONFIG.MAX_HEALTH;
+          this.updateHUD();
+          window.GameEvents.gameplayStart();
+        }, 150);
+      }
+
+      onStageComplete() {
+        window.GameEvents.levelComplete();
+        audio.playStageClear();
+        camera.shake(5, 0.4);
+        particles.burstInk(this.stage.torii.x, this.stage.torii.y, 40, CONFIG.GOLD);
+
+        // Meaningful save moment: Stage cleared & coins collected & new high score
+        const nextUnlocked = Math.max(Save.get('stagesUnlocked') || 1, this.stageIdx + 2);
+        const currentCoins = (Save.get('coinsTotal') || 0) + this.runCoins;
+        this.runCoins = 0;
+        const bestScore = Math.max(Save.get('highScore') || 0, this.highScore);
+        Save.write({
+          stagesUnlocked: nextUnlocked,
+          coinsTotal: currentCoins,
+          highScore: bestScore,
+          seenControlHint: true
+        });
+
+        if (this.stageIdx < STAGE_CONFIGS.length - 1) {
+          setTimeout(() => {
+            this.activeCheckpoint = null;
+            this.loadStage(this.stageIdx + 1);
+            this.updateHUD();
+          }, 800);
+        } else {
+          // Game Victory Overlay: Run ended!
+          window.GameEvents.gameplayStop();
+          this.isRunning = false;
+          const overlay = document.getElementById('overlay');
+          document.getElementById('overlayKanji').textContent = '極';
+          document.getElementById('overlayTitle').textContent = 'SUMI MASTERED';
+          document.getElementById('overlaySubtitle').textContent =
+            `You mastered the ink path with a final score of ${this.score.toLocaleString()}!`;
+          const playCaption = document.getElementById('playCaption');
+          if (playCaption) playCaption.textContent = 'Click to Run Again';
+          overlay.classList.remove('hidden');
+          this.stageIdx = 0;
+          this.activeCheckpoint = null;
+        }
+      }
+
+      // ===================================================================
+      // FIXED PHYSICS TICK (DETERMINISTIC ACROSS ALL MONITORS)
+      // ===================================================================
+      physicsTick(dt) {
+        // Zanshin powerup slows world physics by 50% while player is 100%
+        const worldSpeed = (this.player.powerup === 'zanshin') ? 0.5 : 1.0;
+        const worldDt = dt * worldSpeed;
+
+        // 1. Combo multiplier decay
+        if (this.comboTimer > 0) {
+          this.comboTimer -= dt;
+          if (this.comboTimer <= 0) {
+            this.combo = 1.0;
+            this.updateHUD();
+          }
+        }
+
+        // 2. Moving & Crumbling Platforms
+        for (const p of this.runtimePlatforms) {
+          if (p.moving) {
+            p.phase = (p.phase || 0) + worldDt * (p.moveSpeed || 1);
+            if (p.moveX) p.x = p.baseX + Math.sin(p.phase) * p.moveX;
+            if (p.moveY) p.y = p.baseY + Math.sin(p.phase) * p.moveY;
+          }
+          if (p.crumbleTimer > 0) {
+            p.crumbleTimer -= worldDt;
+            if (p.crumbleTimer <= 0) {
+              p.isFallen = true;
+              p.respawnTimer = 3.0;
+              particles.burstInk(p.x + p.w / 2, p.y + p.h / 2, 10, CONFIG.GREY_MID);
+            }
+          } else if (p.isFallen) {
+            p.respawnTimer -= worldDt;
+            if (p.respawnTimer <= 0) {
+              p.isFallen = false;
+              p.crumbleTimer = 0;
+            }
+          }
+        }
+
+        // 3. Moving Hazards (Saws)
+        for (const h of this.runtimeHazards) {
+          if (h.type === 'saw') {
+            h.curX += h.dir * h.speed * worldDt;
+            if (h.curX > h.endX) { h.curX = h.endX; h.dir = -1; }
+            if (h.curX < h.startX) { h.curX = h.startX; h.dir = 1; }
+          }
+        }
+
+        // 4. Update Player
+        this.player.update(dt, this.runtimePlatforms, this.runtimeDestructibles);
+
+        // Pit death check
+        if (this.player.y > this.stage.height + 60) {
+          this.player.damage(1);
+          if (this.player.health > 0) {
+            const sp = this.activeCheckpoint || this.stage.spawn;
+            this.player.reset(sp.x, sp.y);
+            this.updateHUD();
+          }
+        }
+
+        // 5. Enemies update & combat
+        const playerBox = {
+          x: this.player.x - this.player.w / 2,
+          y: this.player.y - this.player.h / 2,
+          w: this.player.w,
+          h: this.player.h
+        };
+        const slashReach = (this.player.powerup === 'edge') ? CONFIG.SLASH_RANGE_POWERED : CONFIG.SLASH_RANGE_NORMAL;
+        const slashBox = this.player.isSlashing ? {
+          x: this.player.facing > 0 ? this.player.x : this.player.x - slashReach,
+          y: this.player.y - 24,
+          w: slashReach,
+          h: 48
+        } : null;
+
+        for (const e of this.runtimeEnemies) {
+          if (!e.active) continue;
+
+          // Oni patrol
+          if (e.type === 'oni') {
+            e.curX += e.vx * worldDt;
+            if (e.curX > e.maxX) { e.curX = e.maxX; e.vx = -80; e.facing = -1; }
+            if (e.curX < e.minX) { e.curX = e.minX; e.vx = 80; e.facing = 1; }
+          }
+          // Paper Lantern floating sine drift
+          else if (e.type === 'lantern') {
+            e.phase += worldDt * e.freq;
+            e.curY = e.y + Math.sin(e.phase) * e.amp;
+          }
+          // Archer shooting
+          else if (e.type === 'archer') {
+            e.shootTimer -= worldDt;
+            if (e.shootTimer <= 0) {
+              e.shootTimer = 2.4;
+              // Shoot slow ink arrow towards player
+              const dir = (this.player.x < e.curX) ? -1 : 1;
+              this.arrows.push({
+                x: e.curX, y: e.curY - 6,
+                vx: dir * 180,
+                active: true
+              });
+            }
+          }
+
+          const enemyBox = {
+            x: e.curX - 16, y: (e.curY || e.y) - 20, w: 32, h: 40
+          };
+
+          // Hit by Katana Slash
+          if (slashBox && testAABB(slashBox, enemyBox)) {
+            e.active = false;
+            audio.playHit();
+            particles.burstInk(e.curX, enemyBox.y + 20, 24, CONFIG.INK_BLACK);
+            this.addScore(150);
+            this.hitStopTimer = CONFIG.HITSTOP_TIME;
+            camera.shake(3.5, 0.12);
+
+            // Aerial bounce mechanic allows chaining slashes
+            if (!this.player.isGrounded) {
+              this.player.vy = CONFIG.SLASH_BOUNCE_Y;
+              this.player.hasAirDash = true; // Refresh air dash on enemy kill!
+            }
+            continue;
+          }
+
+          // Enemy touches player
+          if (testAABB(playerBox, enemyBox)) {
+            if (this.player.damage(1)) {
+              this.updateHUD();
+            }
+          }
+        }
+
+        // 6. Projectile Arrows
+        for (let i = this.arrows.length - 1; i >= 0; i--) {
+          const arr = this.arrows[i];
+          arr.x += arr.vx * worldDt;
+
+          const arrowBox = { x: arr.x - 12, y: arr.y - 4, w: 24, h: 8 };
+
+          // Slash deflects arrow
+          if (slashBox && testAABB(slashBox, arrowBox)) {
+            arr.vx = -arr.vx * 1.5; // reflect backwards
+            audio.playDeflect();
+            particles.burstInk(arr.x, arr.y, 8, CONFIG.GOLD);
+            camera.shake(2, 0.08);
+            continue;
+          }
+
+          // Arrow hits player
+          if (testAABB(playerBox, arrowBox)) {
+            if (this.player.damage(1)) {
+              this.updateHUD();
+            }
+            this.arrows.splice(i, 1);
+            continue;
+          }
+
+          // Arrow hits an enemy while deflected
+          for (const e of this.runtimeEnemies) {
+            if (!e.active) continue;
+            const eb = { x: e.curX - 16, y: (e.curY || e.y) - 20, w: 32, h: 40 };
+            if (testAABB(arrowBox, eb)) {
+              e.active = false;
+              audio.playHit();
+              particles.burstInk(e.curX, eb.y + 20, 20, CONFIG.INK_BLACK);
+              this.addScore(200);
+              this.arrows.splice(i, 1);
+              break;
+            }
+          }
+        }
+
+        // 7. Hazard collisions (Spikes & Saws)
+        for (const h of this.runtimeHazards) {
+          const hBox = (h.type === 'saw')
+            ? { x: h.curX - 18, y: h.y - 18, w: 36, h: 36 }
+            : { x: h.x, y: h.y, w: h.w, h: h.h };
+
+          if (testAABB(playerBox, hBox)) {
+            if (this.player.damage(1)) {
+              this.updateHUD();
+            }
+          }
+        }
+
+        // 8. Pickups (Coins, Koban, Powerups, Checkpoints, Torii Gate)
+        for (let i = 0; i < this.runtimeCoins.length; i++) {
+          const c = this.runtimeCoins[i];
+          if (c.collected) continue;
+          if (Math.hypot(this.player.x - c.x, this.player.y - c.y) < 28) {
+            c.collected = true;
+            this.runCoins += 1;
+            this.addScore(50);
+            audio.playCoin(i);
+            particles.burstInk(c.x, c.y, 6, CONFIG.GOLD);
+          }
+        }
+
+        // Rare Koban
+        if (this.runtimeKoban && !this.runtimeKoban.collected) {
+          const kb = this.runtimeKoban;
+          if (Math.hypot(this.player.x - kb.x, this.player.y - kb.y) < 32) {
+            kb.collected = true;
+            this.runCoins += 10;
+            this.addScore(500);
+            audio.playKoban();
+            particles.burstInk(kb.x, kb.y, 25, CONFIG.GOLD);
+            camera.shake(3, 0.15);
+          }
+        }
+
+        // Powerups
+        for (const p of this.runtimePowerups) {
+          if (p.collected) continue;
+          if (Math.hypot(this.player.x - p.x, this.player.y - p.y) < 32) {
+            p.collected = true;
+            this.player.applyPowerup(p.type);
+            particles.burstInk(p.x, p.y, 18, CONFIG.CRIMSON);
+          }
+        }
+
+        // Checkpoints (Stone lanterns)
+        for (const cp of (this.stage.checkpoints || [])) {
+          if (Math.hypot(this.player.x - cp.x, this.player.y - cp.y) < 40) {
+            if (this.activeCheckpoint !== cp) {
+              this.activeCheckpoint = cp;
+              audio.playCheckpoint();
+              particles.burstInk(cp.x, cp.y - 20, 15, CONFIG.GOLD);
+            }
+          }
+        }
+
+        // Torii Gate Clear
+        if (Math.hypot(this.player.x - this.stage.torii.x, this.player.y - (this.stage.torii.y - 40)) < 40) {
+          this.onStageComplete();
+        }
+
+        // Update particles
+        particles.update(dt);
+
+        // Update camera
+        camera.update(this.player, dt, this.stage.width, this.stage.height);
+      }
+
+      // Main RAF render loop with hit-stop freeze handling
+      loop(currentTime) {
+        requestAnimationFrame((t) => this.loop(t));
+
+        if (!this.isRunning || this.isPaused) {
+          this.render();
+          return;
+        }
+
+        // Poll Gamepad
+        input.pollGamepad();
+
+        let dt = (currentTime - this.lastTime) / 1000;
+        this.lastTime = currentTime;
+        if (dt > 0.05) dt = 0.05; // Prevent dt spiral
+
+        // Hit-stop brief 60ms freeze when katana connects
+        if (this.hitStopTimer > 0) {
+          this.hitStopTimer -= dt;
+          this.render();
+          return;
+        }
+
+        // Fixed-timestep physics accumulator
+        this.accumulatedTime += dt;
+        while (this.accumulatedTime >= this.fixedStep) {
+          this.physicsTick(this.fixedStep);
+          this.accumulatedTime -= this.fixedStep;
+        }
+
+        this.render();
+      }
+
+      // ===================================================================
+      // PROCEDURAL SUMI-E RENDERING
+      // ===================================================================
+      render() {
+        const ctx = this.ctx;
+        const w = camera.viewportW;
+        const h = camera.viewportH;
+
+        // Base Paper Background Fill
+        ctx.fillStyle = CONFIG.PAPER_BG;
+        ctx.fillRect(0, 0, w, h);
+
+        // Procedural Paper Texture overlay
+        if (paperCanvas) {
+          ctx.save();
+          ctx.globalAlpha = 0.6;
+          const pattern = ctx.createPattern(paperCanvas, 'repeat');
+          ctx.fillStyle = pattern;
+          ctx.fillRect(0, 0, w, h);
+          ctx.restore();
+        }
+
+        // PARALLAX LAYER 1 (0.15 speed): Distant ink wash mountains in light grey
+        this.drawParallaxMountains(ctx, 0.15, CONFIG.GREY_LIGHT, 0.35, 180);
+
+        // PARALLAX LAYER 2 (0.35 speed): Midground bamboo ridges
+        this.drawParallaxBamboo(ctx, 0.35, CONFIG.GREY_MID, 0.5, 260);
+
+        // Camera Transform with Shake
+        ctx.save();
+        const shake = camera.getShakeOffset();
+        // Snap the camera transform to whole device pixels. The camera eases in
+        // with an exponential lerp, so it otherwise parks on a fractional offset
+        // and nearest-neighbour sprite sampling re-phases every frame (shimmer).
+        const dpr = this.dpr || 1;
+        const snap = (v) => Math.round(v * dpr) / dpr;
+        const z = camera.zoom;
+        ctx.translate(snap(w / 2 + shake.x), snap(h / 2 + shake.y));
+        ctx.scale(z, z);
+        ctx.translate(snap(-camera.x * z) / z, snap(-camera.y * z) / z);
+
+        // Render Checkpoint Stone Lanterns
+        for (const cp of (this.stage.checkpoints || [])) {
+          this.drawLantern(ctx, cp.x, cp.y, this.activeCheckpoint === cp);
+        }
+
+        // Render Torii Gate (Grand Stage Exit)
+        this.drawToriiGate(ctx, this.stage.torii.x, this.stage.torii.y);
+
+        // Render Platforms with Organic Brush Stroke Edges & Ink Bleed
+        for (const p of this.runtimePlatforms) {
+          if (p.isFallen) continue;
+          this.drawBrushPlatform(ctx, p);
+        }
+
+        // Render Destructible bamboo barriers
+        for (const d of this.runtimeDestructibles) {
+          this.drawDestructible(ctx, d);
+        }
+
+        // Render Hazards (Spikes & Saws)
+        for (const hz of this.runtimeHazards) {
+          if (hz.type === 'spike') this.drawSpikes(ctx, hz);
+          else if (hz.type === 'saw') this.drawSaw(ctx, hz);
+        }
+
+        // Render Pickups (Coins, Koban, Powerups)
+        for (const c of this.runtimeCoins) {
+          if (!c.collected) this.drawMonCoin(ctx, c.x, c.y);
+        }
+        if (this.runtimeKoban && !this.runtimeKoban.collected) {
+          this.drawGoldenKoban(ctx, this.runtimeKoban.x, this.runtimeKoban.y);
+        }
+        for (const pw of this.runtimePowerups) {
+          if (!pw.collected) this.drawPowerupItem(ctx, pw);
+        }
+
+        // Render Arrows
+        for (const arr of this.arrows) {
+          ctx.save();
+          ctx.strokeStyle = CONFIG.INK_BLACK;
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(arr.x - 12, arr.y);
+          ctx.lineTo(arr.x + 12, arr.y);
+          ctx.stroke();
+          // Arrow head
+          ctx.fillStyle = (arr.vx < 0) ? CONFIG.CRIMSON : CONFIG.INK_BLACK;
+          ctx.beginPath();
+          const headX = (arr.vx > 0) ? arr.x + 12 : arr.x - 12;
+          ctx.arc(headX, arr.y, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // Render Enemies
+        for (const e of this.runtimeEnemies) {
+          if (!e.active) continue;
+          if (e.type === 'oni') this.drawOni(ctx, e);
+          else if (e.type === 'lantern') this.drawLanternEnemy(ctx, e);
+          else if (e.type === 'archer') this.drawArcher(ctx, e);
+        }
+
+        // Render Player Samurai
+        this.player.draw(ctx);
+
+        // Render Particles
+        particles.draw(ctx);
+
+        ctx.restore();
+      }
+
+      // Sumi-e Brush Platform: wobbly brush contour, ink bleed gradient beneath
+      drawBrushPlatform(ctx, p) {
+        ctx.save();
+        // Soft ink-bleed shadow underneath
+        ctx.fillStyle = 'rgba(13, 13, 16, 0.08)';
+        ctx.fillRect(p.x, p.y + p.h, p.w, 14);
+
+        // Solid ink body
+        ctx.fillStyle = CONFIG.INK_BLACK;
+        ctx.beginPath();
+        // Organic wobbly top line
+        ctx.moveTo(p.x, p.y);
+        const steps = Math.max(4, Math.floor(p.w / 30));
+        for (let i = 1; i <= steps; i++) {
+          const px = p.x + (p.w / steps) * i;
+          const py = p.y + ((i % 2 === 0) ? -1.5 : 1.5);
+          ctx.lineTo(px, py);
+        }
+        ctx.lineTo(p.x + p.w, p.y + p.h);
+        ctx.lineTo(p.x, p.y + p.h);
+        ctx.closePath();
+        ctx.fill();
+
+        // Crumbling crack indicator
+        if (p.crumbling && p.crumbleTimer > 0) {
+          ctx.strokeStyle = CONFIG.PAPER_BG;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(p.x + p.w * 0.3, p.y);
+          ctx.lineTo(p.x + p.w * 0.5, p.y + p.h);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      drawDestructible(ctx, d) {
+        ctx.save();
+        ctx.fillStyle = CONFIG.GREY_DARK;
+        ctx.fillRect(d.x, d.y, d.w, d.h);
+        ctx.strokeStyle = CONFIG.INK_BLACK;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(d.x, d.y, d.w, d.h);
+        // Diagonal crack
+        ctx.strokeStyle = CONFIG.CRIMSON;
+        ctx.beginPath();
+        ctx.moveTo(d.x + 4, d.y + 4);
+        ctx.lineTo(d.x + d.w - 4, d.y + d.h - 4);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      drawSpikes(ctx, hz) {
+        ctx.save();
+        ctx.fillStyle = CONFIG.GREY_DARK;
+        const count = Math.floor(hz.w / 16);
+        for (let i = 0; i < count; i++) {
+          const sx = hz.x + i * 16;
+          ctx.beginPath();
+          ctx.moveTo(sx, hz.y + hz.h);
+          ctx.lineTo(sx + 8, hz.y);
+          ctx.lineTo(sx + 16, hz.y + hz.h);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      drawSaw(ctx, hz) {
+        ctx.save();
+        ctx.translate(hz.curX, hz.y);
+        ctx.rotate((performance.now() / 80));
+        ctx.fillStyle = CONFIG.INK_BLACK;
+        // 4-bladed spinning shuriken
+        for (let i = 0; i < 4; i++) {
+          ctx.rotate(Math.PI / 2);
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(-6, -16);
+          ctx.lineTo(0, -22);
+          ctx.lineTo(6, -16);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.fillStyle = CONFIG.CRIMSON;
+        ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+
+      drawMonCoin(ctx, x, y) {
+        ctx.save();
+        ctx.translate(x, y + Math.sin(performance.now() / 250 + x) * 3);
+        ctx.fillStyle = CONFIG.GREY_MID;
+        ctx.beginPath();
+        ctx.arc(0, 0, 9, 0, Math.PI * 2);
+        ctx.fill();
+        // Square center hole
+        ctx.fillStyle = CONFIG.PAPER_BG;
+        ctx.fillRect(-3, -3, 6, 6);
+        ctx.restore();
+      }
+
+      drawGoldenKoban(ctx, x, y) {
+        ctx.save();
+        ctx.translate(x, y + Math.sin(performance.now() / 200) * 4);
+        ctx.fillStyle = CONFIG.GOLD;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 9, 14, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = CONFIG.INK_BLACK;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        // Inscription lines
+        ctx.fillStyle = CONFIG.INK_BLACK;
+        ctx.fillRect(-4, -6, 8, 2);
+        ctx.fillRect(-4, 0, 8, 2);
+        ctx.fillRect(-4, 6, 8, 2);
+        ctx.restore();
+      }
+
+      drawPowerupItem(ctx, pw) {
+        ctx.save();
+        ctx.translate(pw.x, pw.y + Math.sin(performance.now() / 220) * 4);
+        // Spinning aura ring
+        ctx.strokeStyle = CONFIG.CRIMSON;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 16, 0, Math.PI * 2);
+        ctx.stroke();
+        // Icon / Kanji
+        ctx.fillStyle = CONFIG.INK_BLACK;
+        ctx.font = 'bold 13px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const symbol = pw.type === 'zanshin' ? '残' : (pw.type === 'edge' ? '刃' : '札');
+        ctx.fillText(symbol, 0, 1);
+        ctx.restore();
+      }
+
+      drawLantern(ctx, x, y, active) {
+        ctx.save();
+        ctx.translate(x, y);
+        // Stone base
+        ctx.fillStyle = CONFIG.GREY_DARK;
+        ctx.fillRect(-8, -12, 16, 12);
+        ctx.fillRect(-12, -18, 24, 6);
+        // Window chamber
+        ctx.fillStyle = active ? CONFIG.GOLD : CONFIG.GREY_MID;
+        ctx.fillRect(-6, -28, 12, 10);
+        // Roof cap
+        ctx.fillStyle = CONFIG.INK_BLACK;
+        ctx.beginPath();
+        ctx.moveTo(-16, -28);
+        ctx.lineTo(0, -36);
+        ctx.lineTo(16, -28);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      drawToriiGate(ctx, x, y) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.fillStyle = CONFIG.INK_BLACK;
+        // Two main pillars
+        ctx.fillRect(-28, -80, 8, 80);
+        ctx.fillRect(20, -80, 8, 80);
+        // Top curved crossbeam (Kasagi)
+        ctx.beginPath();
+        ctx.moveTo(-42, -84);
+        ctx.quadraticCurveTo(0, -90, 42, -84);
+        ctx.lineTo(44, -76);
+        ctx.quadraticCurveTo(0, -82, -44, -76);
+        ctx.closePath();
+        ctx.fill();
+        // Lower crossbeam (Nuki)
+        ctx.fillRect(-34, -68, 68, 6);
+        // Golden sacred crest
+        ctx.fillStyle = CONFIG.GOLD;
+        ctx.beginPath();
+        ctx.arc(0, -75, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      drawOni(ctx, e) {
+        ctx.save();
+        ctx.translate(e.curX, e.curY);
+        ctx.scale(e.facing, 1);
+        ctx.fillStyle = CONFIG.INK_BLACK;
+        // Horned silhouette body
+        ctx.beginPath();
+        ctx.arc(0, -8, 12, 0, Math.PI * 2);
+        ctx.fill();
+        // Horns
+        ctx.beginPath();
+        ctx.moveTo(-6, -18); ctx.lineTo(-10, -26); ctx.lineTo(-3, -20);
+        ctx.moveTo(6, -18); ctx.lineTo(10, -26); ctx.lineTo(3, -20);
+        ctx.fill();
+        // Glowing crimson eye dot
+        ctx.fillStyle = CONFIG.CRIMSON;
+        ctx.beginPath();
+        ctx.arc(4, -8, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      drawLanternEnemy(ctx, e) {
+        ctx.save();
+        ctx.translate(e.curX, e.curY);
+        ctx.fillStyle = CONFIG.GREY_DARK;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 12, 16, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Center crimson flicker
+        ctx.fillStyle = CONFIG.CRIMSON;
+        ctx.beginPath();
+        ctx.arc(0, 0, 4 + Math.sin(e.phase * 3) * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+        // Paper tassel trailing below
+        ctx.strokeStyle = CONFIG.INK_BLACK;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, 16);
+        ctx.lineTo(Math.sin(e.phase * 2) * 4, 26);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      drawArcher(ctx, e) {
+        ctx.save();
+        ctx.translate(e.curX, e.curY);
+        const dir = (this.player.x < e.curX) ? -1 : 1;
+        ctx.scale(dir, 1);
+        ctx.fillStyle = CONFIG.INK_BLACK;
+        // Torso
+        ctx.fillRect(-8, -24, 16, 24);
+        // Head
+        ctx.beginPath(); ctx.arc(0, -30, 7, 0, Math.PI * 2); ctx.fill();
+        // Bow arc
+        ctx.strokeStyle = CONFIG.CRIMSON;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(10, -16, 14, -1, 1);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      drawParallaxMountains(ctx, speed, color, alpha, baseHeight) {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = color;
+        const scrollX = camera.x * speed;
+        const w = camera.viewportW;
+        const h = camera.viewportH;
+        ctx.beginPath();
+        ctx.moveTo(0, h);
+        const mountainW = 280;
+        const startIdx = Math.floor(scrollX / mountainW) - 1;
+        const endIdx = startIdx + Math.ceil(w / mountainW) + 2;
+        for (let i = startIdx; i <= endIdx; i++) {
+          const mx = i * mountainW - scrollX;
+          const peakY = h - baseHeight - Math.abs(Math.sin(i * 1.7)) * 120;
+          ctx.lineTo(mx, peakY);
+        }
+        ctx.lineTo(w, h);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      drawParallaxBamboo(ctx, speed, color, alpha, baseHeight) {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = color;
+        const scrollX = camera.x * speed;
+        const w = camera.viewportW;
+        const h = camera.viewportH;
+        const stalkSpacing = 90;
+        const startIdx = Math.floor(scrollX / stalkSpacing) - 1;
+        const endIdx = startIdx + Math.ceil(w / stalkSpacing) + 2;
+        for (let i = startIdx; i <= endIdx; i++) {
+          const bx = i * stalkSpacing - scrollX;
+          const bh = baseHeight + (i % 3) * 40;
+          ctx.fillRect(bx, h - bh, 6, bh);
+          // Bamboo leaves
+          ctx.beginPath();
+          ctx.ellipse(bx + 12, h - bh + 20, 14, 4, 0.3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+
+    // =====================================================================
+    // 9. BOOTSTRAP INITIALIZATION
+    // =====================================================================
+    // Preload sprite sheets before Play button activates
+    loadSprites();
+
+    // Instantiate game immediately so Play overlay is functional with 0 delay
+    const game = new Game();
+    window.game = game;
+    requestAnimationFrame((t) => game.loop(t));
+
+    // Parallel SDK Boot Sequence (never blocks the Play button)
+    (async function bootCrazyGamesAndStorage() {
+      let sdkInitSuccess = false;
+      try {
+        const initPromise = (async () => {
+          if (window.CrazyGames && window.CrazyGames.SDK && typeof window.CrazyGames.SDK.init === 'function') {
+            await window.CrazyGames.SDK.init();
+            return true;
+          }
+          return false;
+        })();
+
+        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(false), 3000));
+        sdkInitSuccess = await Promise.race([initPromise, timeoutPromise]);
+      } catch (e) {
+        console.warn('[CrazyGames] SDK init error / timeout caught:', e);
+        sdkInitSuccess = false;
+      }
+
+      // Resolve the single 3-tier Save wrapper
+      await Save.init(sdkInitSuccess);
+
+      // Sync state to audio and HUD
+      if (Save.get('muted')) {
+        audio.muted = true;
+        if (audio.masterGain && audio.ctx) {
+          audio.masterGain.gain.setValueAtTime(0, audio.ctx.currentTime);
+        }
+        const muteBtn = document.getElementById('muteBtn');
+        if (muteBtn) muteBtn.textContent = '🔇';
+      }
+
+      if (game) {
+        game.highScore = Math.max(game.highScore, Save.get('highScore') || 0);
+        game.updateHUD();
+      }
+
+      if (Save.get('seenControlHint')) {
+        const hint = document.getElementById('controlsHint');
+        if (hint) hint.classList.add('faded');
+      }
+    })();
+
+  })();
+  </script>
+</body>
+</html>
