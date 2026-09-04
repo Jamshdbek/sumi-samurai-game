@@ -182,6 +182,90 @@
       font-weight: 700; color: #0D0D10;
     }
 
+    /* Map / result screens need a heading, not the 130px splash wordmark */
+    .overlay-title.compact {
+      font-size: clamp(26px, 5vw, 44px); letter-spacing: 0.3em; margin-bottom: 4px;
+    }
+
+    /* ---- Map Select ---- */
+    #mapSelect.hidden, #resultPanel.hidden, #overlayActions.hidden,
+    #overlayBtnRow.hidden { display: none; }
+
+    .map-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 14px; max-width: 680px; margin: 0 auto 22px;
+    }
+    .map-card {
+      position: relative; display: flex; flex-direction: column; align-items: center;
+      gap: 5px; padding: 20px 14px 16px; cursor: pointer; text-align: center;
+      background: rgba(255, 255, 255, 0.35); color: #0D0D10; font-family: inherit;
+      border: 1px solid rgba(13, 13, 16, 0.18);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .map-card:hover:not(.locked) {
+      background: #0D0D10; color: #EDE8DC; transform: translateY(-3px);
+      border-color: #0D0D10;
+    }
+    .map-card:active:not(.locked) { transform: translateY(-1px); }
+    .map-card.locked { cursor: not-allowed; opacity: 0.45; background: transparent; }
+    .map-card.cleared { border-color: rgba(217, 180, 92, 0.8); }
+
+    .map-card-kanji { font-size: 30px; font-weight: 900; line-height: 1; opacity: 0.8; }
+    .map-card-no {
+      font-size: 9px; letter-spacing: 0.35em; margin-left: 0.35em;
+      font-weight: 700; opacity: 0.45;
+    }
+    .map-card-name {
+      font-size: 12px; letter-spacing: 0.12em; font-weight: 700; line-height: 1.4;
+    }
+    .map-card-meta {
+      font-size: 9px; letter-spacing: 0.14em; opacity: 0.55; line-height: 1.7;
+      margin-top: 3px; font-weight: 600;
+    }
+    /* Gold seal marking a map already cleared at par */
+    .map-card-seal {
+      position: absolute; top: 7px; right: 8px; font-size: 11px; color: #D9B45C;
+    }
+    .map-foot {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.3em;
+      opacity: 0.45; margin-left: 0.3em; line-height: 1.8; max-width: 520px;
+    }
+
+    /* ---- Stage Result ---- */
+    #resultPanel { max-width: 420px; width: 100%; margin-bottom: 26px; }
+    .result-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 11px; letter-spacing: 0.2em; font-weight: 700; padding: 7px 0;
+      border-bottom: 1px solid rgba(13, 13, 16, 0.1); text-transform: uppercase;
+    }
+    .result-row span:last-child { letter-spacing: 0.05em; opacity: 0.75; }
+    .result-row.is-goal span:last-child { color: #E03B3B; opacity: 1; }
+    .result-gauge {
+      height: 3px; background: rgba(13, 13, 16, 0.12); margin-top: 18px; overflow: hidden;
+    }
+    .result-gauge-fill {
+      height: 100%; width: 0; background: #0D0D10; transition: width 0.7s ease-out;
+    }
+    .result-gauge-fill.pass { background: #D9B45C; }
+    .result-verdict {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.3em;
+      margin: 16px 0 0 0.3em; line-height: 1.8; font-weight: 700;
+    }
+    .result-verdict.pass { color: #D9B45C; }
+    .result-verdict.fail { color: #E03B3B; }
+
+    /* ---- Text buttons shared by result + map screens ---- */
+    .overlay-btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .overlay-btn-row.hidden { display: none; }
+    .btn-text {
+      background: transparent; border: 1px solid rgba(13, 13, 16, 0.3); color: #0D0D10;
+      font-family: inherit; font-size: 10px; font-weight: 700; letter-spacing: 0.25em;
+      padding: 11px 20px 11px 25px; cursor: pointer; text-transform: uppercase;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .btn-text:hover { background: #0D0D10; color: #EDE8DC; border-color: #0D0D10; }
+    .btn-text.hidden { display: none; }
+
     /* On-Screen Mobile Touch Controls (Immersive UI Glass Styling) */
     #touch-controls {
       position: absolute; inset: 0; pointer-events: none; display: none; z-index: 35;
@@ -247,6 +331,8 @@
           </div>
         </div>
         <div class="hud-center">
+          <div class="stage-title" id="stageTitle"></div>
+          <div class="powerup-pill" id="powerupPill"></div>
         </div>
         <div class="hud-right">
           <div class="score-label">Mon Collected</div>
@@ -288,10 +374,30 @@
       <p class="overlay-subtitle" id="overlaySubtitle">
         Shadow of the Brush
       </p>
-      <div style="display: flex; flex-direction: column; align-items: center;">
+      <!-- Map select: one card per stage, locked until the previous is cleared at par -->
+      <div id="mapSelect" class="hidden">
+        <div class="map-grid" id="mapGrid"></div>
+        <p class="map-foot" id="mapFoot"></p>
+      </div>
+
+      <!-- Stage result: score earned vs the par needed to open the next map -->
+      <div id="resultPanel" class="hidden">
+        <div id="resultRows"></div>
+        <div class="result-gauge"><div class="result-gauge-fill" id="resultGaugeFill"></div></div>
+        <p class="result-verdict" id="resultVerdict"></p>
+      </div>
+
+      <div id="overlayActions" style="display: flex; flex-direction: column; align-items: center;">
         <button class="btn-action" id="startBtn" aria-label="Play">
           <div class="play-triangle"></div>
         </button>
+        <div class="play-caption" id="playCaption">Click to Play</div>
+      </div>
+
+      <div class="overlay-btn-row hidden" id="overlayBtnRow">
+        <button class="btn-text hidden" id="btnRetry">Retry Map</button>
+        <button class="btn-text hidden" id="btnNext">Next Map</button>
+        <button class="btn-text hidden" id="btnMaps">Map Select</button>
       </div>
     </div>
   </div>
@@ -586,7 +692,8 @@
     const DEFAULT_SAVE = {
       v: 1,
       highScore: 0,
-      stagesUnlocked: 1,
+      stagesUnlocked: 1,   // how many maps are playable; map N+1 opens at par on map N
+      stageBest: [],       // best single-run score per map, index-aligned to STAGE_CONFIGS
       coinsTotal: 0,
       muted: false,
       seenControlHint: false
@@ -1181,7 +1288,10 @@
     const STAGE_CONFIGS = [
       {
         id: 1,
+        kanji: '竹',
+        name: "THE BAMBOO PATH",
         title: "STAGE 1: THE BAMBOO PATH",
+        requiredScore: 1200,   // ~62% of the 1950 on offer here
         width: 3800,
         height: 600,
         spawn: { x: 80, y: 440 },
@@ -1243,7 +1353,10 @@
       },
       {
         id: 2,
+        kanji: '霧',
+        name: "THE MIST RAVINE",
         title: "STAGE 2: THE MIST RAVINE",
+        requiredScore: 1300,   // ~70% of the 1850 on offer here
         width: 4400,
         height: 660,
         spawn: { x: 80, y: 450 },
@@ -1300,7 +1413,10 @@
       },
       {
         id: 3,
+        kanji: '城',
+        name: "THE FORTRESS GATES",
         title: "STAGE 3: THE FORTRESS GATES",
+        requiredScore: 1500,   // ~73% of the 2050 on offer here
         width: 4800,
         height: 680,
         spawn: { x: 80, y: 450 },
@@ -1356,6 +1472,88 @@
           { x: 3520, y: 470 }
         ],
         torii: { x: 4550, y: 520 }
+      },
+      {
+        id: 4,
+        kanji: '紅',
+        name: "THE CRIMSON MAPLE",
+        title: "STAGE 4: THE CRIMSON MAPLE",
+        requiredScore: 1800,   // ~72% of the 2500 on offer here
+        width: 5200,
+        height: 720,
+        spawn: { x: 80, y: 450 },
+        // Ground surface sits at y=520 throughout; the pit floor is y=720.
+        // Reach budget: 123px single jump, 185px doubled, 283px running gap.
+        platforms: [
+          // A. Maple gate - warm-up ground and a two-step climb
+          { x: 0, y: 520, w: 620, h: 120 },
+          { x: 300, y: 440, w: 130, h: 24 },
+          { x: 470, y: 370, w: 120, h: 24 },
+          { x: 760, y: 520, w: 340, h: 120 },
+          // B. Crumbling maple bridge over a sawn pit
+          { x: 1160, y: 470, w: 95, h: 20, crumbling: true },
+          { x: 1320, y: 440, w: 95, h: 20, crumbling: true },
+          { x: 1480, y: 410, w: 95, h: 20, crumbling: true },
+          { x: 1640, y: 520, w: 460, h: 120 },
+          // C. Drifting platform gauntlet - one sweeps sideways, one rides up and down
+          { x: 2180, y: 450, w: 120, h: 22, moving: true, moveX: 160, moveSpeed: 1.1 },
+          { x: 2520, y: 380, w: 120, h: 22, moving: true, moveY: 110, moveSpeed: 1.3 },
+          // D. Wall-jump chimney: 155px of clear air between the inner faces
+          { x: 2740, y: 520, w: 380, h: 120 },
+          { x: 2820, y: 180, w: 45, h: 400 },
+          { x: 3020, y: 140, w: 45, h: 440 },
+          { x: 3065, y: 160, w: 320, h: 24 },
+          // E. Rooftop run under archer fire
+          { x: 3450, y: 250, w: 260, h: 24 },
+          { x: 3800, y: 300, w: 90, h: 20, crumbling: true },
+          { x: 3960, y: 340, w: 90, h: 20, crumbling: true },
+          { x: 4120, y: 400, w: 140, h: 24 },
+          // F. Torii plaza
+          { x: 4300, y: 520, w: 900, h: 120 }
+        ],
+        hazards: [
+          { type: 'spike', x: 620, y: 600, w: 140, h: 40 },
+          { type: 'spike', x: 1100, y: 620, w: 540, h: 60 },
+          { type: 'saw', x: 1300, y: 560, startX: 1150, endX: 1600, speed: 150 },
+          { type: 'spike', x: 2100, y: 620, w: 640, h: 60 },
+          { type: 'spike', x: 2865, y: 380, w: 20, h: 50 },   // chimney wall spikes
+          { type: 'spike', x: 3000, y: 280, w: 20, h: 50 },
+          { type: 'spike', x: 3120, y: 660, w: 1180, h: 60 }, // void beneath the rooftops
+          { type: 'saw', x: 4600, y: 470, startX: 4450, endX: 4900, speed: 190 }
+        ],
+        enemies: [
+          { type: 'oni', x: 380, y: 480, minX: 180, maxX: 600 },
+          { type: 'lantern', x: 1340, y: 330, amp: 50, freq: 2.2 },
+          { type: 'archer', x: 3600, y: 200 },
+          { type: 'lantern', x: 3900, y: 200, amp: 45, freq: 2.2 },
+          { type: 'oni', x: 4500, y: 480, minX: 4340, maxX: 4820 },
+          { type: 'archer', x: 4950, y: 470 }
+        ],
+        destructibles: [
+          { x: 3350, y: 90, w: 30, h: 70 },   // gates the leap off the top ledge
+          { x: 4880, y: 450, w: 30, h: 70 }
+        ],
+        coins: [
+          { x: 240, y: 480 }, { x: 340, y: 400 }, { x: 500, y: 330 }, { x: 690, y: 400 },
+          { x: 1200, y: 420 }, { x: 1360, y: 390 }, { x: 1520, y: 360 },
+          { x: 2260, y: 400 }, { x: 2560, y: 300 },
+          // Chimney coin column, climbed by wall-jumping
+          { x: 2942, y: 460 }, { x: 2942, y: 380 }, { x: 2942, y: 300 }, { x: 2942, y: 220 },
+          { x: 3520, y: 200 }, { x: 3840, y: 260 }, { x: 4000, y: 300 },
+          { x: 4600, y: 480 }, { x: 4850, y: 480 }
+        ],
+        koban: { x: 2942, y: 110 },   // crowns the chimney climb
+        powerups: [
+          { type: 'charm', x: 1750, y: 470 },
+          { type: 'edge', x: 3120, y: 110 }
+        ],
+        checkpoints: [
+          { x: 1670, y: 470 },
+          { x: 2780, y: 470 },
+          { x: 3480, y: 200 },
+          { x: 4340, y: 470 }
+        ],
+        torii: { x: 5080, y: 520 }
       }
     ];
 
@@ -1925,6 +2123,7 @@
         // State Flags
         this.isRunning = false;
         this.isPaused = false;
+        this.overlayMode = 'title';
         this.hitStopTimer = 0;
 
         // Timing accumulator
@@ -1991,6 +2190,18 @@
         document.getElementById('pauseBtn').addEventListener('click', () => {
           this.togglePause();
         });
+        document.getElementById('btnRetry').addEventListener('click', () => {
+          audio.init();
+          this.startStage(this.stageIdx);
+        });
+        document.getElementById('btnNext').addEventListener('click', () => {
+          audio.init();
+          this.startStage(Math.min(this.stageIdx + 1, STAGE_CONFIGS.length - 1));
+        });
+        document.getElementById('btnMaps').addEventListener('click', () => {
+          audio.init();
+          this.showMapSelect();
+        });
       }
 
       toggleMute() {
@@ -2005,12 +2216,14 @@
         const overlay = document.getElementById('overlay');
         if (this.isPaused) {
           window.GameEvents.gameplayStop();
-          document.getElementById('overlayKanji').textContent = '憩';
-          document.getElementById('overlayTitle').textContent = 'PAUSED';
-          document.getElementById('overlaySubtitle').textContent = 'The wind pauses in the bamboo grove.';
-          const playCaption = document.getElementById('playCaption');
-          if (playCaption) playCaption.textContent = 'Click to Resume';
-          overlay.classList.remove('hidden');
+          // 'paused' mode hides the map grid and result panel, shows the play button
+          this.setOverlayMode('paused', {
+            kanji: '憩',
+            title: 'PAUSED',
+            subtitle: 'The wind pauses in the bamboo grove.',
+            caption: 'Click to Resume'
+          });
+          this.setOverlayButtons({ maps: true });
         } else {
           window.GameEvents.gameplayStart();
           overlay.classList.add('hidden');
@@ -2025,7 +2238,7 @@
 
         const stageTitleEl = document.getElementById('stageTitle');
         if (stageTitleEl) {
-          stageTitleEl.textContent = `PHASE 0${idx + 1}: ${data.title.toUpperCase()}`;
+          stageTitleEl.textContent = `MAP 0${idx + 1} — ${data.name}`;
         }
 
         // Clone runtime platforms
@@ -2073,15 +2286,122 @@
         camera.y = this.player.y;
       }
 
-      startOrResume() {
+      // ===================================================================
+      // OVERLAY SCREENS: TITLE -> MAP SELECT -> PLAY -> RESULT
+      // ===================================================================
+      setOverlayMode(mode, { kanji, title, subtitle, caption } = {}) {
+        const el = (id) => document.getElementById(id);
+        if (kanji !== undefined) el('overlayKanji').textContent = kanji;
+        if (title !== undefined) el('overlayTitle').textContent = title;
+        if (subtitle !== undefined) el('overlaySubtitle').textContent = subtitle;
+        if (caption !== undefined) el('playCaption').textContent = caption;
+
+        // The round play button belongs to the splash and the pause screen only
+        const showPlay = (mode === 'title' || mode === 'paused');
+        el('overlayActions').classList.toggle('hidden', !showPlay);
+        el('mapSelect').classList.toggle('hidden', mode !== 'maps');
+        el('resultPanel').classList.toggle('hidden', mode !== 'result');
+        el('overlayTitle').classList.toggle('compact', mode === 'maps' || mode === 'result');
+
+        el('overlay').classList.remove('hidden');
+        this.overlayMode = mode;
+      }
+
+      setOverlayButtons({ retry = false, next = false, maps = false } = {}) {
+        const pairs = { btnRetry: retry, btnNext: next, btnMaps: maps };
+        for (const id in pairs) {
+          document.getElementById(id).classList.toggle('hidden', !pairs[id]);
+        }
+        document.getElementById('overlayBtnRow')
+          .classList.toggle('hidden', !(retry || next || maps));
+      }
+
+      renderMapSelect() {
+        const unlocked = Save.get('stagesUnlocked') || 1;
+        const best = Save.get('stageBest') || [];
+        const grid = document.getElementById('mapGrid');
+        grid.innerHTML = '';
+
+        STAGE_CONFIGS.forEach((st, i) => {
+          const isOpen = i < unlocked;
+          const b = best[i] || 0;
+          const cleared = b >= st.requiredScore;
+
+          const card = document.createElement('button');
+          card.className = 'map-card' + (isOpen ? '' : ' locked') + (cleared ? ' cleared' : '');
+          card.disabled = !isOpen;
+
+          const meta = isOpen
+            ? `Best ${b.toLocaleString()} &middot; Par ${st.requiredScore.toLocaleString()}`
+            : `Needs ${STAGE_CONFIGS[i - 1].requiredScore.toLocaleString()} on map 0${i}`;
+
+          card.innerHTML =
+            (cleared ? '<span class="map-card-seal">&#10022;</span>' : '') +
+            `<span class="map-card-kanji">${isOpen ? st.kanji : '錠'}</span>` +
+            `<span class="map-card-no">Map 0${i + 1}</span>` +
+            `<span class="map-card-name">${isOpen ? st.name : 'SEALED'}</span>` +
+            `<span class="map-card-meta">${meta}</span>`;
+
+          if (isOpen) {
+            card.addEventListener('click', () => { audio.init(); this.startStage(i); });
+          }
+          grid.appendChild(card);
+        });
+
+        const nextLocked = STAGE_CONFIGS[unlocked];
+        document.getElementById('mapFoot').textContent = nextLocked
+          ? `Score ${STAGE_CONFIGS[unlocked - 1].requiredScore.toLocaleString()} on map 0${unlocked} to unseal ${nextLocked.name}`
+          : 'Every path lies open';
+      }
+
+      showMapSelect() {
+        this.isRunning = false;
+        this.isPaused = false;
+        // Pausing ducks the mix; leaving a paused run this way must undo that
+        audio.setMuted(false);
+        window.GameEvents.gameplayStop();
+        this.renderMapSelect();
+        this.setOverlayMode('maps', {
+          kanji: '道',
+          title: 'CHOOSE A PATH',
+          subtitle: 'Each map seals the next until its par is met'
+        });
+        this.setOverlayButtons({});
+      }
+
+      // Fresh attempt at a map: score restarts, so par is always per-map
+      startStage(idx) {
+        this.stageIdx = idx;
+        this.score = 0;
+        this.combo = 1.0;
+        this.comboTimer = 0;
+        this.activeCheckpoint = null;
+        this.loadStage(idx);
+        this.player.health = CONFIG.MAX_HEALTH;
+        this.updateHUD();
+
         document.getElementById('overlay').classList.add('hidden');
         this.isRunning = true;
         this.isPaused = false;
+        audio.setMuted(false);
         window.GameEvents.gameplayStart();
         this.lastTime = performance.now();
         if (!Save.get('seenControlHint')) {
           Save.write({ seenControlHint: true });
         }
+      }
+
+      startOrResume() {
+        // Splash button doubles as the pause resume
+        if (this.isPaused) {
+          document.getElementById('overlay').classList.add('hidden');
+          this.isPaused = false;
+          this.isRunning = true;
+          window.GameEvents.gameplayStart();
+          this.lastTime = performance.now();
+          return;
+        }
+        this.showMapSelect();
       }
 
       addScore(pts) {
@@ -2141,40 +2461,76 @@
         audio.playStageClear();
         camera.shake(5, 0.4);
         particles.burstInk(this.stage.torii.x, this.stage.torii.y, 40, CONFIG.GOLD);
+        window.GameEvents.gameplayStop();
+        this.isRunning = false;
 
-        // Meaningful save moment: Stage cleared & coins collected & new high score
-        const nextUnlocked = Math.max(Save.get('stagesUnlocked') || 1, this.stageIdx + 2);
-        const currentCoins = (Save.get('coinsTotal') || 0) + this.runCoins;
-        this.runCoins = 0;
-        const bestScore = Math.max(Save.get('highScore') || 0, this.highScore);
+        const idx = this.stageIdx;
+        const par = STAGE_CONFIGS[idx].requiredScore;
+        const earned = this.score;
+        const passed = earned >= par;
+        const isLast = idx >= STAGE_CONFIGS.length - 1;
+
+        // Reaching the torii is not enough on its own: the next map only opens
+        // when this run also met par, so a sloppy clear has to be replayed.
+        const wasUnlocked = Save.get('stagesUnlocked') || 1;
+        const nextUnlocked = (passed && !isLast)
+          ? Math.max(wasUnlocked, idx + 2)
+          : wasUnlocked;
+
+        const best = (Save.get('stageBest') || []).slice();
+        best[idx] = Math.max(best[idx] || 0, earned);
+
         Save.write({
+          stageBest: best,
           stagesUnlocked: nextUnlocked,
-          coinsTotal: currentCoins,
-          highScore: bestScore,
+          coinsTotal: (Save.get('coinsTotal') || 0) + this.runCoins,
+          highScore: Math.max(Save.get('highScore') || 0, this.highScore),
           seenControlHint: true
         });
+        this.runCoins = 0;
 
-        if (this.stageIdx < STAGE_CONFIGS.length - 1) {
-          setTimeout(() => {
-            this.activeCheckpoint = null;
-            this.loadStage(this.stageIdx + 1);
-            this.updateHUD();
-          }, 800);
+        setTimeout(() => {
+          this.showResult(idx, earned, par, passed, isLast, nextUnlocked > wasUnlocked);
+        }, 700);
+      }
+
+      showResult(idx, earned, par, passed, isLast, justUnlocked) {
+        const stage = STAGE_CONFIGS[idx];
+        const best = (Save.get('stageBest') || [])[idx] || 0;
+
+        document.getElementById('resultRows').innerHTML =
+          `<div class="result-row"><span>This run</span><span>${earned.toLocaleString()}</span></div>` +
+          `<div class="result-row is-goal"><span>Par</span><span>${par.toLocaleString()}</span></div>` +
+          `<div class="result-row"><span>Best here</span><span>${best.toLocaleString()}</span></div>`;
+
+        // Animate the gauge from zero so the shortfall is legible at a glance
+        const fill = document.getElementById('resultGaugeFill');
+        fill.classList.toggle('pass', passed);
+        fill.style.width = '0%';
+        requestAnimationFrame(() => {
+          fill.style.width = Math.min(100, Math.round(earned / par * 100)) + '%';
+        });
+
+        const verdict = document.getElementById('resultVerdict');
+        verdict.classList.toggle('pass', passed);
+        verdict.classList.toggle('fail', !passed);
+        if (isLast && passed) {
+          verdict.textContent = 'Every map cleared at par. You mastered the ink path.';
+        } else if (justUnlocked) {
+          verdict.textContent = `${STAGE_CONFIGS[idx + 1].name} is now open`;
+        } else if (passed) {
+          verdict.textContent = 'Par met. The road ahead was already open.';
         } else {
-          // Game Victory Overlay: Run ended!
-          window.GameEvents.gameplayStop();
-          this.isRunning = false;
-          const overlay = document.getElementById('overlay');
-          document.getElementById('overlayKanji').textContent = '極';
-          document.getElementById('overlayTitle').textContent = 'SUMI MASTERED';
-          document.getElementById('overlaySubtitle').textContent =
-            `You mastered the ink path with a final score of ${this.score.toLocaleString()}!`;
-          const playCaption = document.getElementById('playCaption');
-          if (playCaption) playCaption.textContent = 'Click to Run Again';
-          overlay.classList.remove('hidden');
-          this.stageIdx = 0;
-          this.activeCheckpoint = null;
+          verdict.textContent =
+            `${(par - earned).toLocaleString()} points short. The next map stays sealed.`;
         }
+
+        this.setOverlayMode('result', {
+          kanji: passed ? '極' : '未',
+          title: passed ? 'CLEARED' : 'FELL SHORT',
+          subtitle: stage.name
+        });
+        this.setOverlayButtons({ retry: true, next: passed && !isLast, maps: true });
       }
 
       // ===================================================================
