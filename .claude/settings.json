@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c ' *)",
+      "Bash(awk -F: '$1>3400')",
+      "Bash(grep -n \"id: [0-9]*,$\\\\|torii: {\\\\|// MAP\" index.html)",
+      "Bash(grep -n \"id: [0-9]*,$\\\\|torii: {\\\\|// MAP\\\\|width: [0-9]*,\\\\|height: [0-9]*,\" index.html)",
+      "Bash(nohup python3 -m http.server 8878 --bind 127.0.0.1)",
+      "Bash(curl -s -o /dev/null -w \"server:%{http_code}\\\\n\" http://127.0.0.1:8878/preview.html)",
+      "Bash(curl -s -o /dev/null -w \"asset:%{http_code}\\\\n\" http://127.0.0.1:8878/assets/boss/mech.png)",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --virtual-time-budget=9000 --window-size=900,520 --screenshot=../shot_boss4.png 'http://127.0.0.1:8878/preview.html?stage=3&cam=4450&camy=420')",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --virtual-time-budget=11000 --window-size=900,520 --screenshot=/private/tmp/claude-501/-Users-o-Documents-my-games-sumi-samurai-game/e847978b-3ed4-4876-a89b-0d3264a2a6a1/scratchpad/play_boss.png 'http://127.0.0.1:8878/preview.html?stage=3&px=4180&py=460')",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --virtual-time-budget=11000 --window-size=900,520 --dump-dom 'http://127.0.0.1:8878/preview.html?stage=3&px=4180&py=460')",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --virtual-time-budget=12000 --window-size=900,520 --dump-dom 'http://127.0.0.1:8878/preview.html?stage=3&px=4180&py=460&dbg=1')",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --virtual-time-budget=14000 --window-size=900,560 --screenshot=/private/tmp/claude-501/-Users-o-Documents-my-games-sumi-samurai-game/e847978b-3ed4-4876-a89b-0d3264a2a6a1/scratchpad/dbg1.png 'http://127.0.0.1:8878/preview.html?stage=3&px=4180&py=460&dbg=1')",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --virtual-time-budget=90000 --window-size=900,560 --screenshot=/private/tmp/claude-501/-Users-o-Documents-my-games-sumi-samurai-game/e847978b-3ed4-4876-a89b-0d3264a2a6a1/scratchpad/dbg2.png 'http://127.0.0.1:8878/preview.html?stage=3&px=4180&py=460&dbg=1')",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --virtual-time-budget=9000 --window-size=900,520 --screenshot=/private/tmp/claude-501/-Users-o-Documents-my-games-sumi-samurai-game/e847978b-3ed4-4876-a89b-0d3264a2a6a1/scratchpad/m7.png 'http://127.0.0.1:8878/preview.html?stage=6&cam=4280&camy=520')",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --virtual-time-budget=9000 --window-size=900,520 --screenshot=/private/tmp/claude-501/-Users-o-Documents-my-games-sumi-samurai-game/e847978b-3ed4-4876-a89b-0d3264a2a6a1/scratchpad/m10.png 'http://127.0.0.1:8878/preview.html?stage=9&cam=5680&camy=520')",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --virtual-time-budget=12000 --window-size=900,520 --screenshot=/private/tmp/claude-501/-Users-o-Documents-my-games-sumi-samurai-game/e847978b-3ed4-4876-a89b-0d3264a2a6a1/scratchpad/face_left.png 'http://127.0.0.1:8878/preview.html?stage=3&px=4200&py=460&sim=0.6&stand=1')",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --virtual-time-budget=12000 --window-size=900,520 --screenshot=/private/tmp/claude-501/-Users-o-Documents-my-games-sumi-samurai-game/e847978b-3ed4-4876-a89b-0d3264a2a6a1/scratchpad/face_right.png 'http://127.0.0.1:8878/preview.html?stage=3&px=4700&py=460&sim=0.6&stand=1')",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --virtual-time-budget=16000 --window-size=900,560 --screenshot=/private/tmp/claude-501/-Users-o-Documents-my-games-sumi-samurai-game/e847978b-3ed4-4876-a89b-0d3264a2a6a1/scratchpad/endl.png 'http://127.0.0.1:8878/preview.html?endless=1&px=4700&py=400&sim=6&god=1')",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --virtual-time-budget=9000 --window-size=900,520 --screenshot=/private/tmp/claude-501/-Users-o-Documents-my-games-sumi-samurai-game/e847978b-3ed4-4876-a89b-0d3264a2a6a1/scratchpad/night10b.png 'http://127.0.0.1:8878/preview.html?stage=9&cam=5560&camy=500')",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --virtual-time-budget=9000 --window-size=900,520 --screenshot=/private/tmp/claude-501/-Users-o-Documents-my-games-sumi-samurai-game/e847978b-3ed4-4876-a89b-0d3264a2a6a1/scratchpad/night9.png 'http://127.0.0.1:8878/preview.html?stage=8&cam=1200&camy=430')",
+      "Bash(npm run *)",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --virtual-time-budget=20000 --window-size=900,560 --screenshot=/private/tmp/claude-501/-Users-o-Documents-my-games-sumi-samurai-game/e847978b-3ed4-4876-a89b-0d3264a2a6a1/scratchpad/a4.png 'http://127.0.0.1:8878/fixed.html?stage=6&px=3990&py=560&sim=4&god=1&stand=1&noslash=1')"
+    ]
+  }
+}

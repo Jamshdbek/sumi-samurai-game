@@ -1,6 +1,6 @@
 {
   "name": "Sumi",
-  "description": "A 2D sumi-e ink wash precision platformer featuring a lone samurai running, wall-jumping, air-dashing, and slashing through handcrafted stages.",
+  "description": "A 2D pixel art precision platformer: a lone samurai runs, wall-jumps, air-dashes and slashes through ten handcrafted maps and an endless road.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

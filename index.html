@@ -3,25 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Sumi - Ink Wash Samurai Platformer</title>
-  <meta name="description" content="A 2D sumi-e ink wash precision platformer featuring a lone samurai running, wall-jumping, air-dashing, and slashing through handcrafted stages." />
+  <title>Sumi - Pixel Art Samurai Platformer</title>
+  <meta name="description" content="A 2D pixel art precision platformer: a lone samurai runs, wall-jumps, air-dashes and slashes through ten handcrafted maps and an endless road." />
   <meta property="og:title" content="Sumi" />
-  <meta property="og:description" content="A 2D sumi-e ink wash precision platformer featuring a lone samurai running, wall-jumping, air-dashing, and slashing through handcrafted stages." />
+  <meta property="og:description" content="A 2D pixel art precision platformer: a lone samurai runs, wall-jumps, air-dashes and slashes through ten handcrafted maps and an endless road." />
   <meta property="og:type" content="website" />
   <script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     html, body {
-      width: 100%; height: 100%; overflow: hidden; background-color: #EDE8DC;
+      width: 100%; height: 100%; overflow: hidden; background-color: #15141F;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif, sans-serif;
-      color: #0D0D10; user-select: none; -webkit-user-select: none;
+      color: #E9E5D6; user-select: none; -webkit-user-select: none;
       /* Not `none`: an ancestor of `none` would also block the overlay from
          scrolling on touch. Gameplay surfaces opt into `none` individually. */
       touch-action: manipulation; overscroll-behavior: none;
     }
     #game-container {
       position: relative; width: 100vw; height: 100vh; overflow: hidden;
-      display: flex; align-items: center; justify-content: center; background: #EDE8DC;
+      display: flex; align-items: center; justify-content: center; background: #15141F;
     }
     canvas#gameCanvas {
       display: block; width: 100%; height: 100%; image-rendering: auto;
@@ -52,19 +52,19 @@
       display: flex; align-items: center; gap: 8px;
     }
     .hp-dot, .ink-dot {
-      width: 12px; height: 12px; background: #E03B3B; border-radius: 20%;
-      filter: blur(0.5px); box-shadow: 0 0 6px rgba(224, 59, 59, 0.45);
+      width: 12px; height: 12px; background: #E0453B; border-radius: 20%;
+      filter: blur(0.5px); box-shadow: 0 0 8px rgba(224, 69, 59, 0.6);
       transition: transform 0.25s ease, opacity 0.25s ease, background 0.25s ease;
     }
     .hp-dot.lost, .ink-dot.lost {
-      background: #8A8A96; opacity: 0.2; transform: scale(0.75); filter: none; box-shadow: none;
+      background: #8E8CA8; opacity: 0.25; transform: scale(0.75); filter: none; box-shadow: none;
     }
     .life-essence-label {
       margin-left: 12px; font-size: 10px; text-transform: uppercase;
       letter-spacing: 0.3em; font-weight: 700; opacity: 0.6;
     }
     .combo-badge {
-      font-size: 34px; font-weight: 300; letter-spacing: -0.04em; color: #0D0D10;
+      font-size: 34px; font-weight: 300; letter-spacing: -0.04em; color: #F2C14E;
       line-height: 1; opacity: 0; transition: opacity 0.25s, transform 0.25s;
       transform: scale(0.95); margin-top: 4px;
     }
@@ -84,13 +84,39 @@
     }
     .stage-title {
       font-size: 11px; text-transform: uppercase; letter-spacing: 0.25em;
-      opacity: 0.35; font-weight: 700; color: #0D0D10;
+      opacity: 0.6; font-weight: 700; color: #E9E5D6;
     }
     .powerup-pill {
-      margin-top: 6px; font-size: 11px; font-weight: 700; color: #E03B3B;
-      border: 1px solid rgba(224, 59, 59, 0.5); padding: 3px 12px; border-radius: 100px;
-      display: none; background: rgba(224, 59, 59, 0.08); letter-spacing: 0.15em;
+      margin-top: 6px; font-size: 11px; font-weight: 700; color: #FF8A7A;
+      border: 1px solid rgba(224, 69, 59, 0.6); padding: 3px 12px; border-radius: 100px;
+      display: none; background: rgba(224, 69, 59, 0.18); letter-spacing: 0.15em;
       text-transform: uppercase;
+    }
+
+    /* ---- Boss health bar ----
+       Sits under the map title, so the thing the player has to read (how much
+       is left) is on the same axis as the thing he is looking at (the boss). */
+    .boss-bar {
+      margin: 8px auto 0; width: min(400px, 56vw);
+      opacity: 0; transform: translateY(-6px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .boss-bar.active { opacity: 1; transform: none; }
+    .boss-bar-name {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.3em;
+      font-weight: 700; color: #FF8A7A; margin-bottom: 5px;
+    }
+    .boss-bar-name .boss-kanji {
+      font-size: 14px; letter-spacing: 0; margin-right: 8px; opacity: 0.9;
+    }
+    .boss-bar-track {
+      height: 7px; background: rgba(21, 20, 31, 0.75); border-radius: 100px;
+      border: 1px solid rgba(224, 69, 59, 0.5); overflow: hidden;
+    }
+    .boss-bar-fill {
+      height: 100%; width: 100%;
+      background: linear-gradient(90deg, #E0453B, #F2C14E);
+      transition: width 0.22s ease;
     }
 
     .hud-right {
@@ -102,11 +128,11 @@
     }
     .score-display {
       font-size: 46px; font-weight: 300; letter-spacing: -0.03em;
-      color: #0D0D10; line-height: 1;
+      color: #F4F0E2; line-height: 1;
     }
     .high-score {
       margin-top: 4px; font-size: 10px; text-transform: uppercase;
-      letter-spacing: 0.2em; color: #D9B45C; font-weight: 700;
+      letter-spacing: 0.2em; color: #F2C14E; font-weight: 700;
     }
 
     /* Bottom HUD bar */
@@ -125,20 +151,20 @@
       pointer-events: auto; display: flex; gap: 10px; align-items: center;
     }
     .icon-btn {
-      background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(13, 13, 16, 0.2);
-      color: #0D0D10; width: 38px; height: 38px; border-radius: 50%;
+      background: rgba(20, 19, 32, 0.55); backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(233, 229, 214, 0.28);
+      color: #E9E5D6; width: 38px; height: 38px; border-radius: 50%;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       font-size: 14px; font-weight: 600; outline: none; transition: all 0.2s ease;
     }
     @media (hover: hover) and (pointer: fine) {
-      .icon-btn:hover { background: #0D0D10; color: #EDE8DC; border-color: #0D0D10; }
+      .icon-btn:hover { background: #E9E5D6; color: #15141F; border-color: #E9E5D6; }
     }
     .icon-btn:active { transform: scale(0.94); }
     
     /* Immersive UI Overlay Screen */
     #overlay {
-      position: absolute; inset: 0; background: rgba(237, 232, 220, 0.88);
+      position: absolute; inset: 0; background: rgba(21, 20, 31, 0.9);
       backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
       display: flex; flex-direction: column; align-items: center;
       padding: 32px 24px; text-align: center; z-index: 50; transition: opacity 0.3s ease;
@@ -151,12 +177,12 @@
     #overlay::after { content: ''; margin-top: auto; }
     #overlay.hidden { display: none; }
     .overlay-kanji {
-      font-size: 40px; font-weight: 900; color: #0D0D10; line-height: 1;
+      font-size: 40px; font-weight: 900; color: #B7D94A; line-height: 1;
       margin-bottom: 6px; letter-spacing: 0.2em; opacity: 0.75;
     }
     .overlay-title {
       font-size: clamp(60px, 12vw, 130px); font-weight: 300; line-height: 1;
-      letter-spacing: 0.2em; margin-left: 0.2em; color: #0D0D10; margin-bottom: 6px;
+      letter-spacing: 0.2em; margin-left: 0.2em; color: #F4F0E2; margin-bottom: 6px;
     }
     .overlay-subtitle {
       font-size: 11px; text-transform: uppercase; letter-spacing: 0.9em;
@@ -165,17 +191,17 @@
 
     /* Circular Ink Ring Play Button */
     .btn-action {
-      width: 76px; height: 76px; border: 1px solid #0D0D10; border-radius: 50%;
+      width: 76px; height: 76px; border: 1px solid #B7D94A; border-radius: 50%;
       display: flex; align-items: center; justify-content: center; cursor: pointer;
-      background: transparent; color: #0D0D10; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      background: transparent; color: #B7D94A; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       outline: none; margin: 0 auto;
     }
     @media (hover: hover) and (pointer: fine) {
       .btn-action:hover {
-        background: #0D0D10; color: #EDE8DC; transform: scale(1.05);
+        background: #B7D94A; color: #15141F; transform: scale(1.05);
       }
     }
-    .btn-action:active { background: #0D0D10; color: #EDE8DC; transform: scale(0.96); }
+    .btn-action:active { background: #B7D94A; color: #15141F; transform: scale(0.96); }
     .play-triangle {
       width: 0; height: 0; border-top: 9px solid transparent;
       border-left: 16px solid currentColor; border-bottom: 9px solid transparent;
@@ -188,13 +214,13 @@
 
     .controls-hint {
       margin-top: 32px; font-size: 11px; text-transform: uppercase;
-      letter-spacing: 0.2em; color: #4A4A55; line-height: 2;
-      border-top: 1px solid rgba(42, 42, 48, 0.12); padding-top: 18px; max-width: 460px;
+      letter-spacing: 0.2em; color: #A9A5B8; line-height: 2;
+      border-top: 1px solid rgba(233, 229, 214, 0.15); padding-top: 18px; max-width: 460px;
     }
     .controls-hint kbd {
-      background: rgba(13, 13, 16, 0.05); border: 1px solid rgba(13, 13, 16, 0.15);
+      background: rgba(233, 229, 214, 0.08); border: 1px solid rgba(233, 229, 214, 0.25);
       border-radius: 3px; padding: 2px 6px; font-size: 10px; font-family: inherit;
-      font-weight: 700; color: #0D0D10;
+      font-weight: 700; color: #E9E5D6;
     }
 
     /* Map / result screens need a heading, not the 130px splash wordmark */
@@ -208,40 +234,43 @@
        onto the map and result screens */
     #overlayActions { display: flex; flex-direction: column; align-items: center; }
     #mapSelect.hidden, #resultPanel.hidden, #overlayActions.hidden,
-    #overlayBtnRow.hidden { display: none; }
+    #overlayBtnRow.hidden, #boardPanel.hidden { display: none; }
 
     .map-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 14px; max-width: 680px; margin: 0 auto 22px;
+      display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px; max-width: 760px; margin: 0 auto 10px;
+      /* #overlay is a centred flex column, so an auto-width grid resolves its
+         1fr tracks to max-content and runs off the side of a phone. */
+      width: 100%;
     }
     .map-card {
       position: relative; display: flex; flex-direction: column; align-items: center;
-      gap: 5px; padding: 20px 14px 16px; cursor: pointer; text-align: center;
-      background: rgba(255, 255, 255, 0.35); color: #0D0D10; font-family: inherit;
-      border: 1px solid rgba(13, 13, 16, 0.18);
+      gap: 4px; padding: 14px 8px 12px; cursor: pointer; text-align: center;
+      background: rgba(43, 42, 61, 0.55); color: #E9E5D6; font-family: inherit;
+      border: 1px solid rgba(233, 229, 214, 0.18);
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
     /* Guarded: on touch, :hover sticks to the last-tapped card after the tap */
     @media (hover: hover) and (pointer: fine) {
       .map-card:hover:not(.locked) {
-        background: #0D0D10; color: #EDE8DC; transform: translateY(-3px);
-        border-color: #0D0D10;
+        background: #B7D94A; color: #15141F; transform: translateY(-3px);
+        border-color: #B7D94A;
       }
     }
     .map-card:active:not(.locked), .map-card.pressed:not(.locked) {
-      background: #0D0D10; color: #EDE8DC; border-color: #0D0D10;
+      background: #B7D94A; color: #15141F; border-color: #B7D94A;
       transform: translateY(-1px);
     }
     .map-card.locked { cursor: not-allowed; opacity: 0.45; background: transparent; }
-    .map-card.cleared { border-color: rgba(217, 180, 92, 0.8); }
+    .map-card.cleared { border-color: rgba(242, 193, 78, 0.85); }
 
-    .map-card-kanji { font-size: 30px; font-weight: 900; line-height: 1; opacity: 0.8; }
+    .map-card-kanji { font-size: 25px; font-weight: 900; line-height: 1; opacity: 0.8; }
     .map-card-no {
       font-size: 9px; letter-spacing: 0.35em; margin-left: 0.35em;
       font-weight: 700; opacity: 0.45;
     }
     .map-card-name {
-      font-size: 12px; letter-spacing: 0.12em; font-weight: 700; line-height: 1.4;
+      font-size: 11px; letter-spacing: 0.06em; font-weight: 700; line-height: 1.3;
     }
     .map-card-meta {
       font-size: 9px; letter-spacing: 0.14em; opacity: 0.55; line-height: 1.7;
@@ -249,49 +278,92 @@
     }
     /* Gold seal marking a map already cleared at par */
     .map-card-seal {
-      position: absolute; top: 7px; right: 8px; font-size: 11px; color: #D9B45C;
+      position: absolute; top: 7px; right: 8px; font-size: 11px; color: #F2C14E;
     }
     .map-foot {
       font-size: 10px; text-transform: uppercase; letter-spacing: 0.3em;
       opacity: 0.45; margin-left: 0.3em; line-height: 1.8; max-width: 520px;
     }
 
+    /* ---- Endless + board entries in the map grid ---- */
+    .map-extra {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px; max-width: 760px; margin: 0 auto 18px; width: 100%;
+    }
+    .map-card.wide { border-color: rgba(183, 217, 74, 0.5); }
+    .map-card.wide.locked { border-color: rgba(233, 229, 214, 0.15); }
+
+    /* ---- Run Board ---- */
+    #boardPanel { max-width: 460px; width: 100%; margin-bottom: 24px; }
+    .board-row {
+      display: grid; grid-template-columns: 26px 1fr 76px 84px;
+      gap: 8px; align-items: baseline; font-size: 11px; letter-spacing: 0.12em;
+      font-weight: 700; padding: 7px 2px; text-transform: uppercase;
+      border-bottom: 1px solid rgba(233, 229, 214, 0.12); text-align: left;
+    }
+    .board-row span:nth-child(3), .board-row span:nth-child(4) { text-align: right; }
+    .board-head { opacity: 0.4; font-size: 9px; letter-spacing: 0.25em; }
+    .board-row .rank { color: #8E8CA8; }
+    .board-row.you { color: #F2C14E; }
+    .board-row.you .rank { color: #F2C14E; }
+    .board-row.top .rank { color: #B7D94A; }
+    .board-empty {
+      font-size: 10px; letter-spacing: 0.3em; opacity: 0.45; padding: 20px 0;
+      text-transform: uppercase;
+    }
+    .board-empty.hidden { display: none; }
+    .name-row {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      margin-top: 18px;
+    }
+    .name-label {
+      font-size: 9px; letter-spacing: 0.3em; opacity: 0.45; font-weight: 700;
+      text-transform: uppercase;
+    }
+    .name-input {
+      background: transparent; border: none; border-bottom: 1px solid rgba(233, 229, 214, 0.3);
+      color: #E9E5D6; font-family: inherit; font-size: 13px; font-weight: 700;
+      letter-spacing: 0.2em; text-transform: uppercase; text-align: center;
+      padding: 5px 6px; width: 140px; outline: none;
+    }
+    .name-input:focus { border-bottom-color: #B7D94A; }
+
     /* ---- Stage Result ---- */
     #resultPanel { max-width: 420px; width: 100%; margin-bottom: 26px; }
     .result-row {
       display: flex; justify-content: space-between; align-items: baseline;
       font-size: 11px; letter-spacing: 0.2em; font-weight: 700; padding: 7px 0;
-      border-bottom: 1px solid rgba(13, 13, 16, 0.1); text-transform: uppercase;
+      border-bottom: 1px solid rgba(233, 229, 214, 0.12); text-transform: uppercase;
     }
     .result-row span:last-child { letter-spacing: 0.05em; opacity: 0.75; }
-    .result-row.is-goal span:last-child { color: #E03B3B; opacity: 1; }
+    .result-row.is-goal span:last-child { color: #F2C14E; opacity: 1; }
     .result-gauge {
-      height: 3px; background: rgba(13, 13, 16, 0.12); margin-top: 18px; overflow: hidden;
+      height: 3px; background: rgba(233, 229, 214, 0.15); margin-top: 18px; overflow: hidden;
     }
     .result-gauge-fill {
-      height: 100%; width: 0; background: #0D0D10; transition: width 0.7s ease-out;
+      height: 100%; width: 0; background: #8E8CA8; transition: width 0.7s ease-out;
     }
-    .result-gauge-fill.pass { background: #D9B45C; }
+    .result-gauge-fill.pass { background: #B7D94A; }
     .result-verdict {
       font-size: 11px; text-transform: uppercase; letter-spacing: 0.3em;
       margin: 16px 0 0 0.3em; line-height: 1.8; font-weight: 700;
     }
-    .result-verdict.pass { color: #D9B45C; }
-    .result-verdict.fail { color: #E03B3B; }
+    .result-verdict.pass { color: #B7D94A; }
+    .result-verdict.fail { color: #E0453B; }
 
     /* ---- Text buttons shared by result + map screens ---- */
     .overlay-btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
     .overlay-btn-row.hidden { display: none; }
     .btn-text {
-      background: transparent; border: 1px solid rgba(13, 13, 16, 0.3); color: #0D0D10;
+      background: transparent; border: 1px solid rgba(233, 229, 214, 0.35); color: #E9E5D6;
       font-family: inherit; font-size: 10px; font-weight: 700; letter-spacing: 0.25em;
       padding: 11px 20px 11px 25px; cursor: pointer; text-transform: uppercase;
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
     @media (hover: hover) and (pointer: fine) {
-      .btn-text:hover { background: #0D0D10; color: #EDE8DC; border-color: #0D0D10; }
+      .btn-text:hover { background: #B7D94A; color: #15141F; border-color: #B7D94A; }
     }
-    .btn-text:active { background: #0D0D10; color: #EDE8DC; border-color: #0D0D10; }
+    .btn-text:active { background: #B7D94A; color: #15141F; border-color: #B7D94A; }
     .btn-text.hidden { display: none; }
 
     /* On-Screen Mobile Touch Controls (Immersive UI Glass Styling) */
@@ -306,35 +378,35 @@
     }
     .touch-btn-dir {
       width: 100px; height: 80px; border-radius: 30%;
-      background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(13, 13, 16, 0.25);
+      background: rgba(20, 19, 32, 0.5); backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(233, 229, 214, 0.3);
       display: flex; align-items: center; justify-content: center;
-      font-size: 22px; font-weight: 300; color: #0D0D10; user-select: none;
+      font-size: 22px; font-weight: 300; color: #E9E5D6; user-select: none;
       transition: background 0.15s;
       padding:20px;
     }
-    .touch-btn-dir.pressed { background: #0D0D10; color: #EDE8DC; }
+    .touch-btn-dir.pressed { background: #B7D94A; color: #15141F; }
     .touch-actions {
       position: absolute; bottom: 28px; right: 24px;
       pointer-events: auto; display: flex; gap: 14px; align-items: flex-end;
     }
     .touch-action-btn {
       width: 70px; height: 70px; border-radius: 50%;
-      background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(13, 13, 16, 0.25);
+      background: rgba(20, 19, 32, 0.5); backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(233, 229, 214, 0.3);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      color: #0D0D10; font-weight: 700; font-size: 14px; letter-spacing: 0.1em;
+      color: #E9E5D6; font-weight: 700; font-size: 14px; letter-spacing: 0.1em;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05); user-select: none; transition: background 0.15s;
     }
     .touch-action-btn.dash-btn { width: 50px; height: 50px; margin-bottom: 5px; font-size: 11px; }
-    .touch-action-btn.slash-btn { border-color: rgba(224, 59, 59, 0.6); color: #E03B3B; }
-    .touch-action-btn.pressed { background: #0D0D10; color: #EDE8DC; }
-    .touch-action-btn.slash-btn.pressed { background: #E03B3B; color: #EDE8DC; }
+    .touch-action-btn.slash-btn { border-color: rgba(224, 69, 59, 0.7); color: #FF8A7A; }
+    .touch-action-btn.pressed { background: #B7D94A; color: #15141F; }
+    .touch-action-btn.slash-btn.pressed { background: #E0453B; color: #F4F0E2; }
 
     /* Damage Crimson Flash */
     #damage-flash {
       position: absolute; inset: 0; pointer-events: none; z-index: 40;
-      background: radial-gradient(circle at center, transparent 40%, rgba(224, 59, 59, 0.45) 100%);
+      background: radial-gradient(circle at center, transparent 38%, rgba(224, 69, 59, 0.55) 100%);
       opacity: 0; transition: opacity 0.1s ease-out;
     }
 
@@ -368,8 +440,8 @@
       }
 
       .map-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px; max-width: 420px; margin-bottom: 16px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px; max-width: 420px; margin-bottom: 10px;
       }
       .map-card { padding: 14px 8px 12px; gap: 4px; min-height: 108px; justify-content: center; }
       .map-card-kanji { font-size: 26px; }
@@ -378,7 +450,9 @@
       .map-card-meta { font-size: 8px; letter-spacing: 0.06em; line-height: 1.5; }
       .map-foot { font-size: 9px; letter-spacing: 0.18em; margin-left: 0.18em; }
 
-      #resultPanel { margin-bottom: 20px; }
+      #resultPanel, #boardPanel { margin-bottom: 20px; }
+      .map-extra { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-width: 420px; margin-bottom: 16px; }
+      .board-row { grid-template-columns: 22px 1fr 62px 70px; font-size: 10px; letter-spacing: 0.06em; }
       .overlay-btn-row { gap: 8px; }
       .btn-text { padding: 12px 14px 12px 18px; letter-spacing: 0.16em; font-size: 10px; }
     }
@@ -407,8 +481,8 @@
       }
 
       .map-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 8px; max-width: 620px; margin-bottom: 10px;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 7px; max-width: 700px; margin-bottom: 8px;
       }
       .map-card { padding: 10px 6px 9px; gap: 2px; min-height: 0; }
       .map-card-kanji { font-size: 22px; }
@@ -421,7 +495,10 @@
       .btn-action { width: 58px; height: 58px; }
       .play-caption { margin-top: 8px; }
       .controls-hint { margin-top: 14px; padding-top: 10px; line-height: 1.7; }
-      #resultPanel { margin-bottom: 12px; }
+      #resultPanel, #boardPanel { margin-bottom: 12px; }
+      .map-extra { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; max-width: 620px; margin-bottom: 10px; }
+      .board-row { padding: 4px 2px; font-size: 9px; }
+      .name-row { margin-top: 10px; }
       .result-row { padding: 4px 0; font-size: 10px; }
       .result-gauge { margin-top: 10px; }
       .result-verdict { margin-top: 10px; font-size: 10px; letter-spacing: 0.2em; }
@@ -451,6 +528,10 @@
         <div class="hud-center">
           <div class="stage-title" id="stageTitle"></div>
           <div class="powerup-pill" id="powerupPill"></div>
+          <div class="boss-bar" id="bossBar">
+            <div class="boss-bar-name" id="bossBarName"></div>
+            <div class="boss-bar-track"><div class="boss-bar-fill" id="bossBarFill"></div></div>
+          </div>
         </div>
         <div class="hud-right">
           <div class="score-label">Mon Collected</div>
@@ -493,9 +574,24 @@
         Shadow of the Brush
       </p>
       <!-- Map select: one card per stage, locked until the previous is cleared at par -->
-      <div id="mapSelect" class="hidden">
+      <div id="mapSelect" class="hidden" style="width: 100%;">
         <div class="map-grid" id="mapGrid"></div>
+        <div class="map-extra" id="mapExtra"></div>
         <p class="map-foot" id="mapFoot"></p>
+      </div>
+
+      <!-- Run board: the best endless runs this account has ever posted -->
+      <div id="boardPanel" class="hidden">
+        <div class="board-row board-head">
+          <span>#</span><span>Runner</span><span>Ken</span><span>Score</span>
+        </div>
+        <div id="boardRows"></div>
+        <p class="board-empty hidden" id="boardEmpty">No runs posted yet</p>
+        <div class="name-row">
+          <span class="name-label">Name</span>
+          <input id="nameInput" class="name-input" maxlength="10" spellcheck="false"
+                 autocomplete="off" aria-label="Name shown on the run board" />
+        </div>
       </div>
 
       <!-- Stage result: score earned vs the par needed to open the next map -->
@@ -515,6 +611,7 @@
       <div class="overlay-btn-row hidden" id="overlayBtnRow">
         <button class="btn-text hidden" id="btnRetry">Retry Map</button>
         <button class="btn-text hidden" id="btnNext">Next Map</button>
+        <button class="btn-text hidden" id="btnBoard">Run Board</button>
         <button class="btn-text hidden" id="btnMaps">Map Select</button>
       </div>
     </div>
@@ -584,14 +681,16 @@
     // 1. CONFIGURATION & THREE-TIER STORAGE SYSTEM
     // =====================================================================
     const CONFIG = {
-      // Player Hitbox & Sprite Alignment Tunables
+      // Player Hitbox. The samurai is drawn as a procedural ink silhouette in the
+      // same brush vocabulary as the platforms, oni and torii - there are no
+      // raster sprites left, so nothing can drift out of style with the world.
       playerW: 22,
       playerH: 50,
-      spriteScale: 0.64,      // world units per sprite pixel. Artwork fills 68 of the 96px
-                              // cell, so 68 * 0.64 = 43.5 world px tall - the same on-screen
-                              // size the old 128px sheets had (97 * 0.45). Raise to 0.74 to
-                              // make the samurai fill the 50px hitbox instead.
-      spriteAnchorY: 0,       // vertical offset in world units, sprite feet vs hitbox bottom
+      // Artwork is 68px tall inside the 96px cell, so 0.85 draws the samurai
+      // 58 world px tall against a 50px hitbox and a 32px tile - the classic
+      // "just under two tiles" platformer proportion.
+      spriteScale: 0.85,
+      spriteAnchorY: 0,
       spriteAnchorX: 0,
       DEBUG_HITBOX: false,    // outlines collision box in crimson over the sprite
 
@@ -611,7 +710,14 @@
       DOUBLE_JUMP_VEL: -410,     // Upward impulse for air double jump (px/s)
       COYOTE_TIME: 0.10,         // Grace period after walking off a ledge (s)
       JUMP_BUFFER: 0.12,         // Window where jump press is remembered before landing (s)
-      
+
+      // Apex hang & fast fall: the arc spends longer where the player is aiming
+      // and less time on the way down, so a jump reads as a decision rather than
+      // a wait. Both multiply GRAVITY, they never replace it.
+      APEX_VY_WINDOW: 115,       // |vy| below this counts as "at the apex" (px/s)
+      APEX_GRAVITY_MULT: 0.6,    // 40% less gravity inside that window
+      FAST_FALL_MULT: 1.7,       // 1.7x gravity once falling past the apex window
+
       // Wall mechanics
       WALL_SLIDE_SPEED: 110,     // Max downward slide velocity when clinging to wall (px/s)
       WALL_JUMP_VEL_X: 300,      // Horizontal kick velocity away from wall (px/s)
@@ -624,6 +730,9 @@
       
       // Katana Slash
       SLASH_DURATION: 0.12,      // Duration of attack arc (s) - fades over ~120ms
+      SLASH_COOLDOWN: 0.15,      // Earliest re-slash. Shorter than the arc's own tail,
+                                 // so a second press cuts the first arc off instead of
+                                 // queueing behind it - no action waits on an animation.
       SLASH_RANGE_NORMAL: 52,    // Forward reach of katana arc (px)
       SLASH_RANGE_POWERED: 84,   // Forward reach with Crimson Edge power-up (px)
       SLASH_BOUNCE_Y: -320,      // Upward hop granted when slicing an enemy mid-air (px/s)
@@ -635,96 +744,328 @@
       SCREEN_SHAKE_MAX: 6,       // Maximum camera shake displacement (px)
       COMBO_DECAY_TIME: 2.5,     // Seconds before combo multiplier resets (s)
 
-      // Color Palette (Sumi-e modern ink wash)
-      INK_BLACK: '#0D0D10',
-      GREY_DARK: '#2A2A30',
-      GREY_MID:  '#4A4A55',
-      GREY_LIGHT:'#8A8A96',
-      PAPER_BG:  '#EDE8DC',
-      PAPER_DARK:'#E2DCCB',
-      CRIMSON:   '#E03B3B',
-      GOLD:      '#D9B45C'
+      // Palette, sampled off the tileset so overlays and particles sit in the
+      // same world the sprites do.
+      INK_BLACK: '#15141F',
+      GREY_DARK: '#2B2A3D',
+      GREY_MID:  '#4B4A66',
+      GREY_LIGHT:'#8E8CA8',
+      SKY_BG:    '#39364F',   // painted behind the parallax plates
+      PAPER_BG:  '#1E1D2B',   // UI ground
+      PAPER_DARK:'#15141F',
+      LEAF:      '#B7D94A',
+      CRIMSON:   '#E0453B',
+      GOLD:      '#F2C14E'
     };
 
     // =====================================================================
-    // 1B. SPRITE ASSET MANIFEST & LOADER
+    // 1B. PIXEL ART ATLAS, LOADER & SPRITE MANIFESTS
     // =====================================================================
-    // Every sheet is a horizontal strip of 96x96 cells, artwork bottom-aligned to
-    // the cell so the feet land exactly on the hitbox bottom (spriteAnchorY 0).
-    // Sheet sizes: idle/run/slash/slide 576px (6), jump 768px (8), dash/dead 384px
-    // (4), hurt 192px (2). Frame counts below must match, or neighbouring cells
-    // bleed into the drawn frame.
-    const SPRITES = {
-      idle:      { file: 'assets/samurai_idle.png',   frameW: 96, frameH: 96, frames: 6, fps: 8,  loop: true  },
-      run:       { file: 'assets/samurai_run.png',    frameW: 96, frameH: 96, frames: 6, fps: 12, loop: true  },
-      // The 8-frame jump strip covers the whole arc, so rise / fall / land are
-      // three windows onto it (there is no separate land sheet).
-      // 0-3 crouch->apex, 4 descend, 5-7 touchdown->settle
-      jumpRise:  { file: 'assets/samurai_jump.png',   frameW: 96, frameH: 96, frames: 4, fps: 16, loop: false },
-      jumpFall:  { file: 'assets/samurai_jump.png',   frameW: 96, frameH: 96, frames: 1, fps: 10, loop: false, startFrame: 4 },
-      land:      { file: 'assets/samurai_jump.png',   frameW: 96, frameH: 96, frames: 3, fps: 24, loop: false, startFrame: 5 },
-      wallSlide: { file: 'assets/samurai_slide.png',  frameW: 96, frameH: 96, frames: 6, fps: 8,  loop: true  },
-      dash:      { file: 'assets/samurai_dash.png',   frameW: 96, frameH: 96, frames: 4, fps: 16, loop: false },
-      slash:     { file: 'assets/samurai_attack.png', frameW: 96, frameH: 96, frames: 6, fps: 16, loop: false },
-      hurt:      { file: 'assets/samurai_hurt.png',   frameW: 96, frameH: 96, frames: 2, fps: 8,  loop: false },
-      dead:      { file: 'assets/samurai_dead.png',   frameW: 96, frameH: 96, frames: 4, fps: 6,  loop: false },
+    // The whole game is one art language now: 32px pixel-art tiles for the
+    // world, 96x96 pixel-art sheets for every character. Nothing is drawn
+    // procedurally except particles and UI marks, so nothing can look pasted in.
+    //
+    // Sources: CraftPix "Platformer Game Tileset" (world + backgrounds) and
+    // "Forest Bosses" (enemies), both under the CraftPix freebie licence, which
+    // permits commercial game use without attribution. The samurai sheets are
+    // the ones that shipped with the game.
+    const TILE = 32;
+
+    const ART = {
+      // ---- world -------------------------------------------------------
+      tileset:  'assets/world/tileset.png',   // 544x384, 17x12 tiles of 32px
+      tiles_dark:'assets/world/tiles_dark.png', // 384x256, 12x8 — the night set
+      spikes:   'assets/world/spikes.png',    // 384x64,  12 frames of 32x64
+      objects:  'assets/world/objects.png',   // 1280x320 prop sheet
+      cave:     'assets/world/cave.png',      // 192x128  single image
+      coin:     'assets/world/coin.png',      // 192x32,  6 frames of 32x32
+      chest:    'assets/world/chest.png',     // 384x64,  6 frames of 64x64
+      crystal:  'assets/world/crystal.png',   // 960x128, 6 frames of 160x128
+      // ---- parallax ----------------------------------------------------
+      sky:      'assets/bg/sky.png',          // 960x544 each
+      clouds:   'assets/bg/clouds.png',
+      flora1:   'assets/bg/flora1.png',
+      flora2:   'assets/bg/flora2.png',
+      // ---- parallax, night ---------------------------------------------
+      night_sky:    'assets/bg/night_sky.png',    // 576x324 each
+      night_trees:  'assets/bg/night_trees.png',
+      night_trees2: 'assets/bg/night_trees2.png',
+      // ---- samurai (96x96 cells, artwork bottom-aligned in the cell) ----
+      p_idle:   'assets/samurai_idle.png',
+      p_run:    'assets/samurai_run.png',
+      p_jump:   'assets/samurai_jump.png',
+      p_land:   'assets/samurai_land.png',
+      p_slide:  'assets/samurai_slide.png',
+      p_dash:   'assets/samurai_dash.png',
+      p_attack: 'assets/samurai_attack.png',
+      p_hurt:   'assets/samurai_hurt.png',
+      p_dead:   'assets/samurai_dead.png',
+      // ---- enemies (96x96 cells, also bottom-aligned) -------------------
+      e1_idle:  'assets/enemy/e1_idle.png',   e1_walk:  'assets/enemy/e1_walk.png',
+      e1_death: 'assets/enemy/e1_death.png',
+      e2_idle:  'assets/enemy/e2_idle.png',   e2_walk:  'assets/enemy/e2_walk.png',
+      e2_death: 'assets/enemy/e2_death.png',
+      e3_idle:  'assets/enemy/e3_idle.png',   e3_walk:  'assets/enemy/e3_walk.png',
+      e3_attack:'assets/enemy/e3_attack.png', e3_death: 'assets/enemy/e3_death.png',
+      // ---- bosses (96x96 cells, one expression per cell) ----------------
+      b_mech:   'assets/boss/mech.png',       // 1152x96, 12 frames
+      b_ooze:   'assets/boss/ooze.png',
+      b_bear:   'assets/boss/bear.png'
     };
 
-    const spriteImages = {};
-    let spritesLoaded = false;
+    const IMG = {};
+    let artReady = false;
 
-    async function loadSprites() {
+    function loadArt() {
       const startBtn = document.getElementById('startBtn');
       const playCaption = document.getElementById('playCaption');
       if (startBtn) {
         startBtn.disabled = true;
-        startBtn.style.opacity = '0.5';
+        startBtn.style.opacity = '0.45';
         startBtn.style.pointerEvents = 'none';
       }
-      if (playCaption) {
-        playCaption.textContent = 'Loading...';
-      }
 
-      const uniqueFiles = new Set();
-      for (const key in SPRITES) {
-        uniqueFiles.add(SPRITES[key].file);
-      }
+      const names = Object.keys(ART);
+      let done = 0;
+      const tick = () => {
+        done++;
+        if (playCaption) {
+          playCaption.textContent = 'Loading ' + Math.round(done / names.length * 100) + '%';
+        }
+      };
 
-      const loadPromises = Array.from(uniqueFiles).map((file) => {
-        return new Promise((resolve) => {
-          const img = new Image();
-          img.src = file;
-          img.onload = async () => {
-            try {
-              if (typeof img.decode === 'function') {
-                await img.decode();
-              }
-            } catch (e) {
-              console.warn(`[SpriteLoader] decode warning for ${file}:`, e);
-            }
-            spriteImages[file] = img;
-            resolve({ file, img, success: true });
-          };
-          img.onerror = () => {
-            console.warn(`[SpriteLoader] Failed to load image: ${file}. Falling back to silhouette.`);
-            spriteImages[file] = { failed: true };
-            resolve({ file, img: null, success: false });
-          };
-        });
+      return Promise.all(names.map((name) => new Promise((resolve) => {
+        const img = new Image();
+        img.onload = async () => {
+          // decode() keeps the first frame that uses a sheet from hitching
+          try { if (img.decode) await img.decode(); } catch (e) {}
+          IMG[name] = img;
+          tick(); resolve();
+        };
+        img.onerror = () => {
+          console.warn('[art] failed to load', ART[name]);
+          IMG[name] = { failed: true };
+          tick(); resolve();
+        };
+        img.src = ART[name];
+      }))).then(() => {
+        artReady = true;
+        if (startBtn) {
+          startBtn.disabled = false;
+          startBtn.style.opacity = '1';
+          startBtn.style.pointerEvents = 'auto';
+        }
+        if (playCaption) playCaption.textContent = 'Click to Play';
       });
-
-      await Promise.all(loadPromises);
-      spritesLoaded = true;
-
-      if (startBtn) {
-        startBtn.disabled = false;
-        startBtn.style.opacity = '1';
-        startBtn.style.pointerEvents = 'auto';
-      }
-      if (playCaption) {
-        playCaption.textContent = 'Click to Play';
-      }
     }
+
+    const usable = (name) => {
+      const im = IMG[name];
+      return im && !im.failed && im.complete && im.naturalWidth > 0;
+    };
+
+    // Named rectangles inside objects.png, measured off the source art.
+    const OBJ = {
+      chest:       [395, 267, 42, 35],
+      signpost:    [672, 144, 32, 30],
+      signpostAlt: [690, 208, 32, 30],
+      crystalA:    [1042, 134, 29, 40],   // powerup: zanshin
+      crystalB:    [1090, 134, 29, 40],   // powerup: edge
+      crystalC:    [1159, 139, 18, 33],   // powerup: charm
+      shard:       [1048, 280, 15, 25],
+      barricade:   [227, 210, 29, 64],    // destructible spike pillar
+      spikeRock:   [160, 226, 31, 49],    // spinning trap blade
+      bushBig:     [684, 261, 46, 45],
+      bushMid:     [747, 261, 41, 41],
+      bushSmall:   [757, 214, 22, 22],
+      treeSmall:   [728, 24, 72, 87],
+      treeMid:     [452, 167, 92, 138],
+      mushroom:    [914, 209, 25, 29],
+      mushroomTall:[915, 140, 29, 34]
+    };
+
+    // A soft light. A flat translucent circle reads as a sticker pasted over
+    // the art; a radial falloff reads as something actually glowing.
+    function glow(ctx, x, y, radius, rgb, strength) {
+      const g = ctx.createRadialGradient(x, y, 0, x, y, radius);
+      g.addColorStop(0, `rgba(${rgb}, ${strength})`);
+      g.addColorStop(0.45, `rgba(${rgb}, ${strength * 0.42})`);
+      g.addColorStop(1, `rgba(${rgb}, 0)`);
+      ctx.save();
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+
+    // Draw a named prop with its BOTTOM CENTRE at (x, y).
+    function drawProp(ctx, key, x, y, scale = 1, alpha = 1) {
+      if (!usable('objects')) return;
+      const r = OBJ[key];
+      if (!r) return;
+      const w = r[2] * scale, h = r[3] * scale;
+      if (alpha !== 1) { ctx.save(); ctx.globalAlpha = alpha; }
+      ctx.drawImage(IMG.objects, r[0], r[1], r[2], r[3],
+                    Math.round(x - w / 2), Math.round(y - h), Math.round(w), Math.round(h));
+      if (alpha !== 1) ctx.restore();
+    }
+
+    // ---- Themes: tileset 9-slice + parallax stack -------------------------
+    // Two worlds ship. The daylit forest stone the first seven maps are built
+    // from, and a dark keep set for the last three, where the ground turns to
+    // black brick under a night sky. Only the sheet name, the nine-slice cells
+    // and the parallax stack differ, so a map names a theme and every draw call
+    // below reads it off THEME — nothing else in the renderer knows there are
+    // two of them.
+    //
+    // Solid ground is a capped row, body rows and a rounded underside; anything
+    // thin enough to be a ledge uses the free-floating strip instead.
+    const THEMES = {
+      day: {
+        sheet: 'tileset',
+        cells: {
+          topL: [6, 0], topM: [7, 0], topR: [8, 0],
+          midL: [6, 1], midM: [7, 1], midR: [8, 1],
+          botL: [6, 3], botM: [7, 3], botR: [8, 3],
+          ledgeL: [9, 7], ledgeM: [10, 7], ledgeR: [11, 7]
+        },
+        plates: [
+          ['sky',    0.00, 0.00, 1.00],
+          ['clouds', 0.08, 0.00, 0.70],
+          ['flora1', 0.22, 0.02, 0.55],
+          ['flora2', 0.45, 0.05, 0.45]
+        ],
+        sky: CONFIG.SKY_BG,
+        veil: 'rgba(24, 22, 42, 0.42)'
+      },
+      night: {
+        sheet: 'tiles_dark',
+        cells: {
+          topL: [0, 0], topM: [1, 0], topR: [2, 0],
+          midL: [0, 1], midM: [1, 1], midR: [3, 1],
+          botL: [0, 2], botM: [1, 2], botR: [3, 2],
+          ledgeL: [0, 4], ledgeM: [1, 4], ledgeR: [3, 4]
+        },
+        // The same forest plate is kept in the middle at very low alpha so the
+        // two themes still read as one place at two hours, not two games. The
+        // near tree plate is the far one mirrored, so the stack never lines up
+        // with itself as it scrolls.
+        plates: [
+          ['night_sky',    0.00, 0.00, 1.00],
+          ['night_trees',  0.09, 0.00, 0.34],
+          ['flora2',       0.24, 0.02, 0.16],
+          ['night_trees2', 0.46, 0.05, 0.62]
+        ],
+        sky: '#171528',
+        veil: 'rgba(10, 8, 26, 0.30)'
+      }
+    };
+
+    let THEME = THEMES.day;
+    let TSET = THEME.cells;
+    function setTheme(name) {
+      THEME = THEMES[name] || THEMES.day;
+      TSET = THEME.cells;
+    }
+
+    function drawTile(ctx, cell, dx, dy, dw, dh) {
+      if (!usable(THEME.sheet)) return;
+      ctx.drawImage(IMG[THEME.sheet], cell[0] * TILE, cell[1] * TILE, TILE, TILE,
+                    dx, dy, dw === undefined ? TILE : dw, dh === undefined ? TILE : dh);
+    }
+
+    // ---- Frame helpers ---------------------------------------------------
+    // Sheets are single horizontal strips; a clip is a window onto one.
+    function drawFrame(ctx, name, frame, frameW, frameH, dx, dy, dw, dh) {
+      if (!usable(name)) return false;
+      ctx.drawImage(IMG[name], frame * frameW, 0, frameW, frameH, dx, dy, dw, dh);
+      return true;
+    }
+
+    const frameAt = (t, fps, count) => Math.floor(t * fps) % count;
+
+    // ---- Samurai clips ---------------------------------------------------
+    // The 8-frame jump strip covers the arc, so rise and fall are two windows
+    // onto it. Frame counts must match the sheet widths or neighbouring cells
+    // bleed into the drawn frame.
+    const CELL = 96;
+    const SPRITES = {
+      idle:      { img: 'p_idle',   frames: 6, fps: 8,  loop: true  },
+      run:       { img: 'p_run',    frames: 6, fps: 14, loop: true  },
+      jumpRise:  { img: 'p_jump',   frames: 4, fps: 16, loop: false },
+      jumpFall:  { img: 'p_jump',   frames: 1, fps: 10, loop: false, startFrame: 4 },
+      // Its own 8-frame sheet; the first four are the absorb, which is all the
+      // landTimer (0.09-0.18s) is ever on screen for.
+      land:      { img: 'p_land',   frames: 4, fps: 30, loop: false },
+      wallSlide: { img: 'p_slide',  frames: 6, fps: 8,  loop: true  },
+      dash:      { img: 'p_dash',   frames: 4, fps: 28, loop: false },
+      // 48fps so all six frames land inside the 0.12s the hitbox is live —
+      // the swing must be over by the time the player can swing again.
+      slash:     { img: 'p_attack', frames: 6, fps: 48, loop: false },
+      hurt:      { img: 'p_hurt',   frames: 2, fps: 10, loop: false },
+      dead:      { img: 'p_dead',   frames: 4, fps: 6,  loop: false }
+    };
+
+    // ---- Enemy clips -----------------------------------------------------
+    // Two ground bruisers and one caster, picked per-enemy so a map is not a
+    // parade of one silhouette.
+    const ENEMY_ART = {
+      brute1: { idle: ['e1_idle', 4], walk: ['e1_walk', 6], death: ['e1_death', 6], scale: 1.0 },
+      brute2: { idle: ['e2_idle', 4], walk: ['e2_walk', 6], death: ['e2_death', 6], scale: 1.0 },
+      caster: { idle: ['e3_idle', 4], walk: ['e3_walk', 6], death: ['e3_death', 4],
+                attack: ['e3_attack', 6], scale: 1.1 }
+    };
+
+    // ---- Boss clips -------------------------------------------------------
+    // The boss pack ships one still per EXPRESSION, not an animation: twelve
+    // 90x90 portraits per character, packed here into one 96px-cell strip in a
+    // fixed order. So a "clip" below is a hand-picked cycle of expressions, and
+    // the fight is animated by which expression the state machine is in — calm
+    // while hunting, irritated while winding up, wide-eyed on the strike.
+    const BOSS_FRAMES = ['calm', 'thoughtful', 'talking', 'amazed', 'mocking',
+                         'irritated', 'angry', 'furious', 'scared', 'stunning',
+                         'upset', 'sad'];
+    const BF = {};
+    BOSS_FRAMES.forEach((n, i) => { BF[n] = i; });
+
+    const BOSS_CLIPS = {
+      hunt:   [BF.calm, BF.thoughtful],       // drifting toward the samurai
+      rage:   [BF.mocking, BF.angry],         // same, below half health
+      wind:   [BF.irritated, BF.angry],       // the tell
+      strike: [BF.stunning, BF.scared],       // the frames that flare white
+      hurt:   [BF.amazed],
+      dying:  [BF.furious, BF.sad]            // the two frames that show damage
+    };
+
+    // hp is in slashes. The three source portraits do not fill their cell by
+    // the same amount (the mech is 89px tall inside it, the other two ~70), so
+    // scale is set per boss to land all three at roughly 140px on screen —
+    // two and a half times the samurai, and still short enough to jump.
+    const BOSS_ART = {
+      mech: { img: 'b_mech', kanji: '鉄', name: 'TETSU-DOKURO', hp: 6, scale: 1.6,
+              glow: '150, 220, 255' },
+      ooze: { img: 'b_ooze', kanji: '氷', name: 'KOORI-NUSHI',  hp: 7, scale: 1.95,
+              glow: '120, 225, 255' },
+      bear: { img: 'b_bear', kanji: '鬼', name: 'ONI-GUMA',     hp: 9, scale: 1.95,
+              glow: '255, 180, 205' }
+    };
+
+    // Runtime state an authored boss entry gets on top of the shared enemy
+    // fields. Kept next to the art so the two never drift apart.
+    function bossRuntime(e, floorY) {
+      const art = BOSS_ART[e.kind] || BOSS_ART.mech;
+      const hp = e.hp || art.hp;
+      return {
+        hp, maxHp: hp,
+        state: 'hunt', stateT: 0, invulnT: 0, deathT: 0,
+        homeY: e.y, bob: Math.random() * 6.28,
+        floorY   // where its shadow is cast, so the hover reads as height
+      };
+    }
+
+    // The hurtbox. Narrower than the art on purpose: the boss reads as a
+    // silhouette with a lot of loose sparks and drips around it, and being
+    // killed by a drip is not a fair death.
+    const bossBox = (e) => ({ x: e.curX - 44, y: (e.curY || e.y) - 52, w: 88, h: 104 });
 
     // ---------------------------------------------------------------------
     // THREE-TIER PERSISTENCE SYSTEM (CrazyGames SDK.data -> localStorage -> Memory)
@@ -814,7 +1155,10 @@
       stageBest: [],       // best single-run score per map, index-aligned to STAGE_CONFIGS
       coinsTotal: 0,
       muted: false,
-      seenControlHint: false
+      seenControlHint: false,
+      runBoard: [],        // top endless runs, newest merged in on each death
+      endlessBest: 0,
+      playerName: ''
     };
 
     // Single unified Save wrapper
@@ -1083,6 +1427,39 @@
           osc.start(now); osc.stop(now + 1.5);
         });
       }
+      // Boss wind-up: a rising horn under the telegraph frames. The pitch climb
+      // is the audible half of the tell — the player can hear the volley coming
+      // even while looking at his own feet.
+      playBossTell() {
+        if (!this.ctx || this.muted) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(110, now);
+        osc.frequency.exponentialRampToValueAtTime(300, now + 0.5);
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.exponentialRampToValueAtTime(0.22, now + 0.42);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.56);
+        osc.connect(gain); gain.connect(this.masterGain);
+        osc.start(now); osc.stop(now + 0.58);
+      }
+      // Boss defeated: the taiko hit dropped an octave and left to ring out.
+      playBossDown() {
+        if (!this.ctx || this.muted) return;
+        const now = this.ctx.currentTime;
+        [82.4, 110, 164.8].forEach((f, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = i === 0 ? 'triangle' : 'sawtooth';
+          osc.frequency.setValueAtTime(f * 2, now);
+          osc.frequency.exponentialRampToValueAtTime(f, now + 0.6);
+          gain.gain.setValueAtTime(0.3 / (i + 1), now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 1.6);
+          osc.connect(gain); gain.connect(this.masterGain);
+          osc.start(now); osc.stop(now + 1.7);
+        });
+      }
     }
     const audio = new SoundEngine();
 
@@ -1228,33 +1605,6 @@
     // =====================================================================
     // 4. PROCEDURAL SUMI-E GRAPHICS & PARTICLE POOL
     // =====================================================================
-    // Offscreen cached paper texture pattern for authentic sumi-e wash look
-    let paperCanvas = null;
-    function createPaperTexture() {
-      paperCanvas = document.createElement('canvas');
-      paperCanvas.width = 256;
-      paperCanvas.height = 256;
-      const pctx = paperCanvas.getContext('2d');
-      pctx.fillStyle = CONFIG.PAPER_BG;
-      pctx.fillRect(0, 0, 256, 256);
-      // Delicate paper fibers and ink bleed dots
-      pctx.fillStyle = 'rgba(13, 13, 16, 0.025)';
-      for (let i = 0; i < 600; i++) {
-        const x = Math.random() * 256, y = Math.random() * 256;
-        const s = Math.random() * 2.2;
-        pctx.beginPath(); pctx.arc(x, y, s, 0, Math.PI * 2); pctx.fill();
-      }
-      pctx.strokeStyle = 'rgba(74, 74, 85, 0.02)';
-      pctx.lineWidth = 1;
-      for (let i = 0; i < 40; i++) {
-        pctx.beginPath();
-        pctx.moveTo(Math.random() * 256, Math.random() * 256);
-        pctx.lineTo(Math.random() * 256, Math.random() * 256);
-        pctx.stroke();
-      }
-    }
-    createPaperTexture();
-
     // High performance particle system with static pool
     class ParticlePool {
       constructor(max = 240) {
@@ -1274,7 +1624,7 @@
         p.type = type;
       }
 
-      burstInk(x, y, count = 12, color = CONFIG.INK_BLACK) {
+      burstInk(x, y, count = 12, color = CONFIG.LEAF) {
         for (let i = 0; i < count; i++) {
           const angle = Math.random() * Math.PI * 2;
           const speed = 40 + Math.random() * 180;
@@ -1295,7 +1645,7 @@
             x, y + 2,
             (Math.random() * 40 - 20) + dir * 30, -15 - Math.random() * 30,
             1.5 + Math.random() * 2.5,
-            'rgba(42, 42, 48, 0.4)',
+            'rgba(228, 224, 210, 0.45)',
             0.25 + Math.random() * 0.2,
             'dust'
           );
@@ -1400,15 +1750,63 @@
     // =====================================================================
     // 6. STAGE LEVEL DATA (DETERMINISTIC CHUNK ARCHITECTURE)
     // =====================================================================
-    // Stage 1: The Bamboo Path - Teaches run, jump, slash, coin lines, Oni patrol, checkpoints
-    // Stage 2: The Mist Ravine - Introduces wall-jump, dash over spikes, flying lanterns, crumbling bridges
-    // Stage 3: The Fortress Gates - Combines archers, saw traps, secret koban route, Crimson Edge shockwaves
+    // Ten handcrafted maps, then an endless mode generated from the same
+    // vocabulary. Reach budget every map is authored against:
+    //   single jump 126px up - double jump 185px - running gap ~290px,
+    //   and a dash adds roughly 100px of horizontal travel on top.
     const STAGE_CONFIGS = [
+      // -----------------------------------------------------------------
+      // MAP 01 — the whole tutorial, taught without a single line of text.
+      // Four beats in order, each one isolated so the lesson cannot be
+      // confused with anything else happening on screen:
+      //   flat road -> one low block -> one enemy, alone -> one wide gap.
+      // The button glyphs in `prompts` are drawn in the world and vanish for
+      // good the moment the matching input is used.
+      // -----------------------------------------------------------------
       {
         id: 1,
+        kanji: '歩',
+        name: "THE FIRST STEP",
+        title: "MAP 01: THE FIRST STEP",
+        requiredScore: 300,
+        width: 2500,
+        height: 600,
+        spawn: { x: 70, y: 440 },
+        platforms: [
+          { x: 0, y: 500, w: 1520, h: 100 },   // one uninterrupted road
+          { x: 470, y: 440, w: 90, h: 60 },    // the only obstacle: 60px, one jump
+          { x: 1780, y: 500, w: 720, h: 100 }  // the far side of the gap
+        ],
+        hazards: [
+          { type: 'spike', x: 1520, y: 560, w: 260, h: 40 }
+        ],
+        enemies: [
+          { type: 'oni', x: 1120, y: 460, minX: 1020, maxX: 1300 }
+        ],
+        destructibles: [],
+        coins: [
+          { x: 200, y: 460 }, { x: 265, y: 460 }, { x: 330, y: 460 },
+          { x: 515, y: 385 },
+          { x: 760, y: 460 }, { x: 825, y: 460 },
+          { x: 1650, y: 395 },
+          { x: 1900, y: 460 }, { x: 1965, y: 460 }
+        ],
+        koban: null,
+        powerups: [],
+        checkpoints: [{ x: 1450, y: 450 }],
+        prompts: [
+          { act: 'move',  x: 200,  y: 425 },
+          { act: 'jump',  x: 395,  y: 415 },
+          { act: 'slash', x: 960,  y: 425 },
+          { act: 'dash',  x: 1400, y: 410 }
+        ],
+        torii: { x: 2350, y: 500 }
+      },
+      {
+        id: 2,
         kanji: '竹',
         name: "THE BAMBOO PATH",
-        title: "STAGE 1: THE BAMBOO PATH",
+        title: "MAP 02: THE BAMBOO PATH",
         requiredScore: 1200,   // ~62% of the 1950 on offer here
         width: 3800,
         height: 600,
@@ -1470,10 +1868,10 @@
         torii: { x: 3600, y: 500 }
       },
       {
-        id: 2,
+        id: 3,
         kanji: '霧',
         name: "THE MIST RAVINE",
-        title: "STAGE 2: THE MIST RAVINE",
+        title: "MAP 03: THE MIST RAVINE",
         requiredScore: 1300,   // ~70% of the 1850 on offer here
         width: 4400,
         height: 660,
@@ -1530,11 +1928,13 @@
         torii: { x: 4200, y: 520 }
       },
       {
-        id: 3,
+        id: 4,
         kanji: '城',
         name: "THE FORTRESS GATES",
-        title: "STAGE 3: THE FORTRESS GATES",
-        requiredScore: 1500,   // ~73% of the 2050 on offer here
+        title: "MAP 04: THE FORTRESS GATES",
+        // 1500 of the 2050 the map itself offers, plus the 1920 the boss is
+        // worth — killing it is mandatory, so the par is as tight as it was.
+        requiredScore: 3420,
         width: 4800,
         height: 680,
         spawn: { x: 80, y: 450 },
@@ -1546,7 +1946,7 @@
           { x: 980, y: 340, w: 110, h: 24 },
           { x: 1200, y: 500, w: 500, h: 100 },
           // Vertical fortress shaft with alternating spikes
-          { x: 1800, y: 120, w: 40, h: 480 },
+          { x: 1800, y: 330, w: 40, h: 270 },   // hop-in wall: 170px above the approach
           { x: 2020, y: 180, w: 40, h: 420 },
           // Upper rooftop run
           { x: 2100, y: 220, w: 400, h: 24 },
@@ -1568,7 +1968,11 @@
           { type: 'oni', x: 1350, y: 460, minX: 1220, maxX: 1650 },
           { type: 'lantern', x: 2300, y: 160, amp: 40, freq: 2.5 },
           { type: 'archer', x: 3300, y: 390 },
-          { type: 'oni', x: 3800, y: 480, minX: 3600, maxX: 4200 }
+          { type: 'oni', x: 3800, y: 480, minX: 3600, maxX: 4200 },
+          // The gate itself is held. 80px of hover over a 520 floor puts the
+          // hurtbox inside a standing slash for most of the bob, so the fight
+          // opens on the ground and only rewards jumping.
+          { type: 'boss', kind: 'mech', x: 4450, y: 440, minX: 4150, maxX: 4700 }
         ],
         destructibles: [
           { x: 1680, y: 430, w: 30, h: 70 },
@@ -1592,10 +1996,10 @@
         torii: { x: 4550, y: 520 }
       },
       {
-        id: 4,
+        id: 5,
         kanji: '紅',
         name: "THE CRIMSON MAPLE",
-        title: "STAGE 4: THE CRIMSON MAPLE",
+        title: "MAP 05: THE CRIMSON MAPLE",
         requiredScore: 1800,   // ~72% of the 2500 on offer here
         width: 5200,
         height: 720,
@@ -1618,7 +2022,7 @@
           { x: 2520, y: 380, w: 120, h: 22, moving: true, moveY: 110, moveSpeed: 1.3 },
           // D. Wall-jump chimney: 155px of clear air between the inner faces
           { x: 2740, y: 520, w: 380, h: 120 },
-          { x: 2820, y: 180, w: 45, h: 400 },
+          { x: 2820, y: 370, w: 45, h: 210 },   // hop-in wall
           { x: 3020, y: 140, w: 45, h: 440 },
           { x: 3065, y: 160, w: 320, h: 24 },
           // E. Rooftop run under archer fire
@@ -1672,15 +2076,813 @@
           { x: 4340, y: 470 }
         ],
         torii: { x: 5080, y: 520 }
+      },
+      // -----------------------------------------------------------------
+      // MAP 06 — drifting rafts. Everything solid moves; the lesson is timing
+      // a jump against a platform that is already carrying you.
+      // -----------------------------------------------------------------
+      {
+        id: 6,
+        kanji: '滝',
+        name: "THE FALLING WATER",
+        title: "MAP 06: THE FALLING WATER",
+        requiredScore: 1750,   // ~74% of the 2350 on offer, matching the other maps
+        width: 5000,
+        height: 700,
+        spawn: { x: 80, y: 450 },
+        platforms: [
+          { x: 0, y: 520, w: 520, h: 120 },
+          // A. stepping stones over the first fall
+          { x: 640, y: 470, w: 110, h: 22 },
+          { x: 850, y: 415, w: 110, h: 22 },
+          { x: 1060, y: 470, w: 110, h: 22 },
+          { x: 1260, y: 520, w: 420, h: 120 },
+          // B. two rafts: one sweeps sideways over a saw, one rides up and down
+          { x: 1780, y: 460, w: 130, h: 22, moving: true, moveX: 190, moveSpeed: 1.0 },
+          { x: 2150, y: 400, w: 130, h: 22, moving: true, moveY: 120, moveSpeed: 1.4 },
+          { x: 2420, y: 520, w: 360, h: 120 },
+          // C. the climb behind the falls
+          { x: 2880, y: 370, w: 45, h: 210 },   // hop-in wall: 150px above the approach
+          { x: 3080, y: 140, w: 45, h: 440 },
+          { x: 3125, y: 200, w: 300, h: 24 },
+          // D. descent on ledges that will not hold
+          { x: 3500, y: 285, w: 95, h: 20, crumbling: true },
+          { x: 3670, y: 355, w: 95, h: 20, crumbling: true },
+          { x: 3840, y: 425, w: 110, h: 24 },
+          { x: 4050, y: 520, w: 950, h: 120 }
+        ],
+        hazards: [
+          { type: 'spike', x: 520, y: 660, w: 740, h: 40 },
+          { type: 'spike', x: 1680, y: 660, w: 740, h: 40 },
+          { type: 'saw', x: 1900, y: 585, startX: 1760, endX: 2200, speed: 160 },
+          { type: 'spike', x: 2780, y: 660, w: 1270, h: 40 },
+          { type: 'spike', x: 2925, y: 395, w: 20, h: 50 },
+          { type: 'saw', x: 4300, y: 470, startX: 4150, endX: 4600, speed: 180 }
+        ],
+        enemies: [
+          { type: 'lantern', x: 900, y: 320, amp: 50, freq: 2.2 },
+          { type: 'oni', x: 1400, y: 480, minX: 1280, maxX: 1650 },
+          { type: 'lantern', x: 2300, y: 290, amp: 60, freq: 1.8 },
+          { type: 'archer', x: 3200, y: 180 },
+          { type: 'oni', x: 4400, y: 480, minX: 4080, maxX: 4900 }
+        ],
+        destructibles: [
+          { x: 2740, y: 450, w: 30, h: 70 },
+          { x: 3390, y: 130, w: 30, h: 70 }
+        ],
+        coins: [
+          { x: 300, y: 480 }, { x: 690, y: 430 }, { x: 900, y: 375 }, { x: 1110, y: 430 },
+          { x: 1330, y: 480 }, { x: 1560, y: 480 },
+          { x: 1845, y: 405 }, { x: 2215, y: 340 },
+          { x: 2500, y: 470 },
+          { x: 3002, y: 470 }, { x: 3002, y: 385 }, { x: 3002, y: 300 }, { x: 3002, y: 215 },
+          { x: 3250, y: 155 }, { x: 3545, y: 235 }, { x: 3715, y: 305 },
+          { x: 4250, y: 480 }, { x: 4700, y: 480 }
+        ],
+        koban: { x: 3002, y: 105 },
+        powerups: [
+          { type: 'charm', x: 2470, y: 470 },
+          { type: 'zanshin', x: 3160, y: 155 }
+        ],
+        checkpoints: [
+          { x: 1290, y: 470 },
+          { x: 2450, y: 470 },
+          { x: 3145, y: 150 },
+          { x: 4080, y: 470 }
+        ],
+        torii: { x: 4880, y: 520 }
+      },
+      // -----------------------------------------------------------------
+      // MAP 07 — a vertical map. Three chimneys, climbed by wall-jump, with
+      // the fall back down as the only punishment.
+      // -----------------------------------------------------------------
+      {
+        id: 7,
+        kanji: '雪',
+        name: "THE SNOW PASS",
+        title: "MAP 07: THE SNOW PASS",
+        requiredScore: 4040,   // ~74% of the 2700 the map offers, plus the boss
+        width: 4600,
+        height: 760,
+        spawn: { x: 80, y: 570 },
+        platforms: [
+          { x: 0, y: 620, w: 560, h: 140 },
+          // A. first chimney, 160px of clear air
+          { x: 660, y: 450, w: 45, h: 210 },    // hop-in wall
+          { x: 865, y: 200, w: 45, h: 460 },
+          { x: 560, y: 620, w: 350, h: 140 },
+          { x: 700, y: 220, w: 170, h: 24 },
+          // B. a run along the ridge
+          { x: 960, y: 250, w: 240, h: 24 },
+          { x: 1290, y: 300, w: 100, h: 20, crumbling: true },
+          { x: 1460, y: 350, w: 100, h: 20, crumbling: true },
+          { x: 1630, y: 410, w: 150, h: 24 },
+          // C. second chimney, taller
+          { x: 1880, y: 620, w: 420, h: 140 },
+          { x: 1950, y: 450, w: 45, h: 200 },   // hop-in wall
+          { x: 2160, y: 90, w: 45, h: 520 },
+          { x: 2000, y: 110, w: 165, h: 24 },
+          // D. drop and a long carry across
+          { x: 2340, y: 200, w: 130, h: 22, moving: true, moveY: 150, moveSpeed: 1.1 },
+          { x: 2620, y: 330, w: 140, h: 24 },
+          { x: 2880, y: 430, w: 140, h: 24 },
+          { x: 3140, y: 620, w: 380, h: 140 },
+          // E. third chimney into the torii shelf
+          { x: 3620, y: 450, w: 45, h: 200 },   // hop-in wall
+          { x: 3820, y: 250, w: 45, h: 390 },
+          { x: 3665, y: 270, w: 160, h: 24 },
+          { x: 3900, y: 620, w: 700, h: 140 }
+        ],
+        hazards: [
+          { type: 'spike', x: 910, y: 720, w: 970, h: 40 },
+          { type: 'spike', x: 705, y: 330, w: 20, h: 50 },
+          { type: 'spike', x: 2300, y: 720, w: 840, h: 40 },
+          { type: 'spike', x: 2145, y: 320, w: 20, h: 50 },
+          { type: 'saw', x: 2700, y: 500, startX: 2600, endX: 3000, speed: 170 },
+          { type: 'spike', x: 3520, y: 720, w: 380, h: 40 }
+        ],
+        enemies: [
+          { type: 'oni', x: 300, y: 580, minX: 120, maxX: 520 },
+          { type: 'lantern', x: 1370, y: 230, amp: 55, freq: 2.4 },
+          { type: 'archer', x: 1700, y: 380 },
+          { type: 'lantern', x: 2450, y: 400, amp: 70, freq: 1.6 },
+          { type: 'oni', x: 3300, y: 580, minX: 3160, maxX: 3500 },
+          { type: 'archer', x: 4100, y: 580 },
+          { type: 'boss', kind: 'ooze', x: 4300, y: 540, minX: 4000, maxX: 4540 }
+        ],
+        destructibles: [
+          { x: 1210, y: 180, w: 30, h: 70 },
+          { x: 3560, y: 200, w: 30, h: 70 }
+        ],
+        coins: [
+          { x: 250, y: 580 }, { x: 400, y: 580 },
+          { x: 785, y: 560 }, { x: 785, y: 470 }, { x: 785, y: 380 }, { x: 785, y: 290 },
+          { x: 1050, y: 200 }, { x: 1340, y: 250 }, { x: 1510, y: 300 }, { x: 1700, y: 360 },
+          { x: 2075, y: 530 }, { x: 2075, y: 430 }, { x: 2075, y: 330 }, { x: 2075, y: 230 },
+          { x: 2405, y: 160 }, { x: 2690, y: 280 }, { x: 2950, y: 380 },
+          { x: 3745, y: 560 }, { x: 3745, y: 450 }, { x: 3745, y: 340 },
+          { x: 4200, y: 580 }, { x: 4400, y: 580 }
+        ],
+        koban: { x: 2075, y: 60 },
+        powerups: [
+          { type: 'charm', x: 1660, y: 360 },
+          { type: 'edge', x: 2040, y: 60 }
+        ],
+        checkpoints: [
+          { x: 720, y: 170 },
+          { x: 1910, y: 570 },
+          { x: 3170, y: 570 },
+          { x: 3930, y: 570 }
+        ],
+        torii: { x: 4460, y: 620 }
+      },
+      // -----------------------------------------------------------------
+      // MAP 08 — nothing you land on stays. The map sets the pace, not you.
+      // -----------------------------------------------------------------
+      {
+        id: 8,
+        // The last three maps are the night side of the same world: the dark
+        // keep tileset under a night sky. It marks the run-in to the boss maps
+        // without changing a single measurement of the geometry.
+        theme: 'night',
+        kanji: '嵐',
+        name: "THE STORM ROOF",
+        title: "MAP 08: THE STORM ROOF",
+        requiredScore: 2000,   // ~74% of the 2700 on offer
+        width: 5200,
+        height: 720,
+        spawn: { x: 80, y: 450 },
+        platforms: [
+          { x: 0, y: 520, w: 460, h: 120 },
+          // A. the first run of roof tiles, all crumbling
+          { x: 580, y: 480, w: 100, h: 20, crumbling: true },
+          { x: 760, y: 440, w: 100, h: 20, crumbling: true },
+          { x: 940, y: 400, w: 100, h: 20, crumbling: true },
+          { x: 1120, y: 360, w: 100, h: 20, crumbling: true },
+          { x: 1310, y: 330, w: 220, h: 24 },
+          // B. archers on the far roofs, cover in between
+          { x: 1650, y: 400, w: 110, h: 24 },
+          { x: 1880, y: 330, w: 110, h: 24 },
+          { x: 2110, y: 270, w: 300, h: 24 },
+          // C. the drop back to the street
+          { x: 2530, y: 350, w: 100, h: 20, crumbling: true },
+          { x: 2700, y: 430, w: 100, h: 20, crumbling: true },
+          { x: 2870, y: 520, w: 420, h: 120 },
+          // D. a swinging platform gauntlet in the open
+          { x: 3400, y: 450, w: 120, h: 22, moving: true, moveX: 180, moveSpeed: 1.3 },
+          { x: 3760, y: 380, w: 120, h: 22, moving: true, moveY: 130, moveSpeed: 1.5 },
+          { x: 4040, y: 440, w: 130, h: 24 },
+          // E. the last roof, then the plaza
+          { x: 4280, y: 340, w: 260, h: 24 },
+          { x: 4620, y: 520, w: 580, h: 120 }
+        ],
+        hazards: [
+          { type: 'spike', x: 460, y: 660, w: 2400, h: 60 },
+          { type: 'saw', x: 1450, y: 480, startX: 1300, endX: 1750, speed: 200 },
+          { type: 'spike', x: 3290, y: 660, w: 1330, h: 60 },
+          { type: 'saw', x: 4400, y: 420, startX: 4270, endX: 4550, speed: 210 },
+          { type: 'saw', x: 4900, y: 470, startX: 4700, endX: 5150, speed: 190 }
+        ],
+        enemies: [
+          { type: 'lantern', x: 850, y: 330, amp: 55, freq: 2.4 },
+          { type: 'archer', x: 1380, y: 300 },
+          { type: 'lantern', x: 1780, y: 250, amp: 45, freq: 2.6 },
+          { type: 'archer', x: 2200, y: 240 },
+          { type: 'oni', x: 3000, y: 480, minX: 2890, maxX: 3260 },
+          { type: 'archer', x: 4350, y: 310 },
+          { type: 'oni', x: 4800, y: 480, minX: 4650, maxX: 5150 }
+        ],
+        destructibles: [
+          { x: 2370, y: 200, w: 30, h: 70 },
+          { x: 4500, y: 270, w: 30, h: 70 }
+        ],
+        coins: [
+          { x: 250, y: 480 },
+          { x: 630, y: 430 }, { x: 810, y: 390 }, { x: 990, y: 350 }, { x: 1170, y: 310 },
+          { x: 1400, y: 280 }, { x: 1705, y: 350 }, { x: 1935, y: 280 },
+          { x: 2200, y: 220 }, { x: 2300, y: 220 },
+          { x: 2580, y: 300 }, { x: 2750, y: 380 },
+          { x: 3000, y: 480 }, { x: 3460, y: 400 }, { x: 3820, y: 300 },
+          { x: 4105, y: 390 }, { x: 4400, y: 290 },
+          { x: 4750, y: 480 }, { x: 5000, y: 480 }
+        ],
+        koban: { x: 2260, y: 170 },
+        powerups: [
+          { type: 'zanshin', x: 1360, y: 280 },
+          { type: 'charm', x: 2920, y: 470 }
+        ],
+        checkpoints: [
+          { x: 1340, y: 280 },
+          { x: 2140, y: 220 },
+          { x: 2900, y: 470 },
+          { x: 4650, y: 470 }
+        ],
+        torii: { x: 5080, y: 520 }
+      },
+      // -----------------------------------------------------------------
+      // MAP 09 — a combat map. Tight ground, low ceilings, enemies close
+      // enough together that the aerial slash-bounce is the way through.
+      // -----------------------------------------------------------------
+      {
+        id: 9,
+        theme: 'night',
+        kanji: '影',
+        name: "THE SHADOW MARKET",
+        title: "MAP 09: THE SHADOW MARKET",
+        requiredScore: 2400,
+        width: 4900,
+        height: 660,
+        spawn: { x: 80, y: 450 },
+        platforms: [
+          { x: 0, y: 500, w: 900, h: 160 },
+          { x: 380, y: 340, w: 200, h: 22 },   // stall awnings
+          { x: 680, y: 300, w: 200, h: 22 },
+          // A. the crowded lane
+          { x: 1000, y: 500, w: 700, h: 160 },
+          { x: 1080, y: 330, w: 160, h: 22 },
+          { x: 1360, y: 300, w: 160, h: 22 },
+          // B. rooftops over the alley
+          { x: 1800, y: 420, w: 150, h: 24 },
+          { x: 2050, y: 350, w: 150, h: 24 },
+          { x: 2300, y: 280, w: 260, h: 24 },
+          { x: 2200, y: 500, w: 600, h: 160 },
+          // C. the well: drop in, wall-jump out
+          { x: 2950, y: 350, w: 45, h: 310 },   // near lip, cleared with a double jump
+          { x: 3160, y: 240, w: 45, h: 420 },
+          { x: 2995, y: 560, w: 165, h: 100 },
+          { x: 3000, y: 200, w: 160, h: 24 },
+          // D. the far lane out
+          { x: 3400, y: 500, w: 700, h: 160 },
+          { x: 3520, y: 350, w: 180, h: 22 },
+          { x: 3840, y: 310, w: 180, h: 22 },
+          { x: 4200, y: 500, w: 700, h: 160 }
+        ],
+        hazards: [
+          { type: 'spike', x: 900, y: 600, w: 100, h: 60 },
+          { type: 'spike', x: 1700, y: 600, w: 500, h: 60 },
+          { type: 'saw', x: 2000, y: 470, startX: 1850, endX: 2250, speed: 190 },
+          { type: 'spike', x: 2800, y: 600, w: 150, h: 60 },
+          { type: 'spike', x: 3205, y: 600, w: 195, h: 60 },
+          { type: 'saw', x: 3700, y: 460, startX: 3520, endX: 4000, speed: 200 },
+          { type: 'spike', x: 4100, y: 600, w: 100, h: 60 }
+        ],
+        enemies: [
+          { type: 'oni', x: 300, y: 460, minX: 120, maxX: 620 },
+          { type: 'oni', x: 700, y: 460, minX: 640, maxX: 880 },
+          { type: 'lantern', x: 520, y: 260, amp: 40, freq: 2.8 },
+          { type: 'archer', x: 1150, y: 280 },
+          { type: 'oni', x: 1300, y: 460, minX: 1020, maxX: 1660 },
+          { type: 'lantern', x: 1500, y: 220, amp: 45, freq: 2.5 },
+          { type: 'archer', x: 2400, y: 250 },
+          { type: 'oni', x: 2500, y: 460, minX: 2220, maxX: 2780 },
+          { type: 'lantern', x: 3060, y: 380, amp: 90, freq: 1.4 },
+          { type: 'oni', x: 3700, y: 460, minX: 3420, maxX: 4080 },
+          { type: 'archer', x: 3900, y: 280 },
+          { type: 'oni', x: 4500, y: 460, minX: 4220, maxX: 4880 }
+        ],
+        destructibles: [
+          { x: 960, y: 430, w: 30, h: 70 },
+          { x: 2830, y: 430, w: 30, h: 70 },
+          { x: 4130, y: 430, w: 30, h: 70 }
+        ],
+        coins: [
+          { x: 220, y: 460 }, { x: 460, y: 300 }, { x: 760, y: 260 },
+          { x: 1160, y: 290 }, { x: 1440, y: 260 }, { x: 1600, y: 460 },
+          { x: 1870, y: 370 }, { x: 2120, y: 300 }, { x: 2400, y: 230 },
+          { x: 3077, y: 500 }, { x: 3077, y: 410 }, { x: 3077, y: 320 },
+          { x: 3600, y: 300 }, { x: 3920, y: 260 }, { x: 4000, y: 460 },
+          { x: 4400, y: 460 }, { x: 4700, y: 460 }
+        ],
+        koban: { x: 3077, y: 150 },
+        powerups: [
+          { type: 'edge', x: 1150, y: 280 },
+          { type: 'charm', x: 2350, y: 230 },
+          { type: 'zanshin', x: 3560, y: 300 }
+        ],
+        checkpoints: [
+          { x: 1030, y: 450 },
+          { x: 2240, y: 450 },
+          { x: 3440, y: 450 },
+          { x: 4240, y: 450 }
+        ],
+        torii: { x: 4780, y: 500 }
+      },
+      // -----------------------------------------------------------------
+      // MAP 10 — the keep. Every mechanic the game has, in one long line.
+      // -----------------------------------------------------------------
+      {
+        id: 10,
+        theme: 'night',
+        kanji: '鬼',
+        name: "THE ONI KEEP",
+        title: "MAP 10: THE ONI KEEP",
+        requiredScore: 5080,   // the map's old 2800 par, plus what the boss pays
+        width: 6000,
+        height: 780,
+        spawn: { x: 80, y: 570 },
+        platforms: [
+          { x: 0, y: 620, w: 500, h: 160 },
+          // A. the outer stair, under fire
+          { x: 620, y: 550, w: 120, h: 24 },
+          { x: 830, y: 480, w: 120, h: 24 },
+          { x: 1040, y: 410, w: 120, h: 24 },
+          { x: 1250, y: 620, w: 460, h: 160 },
+          // B. the crumbling causeway over the moat
+          { x: 1800, y: 560, w: 100, h: 20, crumbling: true },
+          { x: 1970, y: 520, w: 100, h: 20, crumbling: true },
+          { x: 2140, y: 480, w: 100, h: 20, crumbling: true },
+          { x: 2320, y: 620, w: 380, h: 160 },
+          // C. the shaft: wall-jump the full height of the keep
+          { x: 2820, y: 450, w: 45, h: 200 },   // hop-in wall
+          { x: 3030, y: 60, w: 45, h: 560 },
+          { x: 2865, y: 90, w: 165, h: 24 },
+          { x: 2700, y: 620, w: 380, h: 160 },
+          // D. the roof line, everything moving at once
+          { x: 3200, y: 180, w: 130, h: 22, moving: true, moveX: 200, moveSpeed: 1.2 },
+          { x: 3580, y: 250, w: 130, h: 22, moving: true, moveY: 140, moveSpeed: 1.6 },
+          { x: 3860, y: 330, w: 110, h: 20, crumbling: true },
+          { x: 4030, y: 400, w: 110, h: 20, crumbling: true },
+          { x: 4210, y: 470, w: 140, h: 24 },
+          // E. the inner court and the last gate
+          { x: 4450, y: 620, w: 700, h: 160 },
+          { x: 4700, y: 440, w: 200, h: 24 },
+          { x: 5250, y: 620, w: 750, h: 160 }
+        ],
+        hazards: [
+          { type: 'spike', x: 500, y: 740, w: 750, h: 40 },
+          { type: 'saw', x: 900, y: 620, startX: 700, endX: 1150, speed: 200 },
+          { type: 'spike', x: 1710, y: 740, w: 610, h: 40 },
+          { type: 'saw', x: 2000, y: 660, startX: 1800, endX: 2260, speed: 180 },
+          { type: 'spike', x: 2865, y: 400, w: 20, h: 50 },
+          { type: 'spike', x: 3010, y: 220, w: 20, h: 50 },
+          { type: 'spike', x: 3080, y: 740, w: 1370, h: 40 },
+          { type: 'saw', x: 4260, y: 540, startX: 4160, endX: 4420, speed: 220 },
+          { type: 'spike', x: 5150, y: 740, w: 100, h: 40 },
+          { type: 'saw', x: 5450, y: 570, startX: 5280, endX: 5600, speed: 230 }
+        ],
+        enemies: [
+          { type: 'oni', x: 260, y: 580, minX: 120, maxX: 460 },
+          { type: 'archer', x: 1300, y: 580 },
+          { type: 'lantern', x: 950, y: 340, amp: 60, freq: 2.4 },
+          { type: 'oni', x: 1450, y: 580, minX: 1280, maxX: 1670 },
+          { type: 'lantern', x: 2050, y: 400, amp: 55, freq: 2.6 },
+          { type: 'oni', x: 2500, y: 580, minX: 2350, maxX: 2660 },
+          { type: 'archer', x: 2900, y: 70 },
+          { type: 'lantern', x: 3400, y: 260, amp: 70, freq: 1.8 },
+          { type: 'archer', x: 4270, y: 450 },
+          { type: 'oni', x: 4600, y: 580, minX: 4470, maxX: 5120 },
+          { type: 'lantern', x: 4800, y: 340, amp: 50, freq: 2.8 },
+          // The inner court is the arena, so the patrol and the archer are
+          // pulled back off it — a saw sweeping the floor plus a five-bolt fan
+          // is not a fight, it is a coin flip.
+          { type: 'oni', x: 5400, y: 580, minX: 5270, maxX: 5540 },
+          { type: 'archer', x: 5300, y: 580 },
+          { type: 'boss', kind: 'bear', x: 5700, y: 540, minX: 5480, maxX: 5940 }
+        ],
+        destructibles: [
+          { x: 1200, y: 550, w: 30, h: 70 },
+          { x: 2770, y: 550, w: 30, h: 70 },
+          { x: 3110, y: 20, w: 30, h: 70 },
+          { x: 5200, y: 550, w: 30, h: 70 }
+        ],
+        coins: [
+          { x: 250, y: 580 }, { x: 670, y: 505 }, { x: 880, y: 435 }, { x: 1090, y: 365 },
+          { x: 1350, y: 580 }, { x: 1560, y: 580 },
+          { x: 1845, y: 510 }, { x: 2015, y: 470 }, { x: 2185, y: 430 },
+          { x: 2947, y: 570 }, { x: 2947, y: 460 }, { x: 2947, y: 350 },
+          { x: 2947, y: 240 }, { x: 2947, y: 130 },
+          { x: 3265, y: 130 }, { x: 3645, y: 200 }, { x: 3910, y: 280 }, { x: 4080, y: 350 },
+          { x: 4280, y: 420 }, { x: 4600, y: 580 }, { x: 4800, y: 390 },
+          { x: 5350, y: 580 }, { x: 5600, y: 580 }, { x: 5850, y: 580 }
+        ],
+        koban: { x: 2947, y: 25 },
+        powerups: [
+          { type: 'charm', x: 1300, y: 570 },
+          { type: 'zanshin', x: 2400, y: 570 },
+          { type: 'edge', x: 2900, y: 40 },
+          { type: 'charm', x: 4790, y: 390 }
+        ],
+        checkpoints: [
+          { x: 1280, y: 570 },
+          { x: 2350, y: 570 },
+          { x: 2880, y: 40 },
+          { x: 4480, y: 570 },
+          { x: 5280, y: 570 }
+        ],
+        torii: { x: 5860, y: 620 }
       }
     ];
+
+    // Map numbers are two digits all the way to 10, so the labels stay aligned
+    const mapNo = (i) => String(i + 1).padStart(2, '0');
+
+    // =====================================================================
+    // 6B. ENDLESS ROAD — THE SAME VOCABULARY, GENERATED FOREVER
+    // =====================================================================
+    // Ten maps end. This does not: chunks are appended a screen and a half
+    // ahead of the samurai and dropped a screen behind him, so the world stays
+    // a constant size no matter how far the run goes. Every piece it can place
+    // is a piece one of the handcrafted maps already taught.
+    const ENDLESS = {
+      AHEAD: 1700,        // build this far past the player
+      BEHIND: 900,        // and forget everything this far back
+      GROUND_MIN: 400,
+      GROUND_MAX: 560,
+      PIT_FLOOR: 760,
+      GROUND_H: 170,     // slab thickness; the pit below it is empty air
+      RAMP_DISTANCE: 9000, // distance over which difficulty reaches full
+      BOSS_FIRST: 5000,   // world-x of the first boss on the road
+      BOSS_EVERY: 6500    // and how far apart they stand after that
+    };
+
+    class EndlessWorld {
+      constructor(game) {
+        this.game = game;
+      }
+
+      begin() {
+        const g = this.game;
+        g.runtimePlatforms = [];
+        g.runtimeHazards = [];
+        g.runtimeEnemies = [];
+        g.runtimeDestructibles = [];
+        g.runtimeCoins = [];
+        g.runtimePowerups = [];
+        g.runtimeKoban = null;
+        g.runtimePrompts = [];
+        g.runtimeCheckpoints = [];
+        g.sceneryProps = [];
+        g.arrows = [];
+
+        this.groundY = 500;
+        this.cursor = -200;
+        this.lastKind = 'run';
+        this.sinceItem = 0;
+        this.nextBoss = ENDLESS.BOSS_FIRST;
+        this.bossCount = 0;
+
+        // A long, empty, flat opener. The first three seconds of an endless run
+        // must never kill anyone — that is where the player learns the rhythm.
+        this.push('platform', { x: -200, y: 500, w: 1100, h: ENDLESS.GROUND_H });
+        this.cursor = 900;
+        this.fill(2600);
+      }
+
+      // Difficulty is a single 0..1 dial every chunk reads from.
+      get heat() {
+        return Math.min(1, Math.max(0, this.game.endlessDist / ENDLESS.RAMP_DISTANCE));
+      }
+
+      push(kind, obj) {
+        const g = this.game;
+        if (kind === 'platform') {
+          g.runtimePlatforms.push({
+            ...obj, baseX: obj.x, baseY: obj.y,
+            crumbleTimer: 0, isFallen: false, respawnTimer: 0, phase: 0
+          });
+        } else if (kind === 'hazard') {
+          g.runtimeHazards.push({ ...obj, curX: obj.x, curY: obj.y, dir: 1 });
+        } else if (kind === 'enemy') {
+          g.runtimeEnemies.push({
+            ...obj, curX: obj.x,
+            curY: (obj.type === 'oni' || obj.type === 'archer')
+              ? standOn(obj.x, obj.y, g.runtimePlatforms) : obj.y,
+            vx: obj.type === 'oni' ? 80 : 0, facing: 1, animT: Math.random() * 3,
+            shootTimer: 1.5 + Math.random(), active: true, phase: Math.random() * 10,
+            ...(obj.type === 'boss'
+                ? bossRuntime(obj, standOn(obj.x, obj.y, g.runtimePlatforms) + 20)
+                : null)
+          });
+        } else if (kind === 'coin') {
+          g.runtimeCoins.push({ ...obj, collected: false });
+        } else if (kind === 'powerup') {
+          g.runtimePowerups.push({ ...obj, collected: false });
+        }
+      }
+
+      // Spikes filling exactly the hole between two world-x positions
+      pit(x0, x1) {
+        if (x1 - x0 < 20) return;
+        this.push('hazard', {
+          type: 'spike', x: x0, y: ENDLESS.PIT_FLOOR - 50, w: x1 - x0, h: 50
+        });
+      }
+
+      coinArc(x, y, n, step = 60) {
+        for (let i = 0; i < n; i++) this.push('coin', { x: x + i * step, y });
+      }
+
+      // Keep building until the world reaches `target` world-x.
+      fill(target) {
+        let guard = 0;
+        while (this.cursor < target && guard++ < 40) this.chunk();
+      }
+
+      chunk() {
+        const h = this.heat;
+        // A boss holds the road at fixed intervals. Measured in world-x rather
+        // than distance travelled, because chunks are built well ahead of the
+        // samurai and the boss has to be standing there when he arrives.
+        if (this.cursor >= this.nextBoss) {
+          this.nextBoss = this.cursor + ENDLESS.BOSS_EVERY;
+          this.lastKind = 'boss';
+          this.chunk_boss(h);
+          return;
+        }
+        const r = Math.random();
+        // Early on the road is mostly ground with the occasional hop. Later the
+        // gaps, the moving pieces and the walls crowd it out.
+        let kind;
+        if (r < 0.30 - h * 0.16) kind = 'run';
+        else if (r < 0.55 - h * 0.10) kind = 'gap';
+        else if (r < 0.70) kind = 'steps';
+        else if (r < 0.82) kind = 'crumble';
+        else if (r < 0.92) kind = 'moving';
+        else kind = 'chimney';
+        // Never the same shape twice in a row: repetition is what makes a
+        // generated level feel generated.
+        if (kind === this.lastKind && kind !== 'run') kind = 'run';
+        this.lastKind = kind;
+        this['chunk_' + kind](h);
+
+        // An item roughly every fourth chunk, so the reward beat has a rhythm.
+        this.sinceItem++;
+        if (this.sinceItem >= 4) {
+          this.sinceItem = 0;
+          const types = ['charm', 'zanshin', 'edge'];
+          this.push('powerup', {
+            type: types[(Math.random() * 3) | 0],
+            x: this.cursor - 120, y: this.groundY - 70
+          });
+        }
+      }
+
+      // A stretch of solid ground. Room to breathe, sometimes an oni on it.
+      chunk_run(h) {
+        const w = 380 + Math.random() * 260;
+        const x = this.cursor;
+        this.push('platform', { x, y: this.groundY, w, h: ENDLESS.GROUND_H });
+        this.coinArc(x + 70, this.groundY - 44, 3 + ((Math.random() * 3) | 0));
+        if (Math.random() < 0.35 + h * 0.4) {
+          this.push('enemy', {
+            type: 'oni', x: x + w * 0.6, y: this.groundY - 40,
+            minX: x + 40, maxX: x + w - 40
+          });
+        }
+        if (Math.random() < h * 0.4) {
+          this.push('enemy', { type: 'archer', x: x + w - 50, y: this.groundY - 40 });
+        }
+        this.cursor = x + w;
+      }
+
+      // A hole with spikes at the bottom of it.
+      chunk_gap(h) {
+        const gap = 130 + h * 130 + Math.random() * 60;
+        const x = this.cursor;
+        this.push('hazard', { type: 'spike', x, y: ENDLESS.PIT_FLOOR - 50, w: gap, h: 50 });
+        this.coinArc(x + gap * 0.5 - 30, this.groundY - 110, 2, 60);
+        this.stepGround(gap);
+        const w = 300 + Math.random() * 200;
+        this.push('platform', { x: this.cursor, y: this.groundY, w, h: ENDLESS.GROUND_H });
+        if (Math.random() < 0.4 + h * 0.3) {
+          this.push('enemy', {
+            type: 'lantern', x: this.cursor + w * 0.5, y: this.groundY - 150,
+            amp: 40 + h * 30, freq: 2 + Math.random()
+          });
+        }
+        this.cursor += w;
+      }
+
+      // Two or three ledges climbing away from the ground line.
+      chunk_steps(h) {
+        const n = 2 + ((Math.random() * 2) | 0);
+        const gapStart = this.cursor;
+        let x = this.cursor + 60;
+        let y = this.groundY - 70;
+        const dir = Math.random() < 0.5 ? -1 : 1;
+        for (let i = 0; i < n; i++) {
+          this.push('platform', { x, y, w: 110, h: 22 });
+          this.push('coin', { x: x + 55, y: y - 42 });
+          x += 185 + h * 30;
+          y = Math.max(220, Math.min(this.groundY - 50, y + dir * 62));
+        }
+        this.cursor = x + 20;
+        this.pit(gapStart, this.cursor);
+        const w = 300 + Math.random() * 160;
+        this.push('platform', { x: this.cursor, y: this.groundY, w, h: ENDLESS.GROUND_H });
+        this.cursor += w;
+      }
+
+      // Ledges that drop away the moment they are stood on.
+      chunk_crumble(h) {
+        const n = 3;
+        const gapStart = this.cursor;
+        let x = this.cursor + 70;
+        const y = this.groundY - 60;
+        for (let i = 0; i < n; i++) {
+          this.push('platform', { x, y: y - i * 12, w: 95, h: 20, crumbling: true });
+          this.push('coin', { x: x + 47, y: y - i * 12 - 42 });
+          x += 170;
+        }
+        this.cursor = x + 20;
+        this.pit(gapStart, this.cursor);
+        this.stepGround(0);
+        const w = 320 + Math.random() * 160;
+        this.push('platform', { x: this.cursor, y: this.groundY, w, h: ENDLESS.GROUND_H });
+        this.cursor += w;
+      }
+
+      // One raft over a pit, sweeping sideways or riding up and down.
+      chunk_moving(h) {
+        const x = this.cursor;
+        const span = 420 + h * 120;
+        this.push('hazard', { type: 'spike', x, y: ENDLESS.PIT_FLOOR - 50, w: span, h: 50 });
+        const vertical = Math.random() < 0.5;
+        this.push('platform', {
+          x: x + span * 0.35, y: this.groundY - 70, w: 125, h: 22, moving: true,
+          moveX: vertical ? 0 : 150 + h * 60,
+          moveY: vertical ? 110 + h * 40 : 0,
+          moveSpeed: 1.0 + h * 0.6
+        });
+        this.coinArc(x + span * 0.4, this.groundY - 150, 3, 55);
+        if (Math.random() < 0.5) {
+          this.push('hazard', {
+            type: 'saw', x: x + span * 0.5, y: ENDLESS.PIT_FLOOR - 110,
+            startX: x + 60, endX: x + span - 60, speed: 150 + h * 90
+          });
+        }
+        this.cursor = x + span;
+        this.stepGround(0);
+        const w = 300 + Math.random() * 160;
+        this.push('platform', { x: this.cursor, y: this.groundY, w, h: ENDLESS.GROUND_H });
+        this.cursor += w;
+      }
+
+      // A wall-jump shaft with a coin column up the middle of it.
+      chunk_chimney(h) {
+        const x = this.cursor + 60;
+        const top = 180 - h * 60;
+        this.pit(this.cursor, x + 285);
+        this.push('platform', { x, y: top + 40, w: 45, h: ENDLESS.PIT_FLOOR - top - 40 });
+        this.push('platform', { x: x + 200, y: top, w: 45, h: ENDLESS.PIT_FLOOR - top });
+        this.push('platform', { x: x + 45, y: top + 20, w: 155, h: 22 });
+        for (let i = 0; i < 4; i++) {
+          this.push('coin', { x: x + 122, y: this.groundY - 40 - i * 80 });
+        }
+        if (Math.random() < 0.4 + h * 0.4) {
+          this.push('hazard', { type: 'spike', x: x + 45, y: this.groundY - 170, w: 20, h: 50 });
+        }
+        this.cursor = x + 245 + 40;
+        const w = 320 + Math.random() * 160;
+        this.push('platform', { x: this.cursor, y: this.groundY, w, h: ENDLESS.GROUND_H });
+        this.cursor += w;
+      }
+
+      // A boss, on a long flat slab with nothing else on it. The road has no
+      // gate to seal, so this one can be run straight past — it is the only
+      // thing out here that is worth stopping for rather than something that
+      // has to be beaten, and the arena is flat so that choice stays honest.
+      chunk_boss(h) {
+        const w = 940;
+        const x = this.cursor;
+        this.push('platform', { x, y: this.groundY, w, h: ENDLESS.GROUND_H });
+        const kinds = ['mech', 'ooze', 'bear'];
+        this.push('enemy', {
+          type: 'boss',
+          kind: kinds[this.bossCount++ % kinds.length],
+          x: x + w * 0.62, y: this.groundY - 80,
+          minX: x + 150, maxX: x + w - 150
+        });
+        this.coinArc(x + 170, this.groundY - 150, 4, 80);
+        this.cursor = x + w;
+      }
+
+      // Nudge the ground line up or down. How much it may RISE is capped by how
+      // wide the gap in front of it is: a 320px gap plus a 100px step up is past
+      // what the jump arc can do, and a generated map may never be impossible.
+      stepGround(gapWidth) {
+        const room = Math.max(0, 1 - gapWidth / 320);
+        const up = 100 * room;
+        const delta = -up + Math.random() * (up + 90);
+        this.groundY = Math.max(ENDLESS.GROUND_MIN,
+                       Math.min(ENDLESS.GROUND_MAX, this.groundY + delta));
+        this.cursor += gapWidth;
+      }
+
+      // Build ahead, forget behind. Called every tick while endless is running.
+      stream(playerX) {
+        const before = this.game.runtimePlatforms.length;
+        this.fill(playerX + ENDLESS.AHEAD);
+        if (this.game.runtimePlatforms.length !== before) {
+          // Dress only the newly generated ground, then keep what is still
+          // on the road behind us.
+          const fresh = this.game.runtimePlatforms.slice(before);
+          this.game.sceneryProps = (this.game.sceneryProps || [])
+            .concat(buildScenery(fresh, (this.seed = (this.seed || 12345) + 7919)));
+        }
+        const cut = playerX - ENDLESS.BEHIND;
+        const g = this.game;
+        const alive = (o, w) => (o.x + (w || o.w || 40)) > cut;
+        g.runtimePlatforms = g.runtimePlatforms.filter(p => alive(p));
+        g.sceneryProps = (g.sceneryProps || []).filter(sp => sp.x > cut);
+        g.runtimeHazards = g.runtimeHazards.filter(z => alive(z, z.type === 'saw' ? 40 : z.w));
+        g.runtimeEnemies = g.runtimeEnemies.filter(e => e.curX > cut);
+        g.runtimeCoins = g.runtimeCoins.filter(c => c.x > cut);
+        g.runtimePowerups = g.runtimePowerups.filter(p => p.x > cut);
+      }
+    }
+
+    // =====================================================================
+    // 6C. RUN BOARD — THE REASON TO COME BACK
+    // =====================================================================
+    // Persisted through the same three-tier Save wrapper as everything else,
+    // so on CrazyGames it follows the account across devices. It ranks runs,
+    // not just a single number, and it records how the run ended.
+    const RunBoard = {
+      MAX: 12,
+
+      all() {
+        const rows = Save.get('runBoard');
+        return Array.isArray(rows) ? rows : [];
+      },
+
+      // Returns the 1-based rank the run landed at, or 0 if it did not place.
+      submit(entry) {
+        const rows = this.all().slice();
+        rows.push(entry);
+        rows.sort((a, b) => (b.score - a.score) || (b.dist - a.dist));
+        const trimmed = rows.slice(0, this.MAX);
+        const rank = trimmed.indexOf(entry);
+        Save.write({ runBoard: trimmed });
+        return rank < 0 ? 0 : rank + 1;
+      }
+    };
+
+    // Board names are typed by the player and go through innerHTML, so they
+    // are escaped on the way out rather than trusted.
+    function escapeText(str) {
+      return String(str).replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[ch]);
+    }
+
+    // The name on the board. CrazyGames hands us a real account name when the
+    // player is signed in there; otherwise it is whatever they typed, and a
+    // ronin has no name until he earns one.
+    let cgUserName = '';
+    function playerName() {
+      const typed = (Save.get('playerName') || '').trim();
+      return (typed || cgUserName || 'RONIN').slice(0, 10).toUpperCase();
+    }
 
     // =====================================================================
     // 7. ENTITIES & LOGIC
     // =====================================================================
+    // Frame clock for the samurai sheets. It never gates anything: the game
+    // sets a clip every tick and this just decides which cell to blit, so an
+    // action can always interrupt whatever is playing.
     class Animator {
-      constructor(sprites) {
-        this.sprites = sprites;
+      constructor() {
         this.clip = 'idle';
         this.frame = 0;
         this.timer = 0;
@@ -1697,33 +2899,28 @@
       }
 
       update(dt) {
-        const config = this.sprites[this.clip];
-        if (!config) return;
-
-        if (this.done && !config.loop) return;
-
-        const frameDuration = 1 / (config.fps || 10);
+        const c = SPRITES[this.clip];
+        if (!c) return;
+        if (this.done && !c.loop) return;
+        const step = 1 / (c.fps || 10);
         this.timer += dt;
-
-        while (this.timer >= frameDuration) {
-          this.timer -= frameDuration;
-          if (this.frame + 1 < config.frames) {
+        while (this.timer >= step) {
+          this.timer -= step;
+          if (this.frame + 1 < c.frames) {
             this.frame += 1;
-          } else if (config.loop) {
+          } else if (c.loop) {
             this.frame = 0;
           } else {
             this.done = true;
-            this.frame = config.frames - 1; // hold last frame
+            this.frame = c.frames - 1;   // hold the last cell
             break;
           }
         }
       }
 
-      getCurrentFrame() {
-        const config = this.sprites[this.clip];
-        if (!config) return 0;
-        const start = config.startFrame || 0;
-        return start + this.frame;
+      cell() {
+        const c = SPRITES[this.clip];
+        return c ? (c.startFrame || 0) + this.frame : 0;
       }
     }
 
@@ -1732,7 +2929,8 @@
         // Collision box stays exactly CONFIG.playerW x CONFIG.playerH world units
         this.w = CONFIG.playerW;
         this.h = CONFIG.playerH;
-        this.animator = new Animator(SPRITES);
+        this.animator = new Animator();
+        this.trail = [];
         this.reset(80, 440);
       }
 
@@ -1757,6 +2955,7 @@
         // Katana attack
         this.isSlashing = false;
         this.slashTimer = 0;
+        this.slashCooldown = 0;
 
         // Health & Invulnerability
         this.health = CONFIG.MAX_HEALTH;
@@ -1768,8 +2967,16 @@
         this.animTime = 0;
         this.runCycle = 0;
         this.landTimer = 0;
+        this.landPeak = 0.12;
         this.animState = 'idle';
         this.animator.play('idle');
+        this.trail.length = 0;
+
+        // One-shot "the player just did this" flags, read and cleared by the
+        // game each tick. The textless prompts are the only consumer.
+        this.evtJump = false;
+        this.evtDash = false;
+        this.evtSlash = false;
 
         // Active powerup
         this.powerup = null; // 'zanshin' | 'edge' | 'charm'
@@ -1808,6 +3015,9 @@
         this.animState = 'hurt';
         this.scaleX = 0.92; this.scaleY = 1.12;
         audio.playHit();
+        // The same 60ms bite the katana gets. Getting hit should land with the
+        // same weight as landing a hit, or damage reads as a number changing.
+        game.hitStopTimer = CONFIG.HITSTOP_TIME;
         camera.shake(6, 0.25);
         particles.burstInk(this.x, this.y, 20, CONFIG.CRIMSON);
 
@@ -1901,7 +3111,17 @@
                 this.vy += CONFIG.JUMP_HOLD_ACCEL * dt;
                 this.jumpHoldTimer -= dt;
               }
-              this.vy += CONFIG.GRAVITY * dt;
+              // Apex hang, then fast fall. Near the top of the arc the samurai
+              // floats — that is the window the player actually aims in — and
+              // once he is past it he drops hard, so the landing is a decision
+              // instead of a wait.
+              let g = CONFIG.GRAVITY;
+              if (Math.abs(this.vy) < CONFIG.APEX_VY_WINDOW) {
+                g *= CONFIG.APEX_GRAVITY_MULT;
+              } else if (this.vy > 0) {
+                g *= CONFIG.FAST_FALL_MULT;
+              }
+              this.vy += g * dt;
               if (this.vy > CONFIG.MAX_FALL_SPEED) this.vy = CONFIG.MAX_FALL_SPEED;
             }
           } else {
@@ -1920,6 +3140,7 @@
           if (input.consumeDash() && this.hasAirDash) {
             this.hasAirDash = false;
             this.isDashing = true;
+            this.evtDash = true;
             this.dashTimer = CONFIG.DASH_DURATION;
             this.scaleX = 1.15; this.scaleY = 0.88; // Sleek horizontal deformation
             audio.playDash();
@@ -1935,6 +3156,7 @@
             // A) Normal or Coyote Jump
             if (this.coyoteTimer > 0) {
               this.vy = CONFIG.JUMP_INITIAL_VEL;
+              this.evtJump = true;
               this.jumpHoldTimer = CONFIG.JUMP_HOLD_MAX_TIME;
               this.coyoteTimer = 0;
               this.jumpBufferTimer = 0;
@@ -1946,6 +3168,7 @@
             // B) Wall Jump
             else if (this.isWallSliding) {
               this.vy = CONFIG.WALL_JUMP_VEL_Y;
+              this.evtJump = true;
               this.vx = -this.wallDir * CONFIG.WALL_JUMP_VEL_X;
               this.facing = -this.wallDir;
               this.wallLockoutTimer = CONFIG.WALL_JUMP_LOCKOUT;
@@ -1954,25 +3177,31 @@
               this.hasAirDash = true; // Wall kick refreshes dash
               this.scaleX = 0.88; this.scaleY = 1.15;
               audio.playJump(false);
-              particles.burstInk(this.x + this.wallDir * (this.w / 2), this.y, 8, CONFIG.GREY_MID);
+              particles.burstInk(this.x + this.wallDir * (this.w / 2), this.y, 8, '#CFCBBC');
             }
             // C) Air Double Jump
             else if (this.hasDoubleJump) {
               this.hasDoubleJump = false;
+              this.evtJump = true;
               this.vy = CONFIG.DOUBLE_JUMP_VEL;
               this.jumpHoldTimer = CONFIG.JUMP_HOLD_MAX_TIME * 0.75;
               this.jumpBufferTimer = 0;
               this.scaleX = 0.88; this.scaleY = 1.15;
               audio.playJump(true);
-              particles.burstInk(this.x, this.y + this.h / 2, 14, CONFIG.INK_BLACK);
+              particles.burstInk(this.x, this.y + this.h / 2, 14, '#DCD7C6');
             }
           }
         }
 
-        // Katana Slash
-        if (input.consumeSlash() && !this.isSlashing) {
+        // Katana Slash. Gated by a cooldown shorter than the arc itself, so a
+        // second press cuts the previous arc off instead of being swallowed —
+        // the slash never has to play out before the next one is allowed.
+        if (this.slashCooldown > 0) this.slashCooldown -= dt;
+        if (input.consumeSlash() && this.slashCooldown <= 0) {
           this.isSlashing = true;
+          this.evtSlash = true;
           this.slashTimer = CONFIG.SLASH_DURATION;
+          this.slashCooldown = CONFIG.SLASH_COOLDOWN;
           audio.playSlash();
           camera.shake(1.5, 0.08);
 
@@ -1987,10 +3216,14 @@
           for (let i = destructibles.length - 1; i >= 0; i--) {
             const d = destructibles[i];
             if (testAABB(slashBox, d)) {
-              particles.burstInk(d.x + d.w / 2, d.y + d.h / 2, 22, CONFIG.GREY_DARK);
+              particles.burstInk(d.x + d.w / 2, d.y + d.h / 2, 22, '#9C8B78');
               audio.playHit();
               destructibles.splice(i, 1);
               game.addScore(100);
+              // Same 60ms bite the katana gets on a body: contact always stops
+              // the world for a beat, whatever it connected with.
+              game.hitStopTimer = CONFIG.HITSTOP_TIME;
+              camera.shake(3, 0.12);
             }
           }
         }
@@ -2032,6 +3265,7 @@
         }
 
         // Move Y
+        const impactVy = this.vy;
         this.y += this.vy * dt;
         for (const plat of platforms) {
           if (plat.isFallen) continue;
@@ -2040,10 +3274,19 @@
               this.y = plat.y - this.h / 2;
               this.vy = 0;
               if (!wasGrounded) {
-                // Land squash (max 15% deformation: 0.85 scaleY, 1.15 scaleX)
-                this.scaleX = 1.15; this.scaleY = 0.85;
-                this.landTimer = 0.12;
+                // Land squash scaled by how hard the touchdown was, so a hop
+                // and a long fall read differently. Capped at 15% deformation.
+                const impact = Math.min(1, impactVy / CONFIG.MAX_FALL_SPEED);
+                this.scaleX = 1 + 0.15 * impact;
+                this.scaleY = 1 - 0.15 * impact;
+                this.landTimer = 0.09 + 0.09 * impact;
+                this.landPeak = this.landTimer;
                 particles.dust(this.x, this.y + this.h / 2, 0);
+                if (impact > 0.55) {
+                  camera.shake(2.2 * impact, 0.1);
+                  particles.dust(this.x - 8, this.y + this.h / 2, -1);
+                  particles.dust(this.x + 8, this.y + this.h / 2, 1);
+                }
               }
               this.isGrounded = true;
               this.hasAirDash = true;
@@ -2092,6 +3335,17 @@
 
         this.animator.play(this.animState);
         this.animator.update(dt);
+
+        // Dash afterimages. Only the dash leaves them, so the burst reads as
+        // distance covered rather than as generic speed lines.
+        for (let i = this.trail.length - 1; i >= 0; i--) {
+          this.trail[i].life -= dt;
+          if (this.trail[i].life <= 0) this.trail.splice(i, 1);
+        }
+        if (this.isDashing && (this.trail.length === 0 ||
+            Math.abs(this.x - this.trail[this.trail.length - 1].x) > 9)) {
+          this.trail.push({ x: this.x, y: this.y, facing: this.facing, life: 0.22 });
+        }
       }
 
       checkCollision(rect) {
@@ -2107,61 +3361,51 @@
         );
       }
 
+      // Blit one samurai cell with the feet on the bottom of the hitbox.
+      blit(ctx, alpha) {
+        const clip = SPRITES[this.animator.clip] || SPRITES.idle;
+        const dw = Math.round(CELL * CONFIG.spriteScale);
+        const dh = dw;
+        ctx.globalAlpha = alpha;
+        if (!drawFrame(ctx, clip.img, this.animator.cell(), CELL, CELL,
+                       Math.round(-dw / 2), -dh, dw, dh)) {
+          // Sheet missing: a plain block still shows where the player is
+          ctx.fillStyle = '#E8D9A0';
+          ctx.fillRect(Math.round(-this.w / 2), -this.h, this.w, this.h);
+        }
+      }
+
       draw(ctx) {
-        const prevSmoothing = ctx.imageSmoothingEnabled;
-        ctx.imageSmoothingEnabled = false;
+        const smooth = ctx.imageSmoothingEnabled;
+        ctx.imageSmoothingEnabled = false;   // pixel art must stay crisp
+
+        // Dash afterimages, oldest and faintest first
+        for (const t of this.trail) {
+          ctx.save();
+          ctx.translate(Math.round(t.x), Math.round(t.y + this.h / 2));
+          ctx.scale(t.facing, 1);
+          this.blit(ctx, (t.life / 0.22) * 0.3);
+          ctx.restore();
+        }
 
         ctx.save();
-
-        // Invulnerable flicker: toggle ctx.globalAlpha, never skip drawing entirely
-        if (this.invulnTimer > 0) {
-          ctx.globalAlpha = (Math.floor(Date.now() / 70) % 2 === 0) ? 0.35 : 0.85;
-        }
-
-        const clipName = this.animator.clip || 'idle';
-        const clipConfig = SPRITES[clipName] || SPRITES.idle;
-        const imgObj = spriteImages[clipConfig.file];
-        const hasValidImage = imgObj && !imgObj.failed && imgObj.complete && imgObj.naturalWidth > 0;
-
-        // Position calculations rounded to whole device pixels to prevent shimmering
-        const cx = Math.round(this.x + (CONFIG.spriteAnchorX || 0));
-        const feetY = Math.round(this.y + this.h / 2 + (CONFIG.spriteAnchorY || 0));
-        const destW = Math.round(clipConfig.frameW * CONFIG.spriteScale);
-        const destH = Math.round(clipConfig.frameH * CONFIG.spriteScale);
-
-        ctx.translate(cx, feetY);
-        ctx.scale(this.facing, 1);
-
-        if (hasValidImage) {
-          const frameIndex = this.animator.getCurrentFrame();
-          const sx = frameIndex * clipConfig.frameW;
-          const sy = 0;
-          const dx = Math.round(-destW / 2);
-          const dy = Math.round(-destH);
-
-          ctx.drawImage(
-            imgObj,
-            sx,
-            sy,
-            clipConfig.frameW,
-            clipConfig.frameH,
-            dx,
-            dy,
-            destW,
-            destH
-          );
-        } else {
-          // Fallback to plain filled rectangle in player ink colour
-          ctx.fillStyle = CONFIG.INK_BLACK;
-          ctx.fillRect(
-            Math.round(-this.w / 2),
-            Math.round(-this.h),
-            this.w,
-            this.h
-          );
-        }
-
+        // Feet sit on the hitbox bottom, which is where the sheets are anchored
+        ctx.translate(Math.round(this.x + (CONFIG.spriteAnchorX || 0)),
+                      Math.round(this.y + this.h / 2 + (CONFIG.spriteAnchorY || 0)));
+        ctx.scale(this.facing * this.scaleX, this.scaleY);
+        // Invulnerable flicker: fade, never skip drawing entirely
+        const a = this.invulnTimer > 0
+          ? ((Math.floor(Date.now() / 70) % 2 === 0) ? 0.35 : 0.9) : 1;
+        this.blit(ctx, a);
         ctx.restore();
+        ctx.globalAlpha = 1;
+
+        // A ward crystal orbiting the shoulder while the charm is up
+        if (this.powerup === 'charm') {
+          drawProp(ctx, 'crystalC', this.x,
+                   this.y - 30 + Math.sin(performance.now() / 220) * 3, 0.7);
+        }
+        ctx.imageSmoothingEnabled = smooth;
 
         // Katana slash crescent stroke visualization
         if (this.isSlashing) {
@@ -2171,8 +3415,10 @@
           ctx.translate(Math.round(this.x), Math.round(this.y));
           ctx.scale(this.facing, 1);
           ctx.globalAlpha = Math.max(0, 1 - progress * 0.85);
-          ctx.strokeStyle = (this.powerup === 'edge') ? CONFIG.CRIMSON : CONFIG.INK_BLACK;
+          ctx.strokeStyle = (this.powerup === 'edge') ? '#FF6B5A' : '#F4F0E2';
           ctx.lineWidth = 4.5;
+          ctx.shadowColor = (this.powerup === 'edge') ? CONFIG.CRIMSON : '#8FE3FF';
+          ctx.shadowBlur = 10;
           ctx.lineCap = 'round';
           ctx.beginPath();
           const startAngle = -1.1 + progress * 0.5;
@@ -2204,9 +3450,68 @@
           );
           ctx.restore();
         }
-
-        ctx.imageSmoothingEnabled = prevSmoothing;
       }
+    }
+
+    // Small deterministic RNG so a map's scenery is identical every run —
+    // trees that move between attempts read as bugs.
+    function seededRandom(seed) {
+      let s = seed >>> 0 || 1;
+      return () => {
+        s ^= s << 13; s >>>= 0;
+        s ^= s >> 17;
+        s ^= s << 5; s >>>= 0;
+        return s / 4294967296;
+      };
+    }
+
+    // Dress the tops of the wide platforms with trees and bushes. Purely
+    // decorative: nothing here is ever collided against or drawn in front of
+    // the player, so it can never hide a hazard.
+    const SCENERY_KEYS = [
+      { key: 'treeMid',      scale: 0.85, weight: 1, alpha: 0.9 },
+      { key: 'treeSmall',    scale: 0.9,  weight: 2, alpha: 0.95 },
+      { key: 'bushBig',      scale: 1.0,  weight: 3, alpha: 1 },
+      { key: 'bushMid',      scale: 1.0,  weight: 3, alpha: 1 },
+      { key: 'bushSmall',    scale: 1.0,  weight: 3, alpha: 1 },
+      { key: 'mushroom',     scale: 1.0,  weight: 2, alpha: 1 },
+      { key: 'mushroomTall', scale: 1.0,  weight: 2, alpha: 1 }
+    ];
+    const SCENERY_BAG = SCENERY_KEYS.flatMap(e => Array(e.weight).fill(e));
+
+    function buildScenery(platforms, seed) {
+      const rnd = seededRandom(seed);
+      const props = [];
+      for (const p of platforms) {
+        if (p.w < 160 || p.h < 40 || p.moving || p.crumbling) continue;  // ground only
+        const n = Math.min(6, Math.floor(p.w / 190));
+        for (let i = 0; i < n; i++) {
+          const pick = SCENERY_BAG[Math.floor(rnd() * SCENERY_BAG.length)];
+          props.push({
+            key: pick.key,
+            x: Math.round(p.x + 40 + rnd() * (p.w - 80)),
+            y: p.y + 2,
+            scale: pick.scale * (0.85 + rnd() * 0.3),
+            alpha: pick.alpha
+          });
+        }
+      }
+      // Far things first so the near ones overlap them correctly
+      props.sort((a, b) => b.scale - a.scale);
+      return props;
+    }
+
+    // A walking enemy's hitbox is curY-20 .. curY+20, so its feet rest on a
+    // surface when curY is 20 above that surface's top. Finds the nearest one
+    // below the authored position and returns the curY that plants it there.
+    function standOn(x, y, platforms) {
+      let bestTop = null;
+      for (const p of platforms) {
+        if (x < p.x - 8 || x > p.x + p.w + 8) continue;
+        if (p.y < y - 30) continue;                 // above the enemy: not a floor
+        if (bestTop === null || p.y < bestTop) bestTop = p.y;
+      }
+      return bestTop === null ? y : bestTop - 20;
     }
 
     // AABB Collision Helper
@@ -2227,6 +3532,12 @@
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
         this.stageIdx = 0;
+        this.mode = 'stage';           // 'stage' | 'endless'
+        this.lastAdAt = 0;
+        this.endless = new EndlessWorld(this);
+        this.endlessDist = 0;
+        this.runtimePrompts = [];
+        this.runtimeCheckpoints = [];
         this.player = new Player();
         this.stage = null;
         this.activeCheckpoint = null;
@@ -2310,11 +3621,32 @@
         });
         document.getElementById('btnRetry').addEventListener('click', () => {
           audio.init();
-          this.startStage(this.stageIdx);
+          // Each screen decides what "again" means: the board always means
+          // another endless run, a stage result means that stage.
+          (this.retryAction || (() => this.startStage(this.stageIdx)))();
+        });
+        document.getElementById('btnBoard').addEventListener('click', () => {
+          audio.init();
+          this.showRunBoard(null, 0);
+        });
+
+        // The name is committed as it is typed; there is no submit step to miss
+        const nameInput = document.getElementById('nameInput');
+        const commitName = () => {
+          const v = nameInput.value.trim().slice(0, 10).toUpperCase();
+          Save.write({ playerName: v });
+        };
+        nameInput.addEventListener('change', commitName);
+        nameInput.addEventListener('blur', commitName);
+        // Typing a name must not steer the samurai
+        nameInput.addEventListener('keydown', (e) => {
+          e.stopPropagation();
+          if (e.key === 'Enter') nameInput.blur();
         });
         document.getElementById('btnNext').addEventListener('click', () => {
           audio.init();
-          this.startStage(Math.min(this.stageIdx + 1, STAGE_CONFIGS.length - 1));
+          const nextIdx = Math.min(this.stageIdx + 1, STAGE_CONFIGS.length - 1);
+          this.withAdBreak(() => this.startStage(nextIdx));
         });
         document.getElementById('btnMaps').addEventListener('click', () => {
           audio.init();
@@ -2353,10 +3685,12 @@
         this.stageIdx = idx;
         const data = STAGE_CONFIGS[idx];
         this.stage = data;
+        setTheme(data.theme);
+        this.hideBossBar();
 
         const stageTitleEl = document.getElementById('stageTitle');
         if (stageTitleEl) {
-          stageTitleEl.textContent = `MAP 0${idx + 1} — ${data.name}`;
+          stageTitleEl.textContent = `MAP ${mapNo(idx)} — ${data.name}`;
         }
 
         // Clone runtime platforms
@@ -2374,19 +3708,43 @@
           curX: h.x, curY: h.y, dir: 1
         }));
 
-        // Clone enemies
+        // Clone enemies. Oni and archers walk, so their feet are snapped to the
+        // surface underneath them — the authored y values put their hitboxes
+        // 20-40px in the air, which reads as enemies hovering over the ground.
         this.runtimeEnemies = data.enemies.map(e => ({
           ...e,
-          curX: e.x, curY: e.y,
+          curX: e.x,
+          curY: (e.type === 'oni' || e.type === 'archer')
+            ? standOn(e.x, e.y, this.runtimePlatforms)
+            : e.y,
           vx: e.type === 'oni' ? 80 : 0,
           facing: 1,
+          animT: Math.random() * 3,   // desync identical enemies
           shootTimer: 1.5,
           active: true,
-          phase: Math.random() * 10
+          phase: Math.random() * 10,
+          // Bosses hover, so they keep their authored y and carry a fight state.
+          ...(e.type === 'boss'
+              ? bossRuntime(e, standOn(e.x, e.y, this.runtimePlatforms) + 20)
+              : null)
         }));
 
         // Clone destructibles
         this.runtimeDestructibles = data.destructibles.map(d => ({ ...d }));
+
+        // Decorative dressing, seeded off the map id so it never shifts
+        this.sceneryProps = buildScenery(this.runtimePlatforms, (idx + 1) * 7919);
+
+        // Stone lanterns are drawn upward from their anchor, so the authored y
+        // (a hitbox-centre height) leaves them hanging in the air. Clone them
+        // with the anchor moved down onto the surface they mark.
+        this.runtimeCheckpoints = (data.checkpoints || []).map(cp => ({
+          ...cp, y: standOn(cp.x, cp.y, this.runtimePlatforms) + 20
+        }));
+
+        // Clone the textless onboarding glyphs. `used` is set the first time
+        // the player performs the matching action, and the glyph never returns.
+        this.runtimePrompts = (data.prompts || []).map(p => ({ ...p, alpha: 0, used: false }));
 
         // Clone coins & items
         this.runtimeCoins = data.coins.map(c => ({ ...c, collected: false }));
@@ -2409,6 +3767,9 @@
       // ===================================================================
       setOverlayMode(mode, { kanji, title, subtitle, caption } = {}) {
         const el = (id) => document.getElementById(id);
+        // Any overlay means the run is not on screen; the boss bar goes with it
+        // (a pause is the one case where it is worth leaving up).
+        if (mode !== 'paused') this.hideBossBar();
         if (kanji !== undefined) el('overlayKanji').textContent = kanji;
         if (title !== undefined) el('overlayTitle').textContent = title;
         if (subtitle !== undefined) el('overlaySubtitle').textContent = subtitle;
@@ -2419,19 +3780,23 @@
         el('overlayActions').classList.toggle('hidden', !showPlay);
         el('mapSelect').classList.toggle('hidden', mode !== 'maps');
         el('resultPanel').classList.toggle('hidden', mode !== 'result');
-        el('overlayTitle').classList.toggle('compact', mode === 'maps' || mode === 'result');
+        el('boardPanel').classList.toggle('hidden', mode !== 'board');
+        el('overlayTitle').classList.toggle('compact',
+          mode === 'maps' || mode === 'result' || mode === 'board');
 
         el('overlay').classList.remove('hidden');
         this.overlayMode = mode;
       }
 
-      setOverlayButtons({ retry = false, next = false, maps = false } = {}) {
-        const pairs = { btnRetry: retry, btnNext: next, btnMaps: maps };
+      setOverlayButtons({ retry = false, next = false, maps = false, board = false,
+                          retryLabel = 'Retry Map' } = {}) {
+        const pairs = { btnRetry: retry, btnNext: next, btnBoard: board, btnMaps: maps };
         for (const id in pairs) {
           document.getElementById(id).classList.toggle('hidden', !pairs[id]);
         }
+        document.getElementById('btnRetry').textContent = retryLabel;
         document.getElementById('overlayBtnRow')
-          .classList.toggle('hidden', !(retry || next || maps));
+          .classList.toggle('hidden', !(retry || next || maps || board));
       }
 
       renderMapSelect() {
@@ -2451,12 +3816,12 @@
 
           const meta = isOpen
             ? `Best ${b.toLocaleString()} &middot; Par ${st.requiredScore.toLocaleString()}`
-            : `Needs ${STAGE_CONFIGS[i - 1].requiredScore.toLocaleString()} on map 0${i}`;
+            : `Needs ${STAGE_CONFIGS[i - 1].requiredScore.toLocaleString()} on map ${mapNo(i - 1)}`;
 
           card.innerHTML =
             (cleared ? '<span class="map-card-seal">&#10022;</span>' : '') +
             `<span class="map-card-kanji">${isOpen ? st.kanji : '錠'}</span>` +
-            `<span class="map-card-no">Map 0${i + 1}</span>` +
+            `<span class="map-card-no">Map ${mapNo(i)}</span>` +
             `<span class="map-card-name">${isOpen ? st.name : 'SEALED'}</span>` +
             `<span class="map-card-meta">${meta}</span>`;
 
@@ -2471,9 +3836,46 @@
           grid.appendChild(card);
         });
 
+        // The two ways back in that are not a numbered map: the endless road,
+        // and the board it feeds. Endless opens once map 01 has been walked.
+        const extra = document.getElementById('mapExtra');
+        extra.innerHTML = '';
+        const endlessOpen = unlocked > 1 || (best[0] || 0) > 0;
+        const bestKen = Math.floor((Save.get('endlessBest') || 0) / 10);
+
+        const mkCard = (kanji, no, name, meta, locked, onPick) => {
+          const card = document.createElement('button');
+          card.className = 'map-card wide' + (locked ? ' locked' : '');
+          card.disabled = locked;
+          card.innerHTML =
+            `<span class="map-card-kanji">${locked ? '錠' : kanji}</span>` +
+            `<span class="map-card-no">${no}</span>` +
+            `<span class="map-card-name">${name}</span>` +
+            `<span class="map-card-meta">${meta}</span>`;
+          if (!locked) {
+            card.addEventListener('click', () => { audio.init(); onPick(); });
+            card.addEventListener('touchstart', () => card.classList.add('pressed'), { passive: true });
+            ['touchend', 'touchcancel', 'touchmove'].forEach((ev) => {
+              card.addEventListener(ev, () => card.classList.remove('pressed'), { passive: true });
+            });
+          }
+          extra.appendChild(card);
+        };
+
+        mkCard('無', 'No End', 'THE ENDLESS ROAD',
+          endlessOpen
+            ? (bestKen ? `Furthest ${bestKen.toLocaleString()} ken` : 'One life, no gate')
+            : 'Walk map 01 first',
+          !endlessOpen, () => this.startEndless());
+
+        const rows = RunBoard.all();
+        mkCard('番', 'Ranking', 'RUN BOARD',
+          rows.length ? `${rows.length} run${rows.length === 1 ? '' : 's'} posted` : 'Nothing posted yet',
+          false, () => this.showRunBoard(null, 0));
+
         const nextLocked = STAGE_CONFIGS[unlocked];
         document.getElementById('mapFoot').textContent = nextLocked
-          ? `Score ${STAGE_CONFIGS[unlocked - 1].requiredScore.toLocaleString()} on map 0${unlocked} to unseal ${nextLocked.name}`
+          ? `Score ${STAGE_CONFIGS[unlocked - 1].requiredScore.toLocaleString()} on map ${mapNo(unlocked - 1)} to unseal ${nextLocked.name}`
           : 'Every path lies open';
       }
 
@@ -2494,6 +3896,7 @@
 
       // Fresh attempt at a map: score restarts, so par is always per-map
       startStage(idx) {
+        this.mode = 'stage';
         this.stageIdx = idx;
         this.score = 0;
         this.combo = 1.0;
@@ -2514,6 +3917,80 @@
         }
       }
 
+      // A midgame break, but only between maps and never twice inside a few
+      // minutes. GameEvents.requestAd already pauses the run and always calls
+      // back, ad or no ad, so the game cannot stall behind it.
+      withAdBreak(next) {
+        const now = Date.now();
+        if (this.lastAdAt && now - this.lastAdAt < 180000) { next(); return; }
+        this.lastAdAt = now;
+        let done = false;
+        const go = () => { if (!done) { done = true; next(); } };
+        // Belt and braces: if the portal never calls back, start anyway
+        setTimeout(go, 8000);
+        window.GameEvents.requestAd(go, 'midgame');
+      }
+
+      // Endless: no torii, no checkpoints, no par. The road is generated ahead
+      // of the samurai and the run ends when the third hit lands.
+      startEndless() {
+        this.mode = 'endless';
+        this.stageIdx = -1;
+        this.score = 0;
+        this.combo = 1.0;
+        this.comboTimer = 0;
+        this.endlessDist = 0;
+        this.activeCheckpoint = null;
+        this.runCoins = 0;
+        this.stage = {
+          id: 0, kanji: '無', name: 'THE ENDLESS ROAD',
+          width: 1e7, height: ENDLESS.PIT_FLOOR + 60,
+          checkpoints: [], torii: null
+        };
+        setTheme('day');   // the road is the daylit world, forever
+        this.endless.begin();
+        this.player.reset(200, 420);
+        this.player.health = CONFIG.MAX_HEALTH;
+        camera.x = this.player.x;
+        camera.y = this.player.y;
+
+        const el = document.getElementById('stageTitle');
+        if (el) el.textContent = 'THE ENDLESS ROAD — 0 KEN';
+        this.updateHUD();
+
+        document.getElementById('overlay').classList.add('hidden');
+        this.isRunning = true;
+        this.isPaused = false;
+        audio.setMuted(false);
+        window.GameEvents.gameplayStart();
+        this.lastTime = performance.now();
+      }
+
+      // The run is over: bank it, rank it, and put the board in front of them.
+      endEndlessRun() {
+        window.GameEvents.gameplayStop();
+        this.isRunning = false;
+        camera.shake(6, 0.4);
+
+        const dist = Math.floor(this.endlessDist);
+        const entry = {
+          name: playerName(),
+          score: this.score,
+          dist,
+          at: Date.now()
+        };
+        const rank = RunBoard.submit(entry);
+
+        Save.write({
+          coinsTotal: (Save.get('coinsTotal') || 0) + this.runCoins,
+          highScore: Math.max(Save.get('highScore') || 0, this.highScore),
+          endlessBest: Math.max(Save.get('endlessBest') || 0, dist)
+        });
+        this.runCoins = 0;
+
+        setTimeout(() => this.showRunBoard(entry, rank), 600);
+      }
+
       startOrResume() {
         // Splash button doubles as the pause resume
         if (this.isPaused) {
@@ -2525,6 +4002,14 @@
           return;
         }
         this.showMapSelect();
+      }
+
+      // Distance is earned by surviving, not by chaining, so it must not feed
+      // the combo meter or the multiplier would climb on its own.
+      addRaw(pts) {
+        this.score += pts;
+        if (this.score > this.highScore) this.highScore = this.score;
+        this.updateHUD();
       }
 
       addScore(pts) {
@@ -2556,9 +4041,14 @@
       }
 
       onPlayerDeath() {
-        window.GameEvents.gameplayStop();
         this.combo = 1.0;
         this.updateHUD();
+
+        if (this.mode === 'endless') {
+          this.endEndlessRun();
+          return;
+        }
+        window.GameEvents.gameplayStop();
 
         // Meaningful save moment: Run ended
         const currentCoins = (Save.get('coinsTotal') || 0) + this.runCoins;
@@ -2617,6 +4107,53 @@
         }, 700);
       }
 
+      // The board, shown either after an endless run or straight from the map
+      // screen. `justRan` is the entry that was posted this run, if any.
+      showRunBoard(justRan, rank) {
+        this.isRunning = false;
+        this.isPaused = false;
+        audio.setMuted(false);
+        window.GameEvents.gameplayStop();
+
+        const rows = RunBoard.all();
+        const body = document.getElementById('boardRows');
+        body.innerHTML = rows.map((r, i) => {
+          const mine = justRan && r.at === justRan.at;
+          const cls = 'board-row' + (mine ? ' you' : '') + (i === 0 ? ' top' : '');
+          return `<div class="${cls}">` +
+                 `<span class="rank">${i + 1}</span>` +
+                 `<span>${escapeText(r.name || 'RONIN')}</span>` +
+                 `<span>${Math.floor((r.dist || 0) / 10).toLocaleString()}</span>` +
+                 `<span>${(r.score || 0).toLocaleString()}</span>` +
+                 `</div>`;
+        }).join('');
+        document.getElementById('boardEmpty').classList.toggle('hidden', rows.length > 0);
+
+        const nameInput = document.getElementById('nameInput');
+        nameInput.value = playerName();
+        nameInput.placeholder = cgUserName || 'RONIN';
+
+        let subtitle;
+        if (justRan && rank) {
+          subtitle = `${Math.floor(justRan.dist / 10).toLocaleString()} ken · ` +
+                     `${justRan.score.toLocaleString()} pts · rank ${rank}`;
+        } else if (justRan) {
+          const cut = rows.length ? rows[rows.length - 1].score : 0;
+          subtitle = `${justRan.score.toLocaleString()} pts — ` +
+                     `${(cut - justRan.score + 1).toLocaleString()} short of the board`;
+        } else {
+          subtitle = 'The furthest anyone has walked this road';
+        }
+
+        this.setOverlayMode('board', {
+          kanji: rank === 1 ? '極' : '番',
+          title: justRan ? (rank === 1 ? 'NEW BEST' : 'RUN ENDED') : 'RUN BOARD',
+          subtitle
+        });
+        this.retryAction = () => this.startEndless();
+        this.setOverlayButtons({ retry: true, maps: true, retryLabel: 'Run Again' });
+      }
+
       showResult(idx, earned, par, passed, isLast, justUnlocked) {
         const stage = STAGE_CONFIGS[idx];
         const best = (Save.get('stageBest') || [])[idx] || 0;
@@ -2653,6 +4190,7 @@
           title: passed ? 'CLEARED' : 'FELL SHORT',
           subtitle: stage.name
         });
+        this.retryAction = () => this.startStage(idx);
         this.setOverlayButtons({ retry: true, next: passed && !isLast, maps: true });
       }
 
@@ -2685,7 +4223,7 @@
             if (p.crumbleTimer <= 0) {
               p.isFallen = true;
               p.respawnTimer = 3.0;
-              particles.burstInk(p.x + p.w / 2, p.y + p.h / 2, 10, CONFIG.GREY_MID);
+              particles.burstInk(p.x + p.w / 2, p.y + p.h / 2, 10, '#9C8B78');
             }
           } else if (p.isFallen) {
             p.respawnTimer -= worldDt;
@@ -2708,15 +4246,47 @@
         // 4. Update Player
         this.player.update(dt, this.runtimePlatforms, this.runtimeDestructibles);
 
-        // Pit death check
+        // 4B. Endless: extend the road ahead, drop what is behind, and pay out
+        // for ground covered. Distance only ever counts forward progress.
+        if (this.mode === 'endless') {
+          this.endless.stream(this.player.x);
+          const travelled = Math.max(0, this.player.x - 200);
+          if (travelled > this.endlessDist) {
+            const before = Math.floor(this.endlessDist / 100);
+            this.endlessDist = travelled;
+            const after = Math.floor(this.endlessDist / 100);
+            if (after > before) {
+              this.addRaw((after - before) * 10);
+              const el = document.getElementById('stageTitle');
+              if (el) el.textContent =
+                'THE ENDLESS ROAD — ' + Math.floor(this.endlessDist / 10).toLocaleString() + ' KEN';
+            }
+          }
+        }
+
+        // Pit death check. reset() rebuilds the player from scratch, health
+        // included, so the hit the pit just cost has to be carried across it —
+        // otherwise falling in is free.
         if (this.player.y > this.stage.height + 60) {
           this.player.damage(1);
           if (this.player.health > 0) {
-            const sp = this.activeCheckpoint || this.stage.spawn;
-            this.player.reset(sp.x, sp.y);
+            const carried = this.player.health;
+            if (this.mode === 'endless') {
+              this.endlessRespawn();
+            } else {
+              const sp = this.activeCheckpoint || this.stage.spawn;
+              this.player.reset(sp.x, sp.y);
+            }
+            this.player.health = carried;
+            this.player.invulnTimer = Math.max(this.player.invulnTimer, 1.0);
             this.updateHUD();
           }
         }
+
+        // Textless onboarding: a glyph fades in as he reaches it and is gone
+        // for good the moment the matching input is used.
+        if (this.runtimePrompts.length) this.updatePrompts(dt);
+        this.player.evtJump = this.player.evtDash = this.player.evtSlash = false;
 
         // 5. Enemies update & combat
         const playerBox = {
@@ -2735,6 +4305,16 @@
 
         for (const e of this.runtimeEnemies) {
           if (!e.active) continue;
+          // Animation clock ticks with the world, so hitstop and Zanshin slow
+          // the enemies' limbs too instead of only their positions.
+          e.animT = (e.animT || 0) + worldDt;
+
+          // A boss runs its own fight loop — multi-hit health, a telegraph and
+          // a volley. Everything past this point is the one-slash-kill path.
+          if (e.type === 'boss') {
+            this.updateBoss(e, worldDt, slashBox, playerBox);
+            continue;
+          }
 
           // Oni patrol
           if (e.type === 'oni') {
@@ -2757,7 +4337,7 @@
               this.arrows.push({
                 x: e.curX, y: e.curY - 6,
                 vx: dir * 180,
-                active: true
+                active: true, owner: e
               });
             }
           }
@@ -2770,7 +4350,7 @@
           if (slashBox && testAABB(slashBox, enemyBox)) {
             e.active = false;
             audio.playHit();
-            particles.burstInk(e.curX, enemyBox.y + 20, 24, CONFIG.INK_BLACK);
+            particles.burstInk(e.curX, enemyBox.y + 20, 24, CONFIG.CRIMSON);
             this.addScore(150);
             this.hitStopTimer = CONFIG.HITSTOP_TIME;
             camera.shake(3.5, 0.12);
@@ -2796,11 +4376,20 @@
           const arr = this.arrows[i];
           arr.x += arr.vx * worldDt;
 
-          const arrowBox = { x: arr.x - 12, y: arr.y - 4, w: 24, h: 8 };
+          // Nothing else retires a bolt that misses, and a boss volley is five
+          // at a time — without this an endless run accumulates them forever.
+          if (Math.abs(arr.x - this.player.x) > 1600) {
+            this.arrows.splice(i, 1);
+            continue;
+          }
+
+          const r = arr.big ? 18 : 12;
+          const arrowBox = { x: arr.x - r, y: arr.y - r / 3, w: r * 2, h: r / 1.5 };
 
           // Slash deflects arrow
           if (slashBox && testAABB(slashBox, arrowBox)) {
             arr.vx = -arr.vx * 1.5; // reflect backwards
+            arr.deflected = true;   // drives the gold tint, see the render pass
             audio.playDeflect();
             particles.burstInk(arr.x, arr.y, 8, CONFIG.GOLD);
             camera.shake(2, 0.08);
@@ -2816,15 +4405,27 @@
             continue;
           }
 
-          // Arrow hits an enemy while deflected
+          // Arrow hits an enemy while deflected. `owner` is the shooter: a bolt
+          // spawns inside the hurtbox of whatever fired it, so without this the
+          // shooter kills itself on its own first shot.
           for (const e of this.runtimeEnemies) {
-            if (!e.active) continue;
-            const eb = { x: e.curX - 16, y: (e.curY || e.y) - 20, w: 32, h: 40 };
+            if (!e.active || e === arr.owner) continue;
+            const boss = e.type === 'boss';
+            if (boss && (e.state === 'dying' || e.invulnT > 0)) continue;
+            const eb = boss
+              ? bossBox(e)
+              : { x: e.curX - 16, y: (e.curY || e.y) - 20, w: 32, h: 40 };
             if (testAABB(arrowBox, eb)) {
-              e.active = false;
-              audio.playHit();
-              particles.burstInk(e.curX, eb.y + 20, 20, CONFIG.INK_BLACK);
-              this.addScore(200);
+              if (boss) {
+                // A parried bolt is worth one slash. It is the only ranged
+                // answer the samurai has, so it has to actually count.
+                this.damageBoss(e, 1);
+              } else {
+                e.active = false;
+                audio.playHit();
+                particles.burstInk(e.curX, eb.y + 20, 20, CONFIG.CRIMSON);
+                this.addScore(200);
+              }
               this.arrows.splice(i, 1);
               break;
             }
@@ -2881,8 +4482,8 @@
         }
 
         // Checkpoints (Stone lanterns)
-        for (const cp of (this.stage.checkpoints || [])) {
-          if (Math.hypot(this.player.x - cp.x, this.player.y - cp.y) < 40) {
+        for (const cp of this.runtimeCheckpoints) {
+          if (Math.hypot(this.player.x - cp.x, this.player.y - cp.y) < 48) {
             if (this.activeCheckpoint !== cp) {
               this.activeCheckpoint = cp;
               audio.playCheckpoint();
@@ -2891,16 +4492,256 @@
           }
         }
 
-        // Torii Gate Clear
-        if (Math.hypot(this.player.x - this.stage.torii.x, this.player.y - (this.stage.torii.y - 40)) < 40) {
+        // Torii Gate Clear (the endless road has no gate to reach). On a map
+        // with a boss the gate is sealed until it is down — the fight is the
+        // map's last obstacle, not something to run past.
+        if (this.stage.torii && !this.bossAlive() &&
+            Math.hypot(this.player.x - this.stage.torii.x,
+                       this.player.y - (this.stage.torii.y - 40)) < 40) {
           this.onStageComplete();
         }
+
+        this.updateBossHUD();
 
         // Update particles
         particles.update(dt);
 
         // Update camera
         camera.update(this.player, dt, this.stage.width, this.stage.height);
+      }
+
+      // ===================================================================
+      // BOSS FIGHTS
+      // ===================================================================
+      // One hovering boss guards the gate of maps 04, 07 and 10, and the
+      // endless road throws one at the samurai every so often. The loop is
+      // always the same three beats, so it can be learned once and then read
+      // at speed: HUNT (it closes on him) -> WIND (half a second of tell, both
+      // on the sprite and in the horn) -> STRIKE (a fan of bolts). Below half
+      // health every beat runs faster and the fan gets wider.
+      //
+      // Every clock here is on `worldDt`, so hitstop and Zanshin slow a boss
+      // exactly as much as they slow everything else.
+
+      // Any boss still fighting on this map. Cheap enough to call per frame.
+      bossAlive() {
+        for (const e of this.runtimeEnemies) {
+          if (e.type === 'boss' && e.active && e.state !== 'dying') return true;
+        }
+        return false;
+      }
+
+      updateBoss(e, dt, slashBox, playerBox) {
+        e.bob += dt * 2.2;
+
+        // Death is a fixed 1.5s of sinking and fading, then it is gone. It is
+        // not interactive: nothing the player does during it changes anything.
+        if (e.state === 'dying') {
+          e.deathT += dt;
+          e.curY += 34 * dt;
+          if (e.deathT > 1.5) e.active = false;
+          return;
+        }
+
+        if (e.invulnT > 0) e.invulnT -= dt;
+        e.stateT += dt;
+
+        const enraged = e.hp <= e.maxHp / 2;
+        const toPlayer = this.player.x - e.curX;
+        e.facing = toPlayer < 0 ? -1 : 1;
+
+        if (e.state === 'hunt') {
+          // Closes to arm's length and no further, so it does not simply park
+          // on top of the samurai and grind him down by contact.
+          if (Math.abs(toPlayer) > 84) {
+            e.curX += Math.sign(toPlayer) * (enraged ? 118 : 82) * dt;
+          }
+          e.curX = Math.max(e.minX, Math.min(e.maxX, e.curX));
+          if (e.stateT > (enraged ? 1.15 : 1.8)) {
+            e.state = 'wind'; e.stateT = 0;
+            audio.playBossTell();
+          }
+        } else if (e.state === 'wind') {
+          if (e.stateT > 0.55) {
+            e.state = 'strike'; e.stateT = 0;
+            this.bossVolley(e, enraged);
+          }
+        } else if (e.state === 'strike') {
+          if (e.stateT > 0.35) { e.state = 'hunt'; e.stateT = 0; }
+        } else if (e.state === 'hurt') {
+          // A stagger, not a reset: stateT keeps running underneath it (see
+          // damageBoss), so chaining slashes can interrupt a wind-up but can
+          // never lock the boss out of ever attacking.
+          if (e.invulnT <= 0.24) e.state = 'hunt';
+        }
+
+        e.curY = e.homeY + Math.sin(e.bob) * 16;
+
+        const box = bossBox(e);
+
+        // The invulnerability window is what makes this a fight rather than one
+        // swing: a slash arc is live for 0.12s and would otherwise land its
+        // whole duration against the same hurtbox.
+        if (slashBox && e.invulnT <= 0 && testAABB(slashBox, box)) {
+          this.damageBoss(e, 1);
+          // The aerial chain still pays out, so a boss can be juggled the same
+          // way a line of oni can.
+          if (!this.player.isGrounded) {
+            this.player.vy = CONFIG.SLASH_BOUNCE_Y;
+            this.player.hasAirDash = true;
+          }
+          return;
+        }
+
+        if (testAABB(playerBox, box)) {
+          if (this.player.damage(1)) this.updateHUD();
+        }
+      }
+
+      // The tell resolves into a fan of bolts. They go into the same list the
+      // caster's arrows do, so the parry the caster taught still works here —
+      // and a deflected bolt comes back for real damage.
+      bossVolley(e, enraged) {
+        const dir = e.facing;
+        // Heights are measured off the FLOOR, not off the boss, and the stack
+        // stops well below a jump apex. That makes the volley a thing to jump
+        // rather than a wall of damage: standing still is always wrong, and
+        // there is always a height that is right. Parrying still works too.
+        const floor = e.floorY || (e.curY + 80);
+        const rows = enraged ? [-20, -62, -104] : [-20, -62];
+        for (const dy of rows) {
+          this.arrows.push({
+            // Clear of its own hurtbox, so the fan is not sitting on top of the
+            // boss for the frames the player could parry it in place.
+            x: e.curX + dir * 52,
+            y: floor + dy,
+            vx: dir * (enraged ? 250 : 205),
+            active: true, big: true, owner: e
+          });
+        }
+        camera.shake(3, 0.1);
+      }
+
+      damageBoss(e, amount) {
+        if (e.state === 'dying') return;
+        e.hp -= amount;
+        // Long enough that a single 0.12s slash arc cannot land twice, and long
+        // enough again that the fight has a rhythm instead of being one combo.
+        e.invulnT = 0.5;
+        // stateT is deliberately NOT reset: the attack clock runs through the
+        // stagger, so a player who never stops swinging still has to deal with
+        // the volley instead of holding the boss down forever.
+        e.state = 'hurt';
+        audio.playHit();
+        particles.burstInk(e.curX, e.curY, 26, CONFIG.CRIMSON);
+        this.hitStopTimer = CONFIG.HITSTOP_TIME * 1.7;
+        camera.shake(5, 0.16);
+        this.addScore(120);
+        // Knocked back along the arena, never out of it.
+        e.curX = Math.max(e.minX, Math.min(e.maxX, e.curX + e.facing * 30));
+        if (e.hp <= 0) this.killBoss(e);
+      }
+
+      killBoss(e) {
+        e.hp = 0;
+        e.state = 'dying'; e.stateT = 0; e.deathT = 0;
+        e.invulnT = 0;
+        audio.playBossDown();
+        particles.burstInk(e.curX, e.curY, 60, CONFIG.GOLD);
+        particles.burstInk(e.curX, e.curY, 40, CONFIG.CRIMSON);
+        camera.shake(9, 0.5);
+        this.hitStopTimer = 0.18;
+        this.addScore(1200);
+        // It pays out where it died, so the reward is on the way to the gate
+        // it was blocking rather than a number that appears in the corner.
+        for (let i = 0; i < 6; i++) {
+          this.runtimeCoins.push({
+            x: e.curX - 150 + i * 60, y: e.curY + 40, collected: false
+          });
+        }
+      }
+
+      // Nothing calls updateBossHUD while an overlay is up, so the bar has to
+      // be taken down explicitly — otherwise a death mid-fight leaves a full
+      // health bar sitting over the result screen.
+      hideBossBar() {
+        const bar = document.getElementById('bossBar');
+        if (bar) bar.classList.remove('active');
+        this._bossShown = false;
+        this._bossHp = null;
+      }
+
+      // The bar only exists while a boss does. Written straight to the DOM the
+      // same way the rest of the HUD is.
+      updateBossHUD() {
+        const bar = document.getElementById('bossBar');
+        if (!bar) return;
+        let boss = null;
+        for (const e of this.runtimeEnemies) {
+          if (e.type === 'boss' && e.active && e.state !== 'dying') { boss = e; break; }
+        }
+        if (!boss) {
+          if (this._bossShown) { bar.classList.remove('active'); this._bossShown = false; }
+          return;
+        }
+        const art = BOSS_ART[boss.kind] || BOSS_ART.mech;
+        if (this._bossShown !== boss) {
+          document.getElementById('bossBarName').innerHTML =
+            '<span class="boss-kanji">' + art.kanji + '</span>' + art.name;
+          bar.classList.add('active');
+          this._bossShown = boss;
+          this._bossHp = null;   // force the fill to be written for this one
+        }
+        // Only on a change: this runs every frame and the CSS transition on the
+        // fill would otherwise be restarted 60 times a second.
+        if (this._bossHp !== boss.hp) {
+          this._bossHp = boss.hp;
+          document.getElementById('bossBarFill').style.width =
+            Math.max(0, boss.hp / boss.maxHp * 100) + '%';
+        }
+      }
+
+      // Put the samurai back on the nearest solid ground ahead of him. Endless
+      // has no checkpoints, so a pit costs a life and nothing else.
+      endlessRespawn() {
+        this.endless.fill(this.player.x + ENDLESS.AHEAD);
+        let best = null;
+        for (const pl of this.runtimePlatforms) {
+          if (pl.w < 200 || pl.moving || pl.crumbling) continue;   // ground only
+          if (pl.x + pl.w < this.player.x - 200) continue;
+          if (!best || pl.x < best.x) best = pl;
+        }
+        if (best) {
+          this.player.reset(Math.max(best.x + 60, this.player.x - 120), best.y - 90);
+        } else {
+          this.player.reset(this.player.x, 300);
+        }
+        this.combo = 1.0;
+        this.player.invulnTimer = 1.2;
+      }
+
+      // Prompts fade in on approach, and are retired permanently by the action
+      // they teach — the lesson is over the moment it has been performed once.
+      updatePrompts(dt) {
+        const p = this.player;
+        const did = {
+          move: Math.abs(p.vx) > 90,
+          jump: p.evtJump,
+          slash: p.evtSlash,
+          dash: p.evtDash
+        };
+        for (const pr of this.runtimePrompts) {
+          if (pr.used) {
+            pr.alpha = Math.max(0, pr.alpha - dt * 3.5);
+            continue;
+          }
+          const near = Math.abs(p.x - pr.x) < 190;
+          const target = near ? 1 : 0;
+          pr.alpha += (target - pr.alpha) * Math.min(1, dt * 6);
+          // Only the glyph he is standing in front of can be satisfied, so
+          // running past one does not silently retire the next.
+          if (near && did[pr.act]) pr.used = true;
+        }
       }
 
       // Main RAF render loop with hit-stop freeze handling
@@ -2937,32 +4778,20 @@
       }
 
       // ===================================================================
-      // PROCEDURAL SUMI-E RENDERING
+      // PIXEL ART RENDERING
       // ===================================================================
       render() {
         const ctx = this.ctx;
         const w = camera.viewportW;
         const h = camera.viewportH;
 
-        // Base Paper Background Fill
-        ctx.fillStyle = CONFIG.PAPER_BG;
+        // Nearest-neighbour for the whole frame: every pixel on screen comes
+        // from a 32px tile or a 96px cell and must not be filtered.
+        ctx.imageSmoothingEnabled = false;
+
+        ctx.fillStyle = THEME.sky;
         ctx.fillRect(0, 0, w, h);
-
-        // Procedural Paper Texture overlay
-        if (paperCanvas) {
-          ctx.save();
-          ctx.globalAlpha = 0.6;
-          const pattern = ctx.createPattern(paperCanvas, 'repeat');
-          ctx.fillStyle = pattern;
-          ctx.fillRect(0, 0, w, h);
-          ctx.restore();
-        }
-
-        // PARALLAX LAYER 1 (0.15 speed): Distant ink wash mountains in light grey
-        this.drawParallaxMountains(ctx, 0.15, CONFIG.GREY_LIGHT, 0.35, 180);
-
-        // PARALLAX LAYER 2 (0.35 speed): Midground bamboo ridges
-        this.drawParallaxBamboo(ctx, 0.35, CONFIG.GREY_MID, 0.5, 260);
+        this.drawParallax(ctx, w, h);
 
         // Camera Transform with Shake
         ctx.save();
@@ -2977,34 +4806,50 @@
         ctx.scale(z, z);
         ctx.translate(snap(-camera.x * z) / z, snap(-camera.y * z) / z);
 
-        // Render Checkpoint Stone Lanterns
-        for (const cp of (this.stage.checkpoints || [])) {
+        // Everything past this point is world space. Cull to what the camera
+        // can actually see - a map is up to 6000px wide and endless has no end.
+        const halfW = (w / 2) / camera.zoom + 140;
+        const viewL = camera.x - halfW, viewR = camera.x + halfW;
+        const onScreen = (x, ww) => (x + (ww || 0)) > viewL && x < viewR;
+
+        // Trees and bushes sit behind the playfield
+        this.drawScenery(ctx, viewL, viewR);
+
+        // Render the exit first so the player silhouette always wins over it
+        if (this.stage.torii) {
+          this.drawToriiGate(ctx, this.stage.torii.x, this.stage.torii.y,
+                             this.bossAlive());
+        }
+
+        // Checkpoint signposts
+        for (const cp of this.runtimeCheckpoints) {
+          if (!onScreen(cp.x - 30, 60)) continue;
           this.drawLantern(ctx, cp.x, cp.y, this.activeCheckpoint === cp);
         }
 
-        // Render Torii Gate (Grand Stage Exit)
-        this.drawToriiGate(ctx, this.stage.torii.x, this.stage.torii.y);
-
-        // Render Platforms with Organic Brush Stroke Edges & Ink Bleed
+        // Tiled terrain
         for (const p of this.runtimePlatforms) {
-          if (p.isFallen) continue;
-          this.drawBrushPlatform(ctx, p);
+          if (p.isFallen || !onScreen(p.x, p.w)) continue;
+          this.drawTiledPlatform(ctx, p, viewL, viewR);
         }
 
-        // Render Destructible bamboo barriers
+        // Render Destructible barricades
         for (const d of this.runtimeDestructibles) {
           this.drawDestructible(ctx, d);
         }
 
         // Render Hazards (Spikes & Saws)
         for (const hz of this.runtimeHazards) {
-          if (hz.type === 'spike') this.drawSpikes(ctx, hz);
-          else if (hz.type === 'saw') this.drawSaw(ctx, hz);
+          if (hz.type === 'spike') {
+            if (onScreen(hz.x, hz.w)) this.drawSpikes(ctx, hz);
+          } else if (hz.type === 'saw') {
+            if (onScreen(hz.curX - 30, 60)) this.drawSaw(ctx, hz);
+          }
         }
 
         // Render Pickups (Coins, Koban, Powerups)
         for (const c of this.runtimeCoins) {
-          if (!c.collected) this.drawMonCoin(ctx, c.x, c.y);
+          if (!c.collected && onScreen(c.x - 16, 32)) this.drawMonCoin(ctx, c.x, c.y);
         }
         if (this.runtimeKoban && !this.runtimeKoban.collected) {
           this.drawGoldenKoban(ctx, this.runtimeKoban.x, this.runtimeKoban.y);
@@ -3013,31 +4858,44 @@
           if (!pw.collected) this.drawPowerupItem(ctx, pw);
         }
 
-        // Render Arrows
+        // Caster bolts. A deflected one turns gold, which is the whole tell
+        // that the parry worked.
         for (const arr of this.arrows) {
+          // Boss bolts are half again as big and violet, so a fan of five is
+          // never mistaken for a lone caster's shot.
+          const hot = arr.deflected ? CONFIG.GOLD : (arr.big ? '#C77DFF' : '#FF8A3D');
+          const s = arr.big ? 1.55 : 1;
           ctx.save();
-          ctx.strokeStyle = CONFIG.INK_BLACK;
-          ctx.lineWidth = 2.5;
-          ctx.beginPath();
-          ctx.moveTo(arr.x - 12, arr.y);
-          ctx.lineTo(arr.x + 12, arr.y);
-          ctx.stroke();
-          // Arrow head
-          ctx.fillStyle = (arr.vx < 0) ? CONFIG.CRIMSON : CONFIG.INK_BLACK;
-          ctx.beginPath();
-          const headX = (arr.vx > 0) ? arr.x + 12 : arr.x - 12;
-          ctx.arc(headX, arr.y, 3.5, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.globalAlpha = 0.35;
+          ctx.fillStyle = hot;
+          ctx.beginPath(); ctx.arc(arr.x, arr.y, 11 * s, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = hot;
+          ctx.beginPath(); ctx.arc(arr.x, arr.y, 5.5 * s, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#FFF3C4';
+          ctx.beginPath(); ctx.arc(arr.x - Math.sign(arr.vx) * 1.5, arr.y - 1, 2.4 * s, 0, Math.PI * 2); ctx.fill();
+          // A short tail pointing back down the flight path
+          ctx.globalAlpha = 0.4;
+          ctx.fillStyle = hot;
+          ctx.fillRect(arr.x - Math.sign(arr.vx) * 16 * s, arr.y - 1.5 * s, 12 * s, 3 * s);
           ctx.restore();
         }
 
         // Render Enemies
         for (const e of this.runtimeEnemies) {
-          if (!e.active) continue;
+          // A boss is drawn 150px wide, so it needs the wider cull box or it
+          // pops in with its head already past the screen edge.
+          const pad = e.type === 'boss' ? 110 : 60;
+          if (!e.active || !onScreen(e.curX - pad, pad * 2)) continue;
           if (e.type === 'oni') this.drawOni(ctx, e);
           else if (e.type === 'lantern') this.drawLanternEnemy(ctx, e);
           else if (e.type === 'archer') this.drawArcher(ctx, e);
+          else if (e.type === 'boss') this.drawBoss(ctx, e);
         }
+
+        // Render the onboarding glyphs behind him, so he is never hidden by
+        // the thing that is trying to teach him
+        for (const pr of this.runtimePrompts) this.drawPrompt(ctx, pr);
 
         // Render Player Samurai
         this.player.draw(ctx);
@@ -3048,306 +4906,486 @@
         ctx.restore();
       }
 
-      // Sumi-e Brush Platform: wobbly brush contour, ink bleed gradient beneath
-      drawBrushPlatform(ctx, p) {
+      // ---- Textless onboarding glyphs -------------------------------------
+      // Drawn in the world, at the exact spot the lesson applies. No sentence,
+      // no tooltip: the shape of the control the player is holding, plus an ink
+      // mark for what it does. They fade out for good once used.
+      drawPrompt(ctx, pr) {
+        if (pr.alpha < 0.01) return;
+        const touch = input.touchActive;
+        const bob = Math.sin(performance.now() / 380 + pr.x) * 3;
+
         ctx.save();
-        // Soft ink-bleed shadow underneath
-        ctx.fillStyle = 'rgba(13, 13, 16, 0.08)';
-        ctx.fillRect(p.x, p.y + p.h, p.w, 14);
+        ctx.globalAlpha = pr.alpha * 0.92;
+        ctx.translate(pr.x, pr.y + bob);
 
-        // Solid ink body
-        ctx.fillStyle = CONFIG.INK_BLACK;
-        ctx.beginPath();
-        // Organic wobbly top line
-        ctx.moveTo(p.x, p.y);
-        const steps = Math.max(4, Math.floor(p.w / 30));
-        for (let i = 1; i <= steps; i++) {
-          const px = p.x + (p.w / steps) * i;
-          const py = p.y + ((i % 2 === 0) ? -1.5 : 1.5);
-          ctx.lineTo(px, py);
+        const caps = (pr.act === 'move') ? 2 : 1;
+        const capW = (pr.act === 'jump' && !touch) ? 62 : 30;
+        const gap = 8;
+        const totalW = caps * capW + (caps - 1) * gap;
+        let cx = -totalW / 2 + capW / 2;
+
+        for (let i = 0; i < caps; i++) {
+          this.drawKeyCap(ctx, cx, 0, capW, 30, touch);
+          const icon = (pr.act === 'move') ? (i === 0 ? 'left' : 'right') : pr.act;
+          this.drawKeyIcon(ctx, cx, 0, icon, touch, i);
+          cx += capW + gap;
         }
-        ctx.lineTo(p.x + p.w, p.y + p.h);
-        ctx.lineTo(p.x, p.y + p.h);
-        ctx.closePath();
-        ctx.fill();
 
-        // Crumbling crack indicator
-        if (p.crumbling && p.crumbleTimer > 0) {
-          ctx.strokeStyle = CONFIG.PAPER_BG;
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.moveTo(p.x + p.w * 0.3, p.y);
-          ctx.lineTo(p.x + p.w * 0.5, p.y + p.h);
-          ctx.stroke();
-        }
-        ctx.restore();
-      }
-
-      drawDestructible(ctx, d) {
-        ctx.save();
-        ctx.fillStyle = CONFIG.GREY_DARK;
-        ctx.fillRect(d.x, d.y, d.w, d.h);
-        ctx.strokeStyle = CONFIG.INK_BLACK;
-        ctx.lineWidth = 2;
-        ctx.strokeRect(d.x, d.y, d.w, d.h);
-        // Diagonal crack
-        ctx.strokeStyle = CONFIG.CRIMSON;
+        // A thin tick pointing at the ground the lesson is about
+        ctx.strokeStyle = CONFIG.LEAF;
+        ctx.globalAlpha = pr.alpha * 0.5;
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.moveTo(d.x + 4, d.y + 4);
-        ctx.lineTo(d.x + d.w - 4, d.y + d.h - 4);
+        ctx.moveTo(0, 20);
+        ctx.lineTo(0, 34);
         ctx.stroke();
         ctx.restore();
       }
 
-      drawSpikes(ctx, hz) {
-        ctx.save();
-        ctx.fillStyle = CONFIG.GREY_DARK;
-        const count = Math.floor(hz.w / 16);
-        for (let i = 0; i < count; i++) {
-          const sx = hz.x + i * 16;
-          ctx.beginPath();
-          ctx.moveTo(sx, hz.y + hz.h);
-          ctx.lineTo(sx + 8, hz.y);
-          ctx.lineTo(sx + 16, hz.y + hz.h);
+      drawKeyCap(ctx, x, y, w, h, round) {
+        ctx.beginPath();
+        if (round) {
+          ctx.arc(x, y, h / 2 + 2, 0, Math.PI * 2);
+        } else {
+          const r = 6, hw = w / 2, hh = h / 2;
+          ctx.moveTo(x - hw + r, y - hh);
+          ctx.arcTo(x + hw, y - hh, x + hw, y + hh, r);
+          ctx.arcTo(x + hw, y + hh, x - hw, y + hh, r);
+          ctx.arcTo(x - hw, y + hh, x - hw, y - hh, r);
+          ctx.arcTo(x - hw, y - hh, x + hw, y - hh, r);
           ctx.closePath();
-          ctx.fill();
+        }
+        // A dark cap with a bright rim: the glyph has to sit on top of a busy
+        // tiled world without becoming another piece of scenery.
+        ctx.fillStyle = 'rgba(21, 20, 31, 0.88)';
+        ctx.fill();
+        ctx.strokeStyle = CONFIG.LEAF;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      drawKeyIcon(ctx, x, y, icon, touch, idx) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.strokeStyle = '#F4F0E2';
+        ctx.fillStyle = '#F4F0E2';
+        ctx.lineWidth = 2.4;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        switch (icon) {
+          case 'left':
+          case 'right': {
+            const d = icon === 'right' ? 1 : -1;
+            ctx.beginPath();
+            ctx.moveTo(-3 * d, -6); ctx.lineTo(3 * d, 0); ctx.lineTo(-3 * d, 6);
+            ctx.stroke();
+            break;
+          }
+          case 'jump':
+            // Up chevron over a ground line: rise, from here
+            ctx.beginPath();
+            ctx.moveTo(-6, -1); ctx.lineTo(0, -8); ctx.lineTo(6, -1);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(-7, 6); ctx.lineTo(7, 6);
+            ctx.stroke();
+            break;
+          case 'slash':
+            // The katana's own crescent, the same arc the attack draws
+            ctx.beginPath();
+            ctx.arc(-4, 0, 9, -0.9, 0.9);
+            ctx.stroke();
+            ctx.fillStyle = CONFIG.CRIMSON;
+            ctx.beginPath();
+            ctx.arc(5, -8, 2, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+          case 'dash':
+            // Three speed strokes, longest last
+            for (let i = 0; i < 3; i++) {
+              ctx.globalAlpha = 0.45 + i * 0.27;
+              ctx.beginPath();
+              ctx.moveTo(-8, -5 + i * 5);
+              ctx.lineTo(-8 + 6 + i * 4, -5 + i * 5);
+              ctx.stroke();
+            }
+            break;
         }
         ctx.restore();
       }
 
+      // ===================================================================
+      // WORLD RENDERING — 32px TILES, PARALLAX PLATES, PIXEL PROPS
+      // ===================================================================
+
+      // Four plates, each scrolling at its own rate and tiled horizontally so
+      // they never run out. The sky is pinned; everything else slides.
+      drawParallax(ctx, w, h) {
+        // The plates ship bright, because in the source pack they are the whole
+        // picture. Here they are behind a playfield, so each one is knocked
+        // back further than the one in front of it and the whole stack sits
+        // under a dark veil — the readable thing on screen has to be the part
+        // the player can touch.
+        for (const [name, speed, drift, alpha] of THEME.plates) {
+          if (!usable(name)) continue;
+          const im = IMG[name];
+          // Cover the viewport height, keep the plate's aspect, sit on the floor
+          const scale = Math.max(h / im.height, w / im.width, 1);
+          const pw = Math.ceil(im.width * scale);
+          const ph = Math.ceil(im.height * scale);
+          const oy = h - ph + camera.y * drift;
+          let ox = -((camera.x * speed) % pw);
+          if (ox > 0) ox -= pw;
+          ctx.globalAlpha = alpha;
+          for (let x = ox; x < w; x += pw) {
+            ctx.drawImage(im, Math.round(x), Math.round(oy), pw, ph);
+          }
+        }
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = THEME.veil;
+        ctx.fillRect(0, 0, w, h);
+      }
+
+      // Solid ground: a grassy cap row, body rows, and a rounded underside.
+      // Anything 30px or thinner is a ledge and gets the half-height strip.
+      drawTiledPlatform(ctx, p, viewL, viewR) {
+        const thin = p.h <= 30;
+
+        // A ground slab can be 1500px of 32px tiles; only the columns the
+        // camera can see are worth issuing draw calls for.
+        const cols = Math.max(1, Math.ceil(p.w / TILE));
+        const c0 = Math.max(0, Math.floor((viewL - p.x) / TILE));
+        const c1 = Math.min(cols - 1, Math.ceil((viewR - p.x) / TILE));
+        if (c1 < c0) return;
+
+        // No tileset (a failed load, or an offline first paint): a flat slab
+        // still shows exactly where the ground is, so the map stays playable.
+        if (!usable(THEME.sheet)) {
+          ctx.fillStyle = thin ? '#5A4636' : '#3E3226';
+          ctx.fillRect(p.x, p.y, p.w, p.h);
+          ctx.fillStyle = CONFIG.LEAF;
+          ctx.fillRect(p.x, p.y, p.w, 4);
+          return;
+        }
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(p.x, p.y, p.w, thin ? p.h + 18 : p.h);
+        ctx.clip();
+
+        if (thin) {
+          for (let c = c0; c <= c1; c++) {
+            const cell = cols === 1 ? TSET.ledgeM
+                       : c === 0 ? TSET.ledgeL
+                       : c === cols - 1 ? TSET.ledgeR : TSET.ledgeM;
+            drawTile(ctx, cell, p.x + c * TILE, p.y);
+          }
+        } else {
+          const rows = Math.max(1, Math.ceil(p.h / TILE));
+          for (let r = 0; r < rows; r++) {
+            // The last row is pinned to the platform's own bottom edge instead
+            // of the tile grid, so a block whose height is not a multiple of 32
+            // still ends on a finished edge rather than a sliced one.
+            const last = r === rows - 1 && rows > 2;
+            const y = last ? p.y + p.h - TILE : p.y + r * TILE;
+            for (let c = c0; c <= c1; c++) {
+              const left = c === 0, right = c === cols - 1 && cols > 1;
+              let cell;
+              if (r === 0) cell = left ? TSET.topL : right ? TSET.topR : TSET.topM;
+              else if (last) cell = left ? TSET.botL : right ? TSET.botR : TSET.botM;
+              else cell = left ? TSET.midL : right ? TSET.midR : TSET.midM;
+              drawTile(ctx, cell, p.x + c * TILE, y);
+            }
+          }
+        }
+        ctx.restore();
+
+        // A ledge that is about to give way flickers and bleeds dust
+        if (p.crumbling && p.crumbleTimer > 0) {
+          ctx.save();
+          ctx.globalAlpha = 0.35 + Math.sin(performance.now() / 40) * 0.25;
+          ctx.fillStyle = CONFIG.CRIMSON;
+          ctx.fillRect(p.x, p.y, p.w, 3);
+          ctx.restore();
+        }
+      }
+
+      // Breakable pillar barring the way
+      drawDestructible(ctx, d) {
+        drawProp(ctx, 'barricade', d.x + d.w / 2, d.y + d.h, d.h / 64);
+      }
+
+      // The spike sheet is a rise-and-fall animation; frame 8 is fully out,
+      // which is the only honest pose for a hazard that is always lethal.
+      drawSpikes(ctx, hz) {
+        if (!usable('spikes')) return;
+        const FW = 32, FH = 64, F = 8;
+        const cols = Math.ceil(hz.w / FW);
+        ctx.save();
+        ctx.beginPath(); ctx.rect(hz.x, hz.y - 24, hz.w, hz.h + 24); ctx.clip();
+        for (let c = 0; c < cols; c++) {
+          // The spikes sit at the top of the 64px cell, so pull the cell up to
+          // put the points at the top edge of the hazard box.
+          ctx.drawImage(IMG.spikes, F * FW, 0, FW, FH,
+                        hz.x + c * FW, hz.y - 22, FW, FH);
+        }
+        ctx.restore();
+      }
+
+      // A spinning rock blade on a track
       drawSaw(ctx, hz) {
         ctx.save();
         ctx.translate(hz.curX, hz.y);
-        ctx.rotate((performance.now() / 80));
-        ctx.fillStyle = CONFIG.INK_BLACK;
-        // 4-bladed spinning shuriken
+        ctx.rotate(performance.now() / 220);
         for (let i = 0; i < 4; i++) {
           ctx.rotate(Math.PI / 2);
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.lineTo(-6, -16);
-          ctx.lineTo(0, -22);
-          ctx.lineTo(6, -16);
-          ctx.closePath();
-          ctx.fill();
+          drawProp(ctx, 'spikeRock', 0, 20, 0.62);
         }
-        ctx.fillStyle = CONFIG.CRIMSON;
-        ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
       }
 
+      // Spinning coins. The x term in the clock stops a row of them turning
+      // in lockstep, which reads as one wide object rather than several coins;
+      // the warm halo is what actually catches the eye at running speed.
       drawMonCoin(ctx, x, y) {
-        ctx.save();
-        ctx.translate(x, y + Math.sin(performance.now() / 250 + x) * 3);
-        ctx.fillStyle = CONFIG.GREY_MID;
-        ctx.beginPath();
-        ctx.arc(0, 0, 9, 0, Math.PI * 2);
-        ctx.fill();
-        // Square center hole
-        ctx.fillStyle = CONFIG.PAPER_BG;
-        ctx.fillRect(-3, -3, 6, 6);
-        ctx.restore();
+        const t = performance.now();
+        const f = frameAt(t / 1000 + x * 0.013, 10, 6);
+        const bob = Math.sin(t / 260 + x) * 3;
+        const cy = y + bob;
+        // The coin's outer ring is dark brown, and two of the six frames are
+        // edge-on and nearly invisible, so the halo carries the read.
+        glow(ctx, x, cy, 27, '255, 216, 120', 0.55 + Math.sin(t / 300 + x) * 0.13);
+        if (!drawFrame(ctx, 'coin', f, 32, 32,
+                       Math.round(x - 16), Math.round(cy - 16), 32, 32)) {
+          ctx.fillStyle = CONFIG.GOLD;
+          ctx.beginPath(); ctx.arc(x, cy, 8, 0, Math.PI * 2); ctx.fill();
+        }
       }
 
       drawGoldenKoban(ctx, x, y) {
-        ctx.save();
-        ctx.translate(x, y + Math.sin(performance.now() / 200) * 4);
-        ctx.fillStyle = CONFIG.GOLD;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 9, 14, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = CONFIG.INK_BLACK;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        // Inscription lines
-        ctx.fillStyle = CONFIG.INK_BLACK;
-        ctx.fillRect(-4, -6, 8, 2);
-        ctx.fillRect(-4, 0, 8, 2);
-        ctx.fillRect(-4, 6, 8, 2);
-        ctx.restore();
+        const t = performance.now();
+        const f = frameAt(t / 1000, 8, 6);
+        const bob = Math.sin(t / 300) * 3;
+        // The one rare pick-up on a map must not be walked past
+        glow(ctx, x, y + bob, 46, '242, 193, 78', 0.5 + Math.sin(t / 400) * 0.12);
+        drawFrame(ctx, 'chest', f, 64, 64,
+                  Math.round(x - 26), Math.round(y + bob - 26), 52, 52);
       }
 
       drawPowerupItem(ctx, pw) {
-        ctx.save();
-        ctx.translate(pw.x, pw.y + Math.sin(performance.now() / 220) * 4);
-        // Spinning aura ring
-        ctx.strokeStyle = CONFIG.CRIMSON;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(0, 0, 16, 0, Math.PI * 2);
-        ctx.stroke();
-        // Icon / Kanji
-        ctx.fillStyle = CONFIG.INK_BLACK;
-        ctx.font = 'bold 13px serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        const symbol = pw.type === 'zanshin' ? '残' : (pw.type === 'edge' ? '刃' : '札');
-        ctx.fillText(symbol, 0, 1);
-        ctx.restore();
+        const key = pw.type === 'zanshin' ? 'crystalA'
+                  : pw.type === 'edge' ? 'crystalB' : 'crystalC';
+        // One colour per power, so which one is on the ground is legible from
+        // across the screen and not only when standing on top of it.
+        const rgb = pw.type === 'edge' ? '224, 69, 59'
+                  : pw.type === 'zanshin' ? '111, 216, 232' : '242, 193, 78';
+        const t = performance.now();
+        const bob = Math.sin(t / 240 + pw.x) * 4;
+        glow(ctx, pw.x, pw.y + bob, 38, rgb, 0.5 + Math.sin(t / 300 + pw.x) * 0.14);
+        drawProp(ctx, key, pw.x, pw.y + bob + 22, 1.5);
       }
 
+      // Checkpoint signpost. Lit ones carry a flame so the state is obvious.
       drawLantern(ctx, x, y, active) {
-        ctx.save();
-        ctx.translate(x, y);
-        // Stone base
-        ctx.fillStyle = CONFIG.GREY_DARK;
-        ctx.fillRect(-8, -12, 16, 12);
-        ctx.fillRect(-12, -18, 24, 6);
-        // Window chamber
-        ctx.fillStyle = active ? CONFIG.GOLD : CONFIG.GREY_MID;
-        ctx.fillRect(-6, -28, 12, 10);
-        // Roof cap
-        ctx.fillStyle = CONFIG.INK_BLACK;
-        ctx.beginPath();
-        ctx.moveTo(-16, -28);
-        ctx.lineTo(0, -36);
-        ctx.lineTo(16, -28);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
+        drawProp(ctx, active ? 'signpost' : 'signpostAlt', x, y, 1.3);
+        if (active) {
+          const t = performance.now() / 130;
+          const fy = y - 48 + Math.sin(t * 0.7) * 1.5;
+          glow(ctx, x, fy, 34, '242, 193, 78', 0.55 + Math.sin(t) * 0.15);
+          ctx.save();
+          ctx.fillStyle = '#FFEDB0';
+          ctx.beginPath();
+          ctx.arc(x, fy, 4 + Math.sin(t) * 1, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
       }
 
-      drawToriiGate(ctx, x, y) {
+      // The way out of the map
+      // The exit. cave_entrance.png is a plain rectangle meant to be set into
+      // a wall, so a hillside is tiled behind it first — free-standing, its
+      // straight edges read as a texture swatch rather than a cave.
+      drawToriiGate(ctx, x, y, sealed = false) {
+        const t = performance.now();
+        const cols = 9, rows = 5;
+        const bx = Math.round(x - (cols * TILE) / 2);
+        const by = Math.round(y - rows * TILE);
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const left = c === 0, right = c === cols - 1;
+            let cell;
+            if (r === 0) cell = left ? TSET.topL : right ? TSET.topR : TSET.topM;
+            else cell = left ? TSET.midL : right ? TSET.midR : TSET.midM;
+            drawTile(ctx, cell, bx + c * TILE, by + r * TILE);
+          }
+        }
+        // Light behind the mouth, then the mouth over it: lit from within.
+        // While a boss holds the map the light goes out and turns crimson —
+        // the gate reads as shut without a line of text saying so.
+        const lamp = sealed ? '224, 69, 59' : '242, 193, 78';
+        const lit = sealed ? 0.20 : 0.42;
+        glow(ctx, x, y - 52, 96, lamp, lit + Math.sin(t / 320) * 0.12);
+        if (usable('cave')) {
+          const w = 192, h = 128;
+          ctx.drawImage(IMG.cave, Math.round(x - w / 2), Math.round(y - h), w, h);
+        }
+        glow(ctx, x, y - 44, 44, sealed ? '255, 150, 140' : '255, 236, 170',
+             (sealed ? 0.18 : 0.32) + Math.sin(t / 320) * 0.1);
+        if (sealed) {
+          // A pair of crossed shimenawa ropes drawn straight over the mouth.
+          ctx.save();
+          ctx.globalAlpha = 0.72 + Math.sin(t / 260) * 0.12;
+          ctx.strokeStyle = CONFIG.CRIMSON;
+          ctx.lineWidth = 5; ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(x - 46, y - 106); ctx.lineTo(x + 46, y - 14);
+          ctx.moveTo(x + 46, y - 106); ctx.lineTo(x - 46, y - 14);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
+      // ---- Enemies --------------------------------------------------------
+      // The Forest Bosses sheets are all drawn facing LEFT, the opposite of the
+      // samurai sheets. So facing +1 (walking right) is the one that needs the
+      // horizontal flip here — without it every enemy moonwalks.
+      drawEnemySprite(ctx, e, kind, clip, fps) {
+        const art = ENEMY_ART[kind];
+        const set = art[clip] || art.idle;
+        const scale = art.scale;
+        const dw = Math.round(CELL * scale), dh = dw;
+        const f = frameAt(e.animT || 0, fps, set[1]);
+        const smooth = ctx.imageSmoothingEnabled;
+        ctx.imageSmoothingEnabled = false;
         ctx.save();
-        ctx.translate(x, y);
-        ctx.fillStyle = CONFIG.INK_BLACK;
-        // Two main pillars
-        ctx.fillRect(-28, -80, 8, 80);
-        ctx.fillRect(20, -80, 8, 80);
-        // Top curved crossbeam (Kasagi)
-        ctx.beginPath();
-        ctx.moveTo(-42, -84);
-        ctx.quadraticCurveTo(0, -90, 42, -84);
-        ctx.lineTo(44, -76);
-        ctx.quadraticCurveTo(0, -82, -44, -76);
-        ctx.closePath();
-        ctx.fill();
-        // Lower crossbeam (Nuki)
-        ctx.fillRect(-34, -68, 68, 6);
-        // Golden sacred crest
-        ctx.fillStyle = CONFIG.GOLD;
-        ctx.beginPath();
-        ctx.arc(0, -75, 5, 0, Math.PI * 2);
-        ctx.fill();
+        // Feet on the bottom of the hitbox, same contract as the samurai
+        ctx.translate(Math.round(e.curX), Math.round((e.curY || e.y) + 20));
+        ctx.scale(e.facing < 0 ? 1 : -1, 1);
+        if (!drawFrame(ctx, set[0], f, CELL, CELL, Math.round(-dw / 2), -dh, dw, dh)) {
+          ctx.fillStyle = CONFIG.CRIMSON;
+          ctx.fillRect(-16, -40, 32, 40);
+        }
         ctx.restore();
+        ctx.imageSmoothingEnabled = smooth;
       }
 
       drawOni(ctx, e) {
-        ctx.save();
-        ctx.translate(e.curX, e.curY);
-        ctx.scale(e.facing, 1);
-        ctx.fillStyle = CONFIG.INK_BLACK;
-        // Horned silhouette body
-        ctx.beginPath();
-        ctx.arc(0, -8, 12, 0, Math.PI * 2);
-        ctx.fill();
-        // Horns
-        ctx.beginPath();
-        ctx.moveTo(-6, -18); ctx.lineTo(-10, -26); ctx.lineTo(-3, -20);
-        ctx.moveTo(6, -18); ctx.lineTo(10, -26); ctx.lineTo(3, -20);
-        ctx.fill();
-        // Glowing crimson eye dot
-        ctx.fillStyle = CONFIG.CRIMSON;
-        ctx.beginPath();
-        ctx.arc(4, -8, 2.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-
-      drawLanternEnemy(ctx, e) {
-        ctx.save();
-        ctx.translate(e.curX, e.curY);
-        ctx.fillStyle = CONFIG.GREY_DARK;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 12, 16, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // Center crimson flicker
-        ctx.fillStyle = CONFIG.CRIMSON;
-        ctx.beginPath();
-        ctx.arc(0, 0, 4 + Math.sin(e.phase * 3) * 1.5, 0, Math.PI * 2);
-        ctx.fill();
-        // Paper tassel trailing below
-        ctx.strokeStyle = CONFIG.INK_BLACK;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(0, 16);
-        ctx.lineTo(Math.sin(e.phase * 2) * 4, 26);
-        ctx.stroke();
-        ctx.restore();
+        // Two bruiser sheets, chosen off the spawn x so a map shows both and
+        // the choice is stable across respawns.
+        const kind = (Math.floor(e.x / 97) % 2 === 0) ? 'brute1' : 'brute2';
+        const moving = Math.abs(e.vx) > 5;
+        this.drawEnemySprite(ctx, e, kind, moving ? 'walk' : 'idle', moving ? 10 : 6);
       }
 
       drawArcher(ctx, e) {
-        ctx.save();
-        ctx.translate(e.curX, e.curY);
-        const dir = (this.player.x < e.curX) ? -1 : 1;
-        ctx.scale(dir, 1);
-        ctx.fillStyle = CONFIG.INK_BLACK;
-        // Torso
-        ctx.fillRect(-8, -24, 16, 24);
-        // Head
-        ctx.beginPath(); ctx.arc(0, -30, 7, 0, Math.PI * 2); ctx.fill();
-        // Bow arc
-        ctx.strokeStyle = CONFIG.CRIMSON;
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.arc(10, -16, 14, -1, 1);
-        ctx.stroke();
-        ctx.restore();
+        // Winding up to shoot is the only tell the player gets, so it is drawn
+        const winding = e.shootTimer < 0.55;
+        e.facing = (this.player.x < e.curX) ? -1 : 1;
+        this.drawEnemySprite(ctx, e, 'caster', winding ? 'attack' : 'idle', winding ? 11 : 6);
       }
 
-      drawParallaxMountains(ctx, speed, color, alpha, baseHeight) {
-        ctx.save();
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = color;
-        const scrollX = camera.x * speed;
-        const w = camera.viewportW;
-        const h = camera.viewportH;
-        ctx.beginPath();
-        ctx.moveTo(0, h);
-        const mountainW = 280;
-        const startIdx = Math.floor(scrollX / mountainW) - 1;
-        const endIdx = startIdx + Math.ceil(w / mountainW) + 2;
-        for (let i = startIdx; i <= endIdx; i++) {
-          const mx = i * mountainW - scrollX;
-          const peakY = h - baseHeight - Math.abs(Math.sin(i * 1.7)) * 120;
-          ctx.lineTo(mx, peakY);
-        }
-        ctx.lineTo(w, h);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
-      }
+      // ---- Boss ------------------------------------------------------------
+      // The state machine picks the clip; the clip is a list of expression
+      // frames. Everything else here is the read: a ground shadow so a hovering
+      // 150px sprite still has a position, an aura that flares on the tell, and
+      // a white flash while it is invulnerable from the last hit.
+      drawBoss(ctx, e) {
+        const art = BOSS_ART[e.kind] || BOSS_ART.mech;
+        const enraged = e.hp <= e.maxHp / 2;
+        let clip, fps;
+        if (e.state === 'hurt') { clip = BOSS_CLIPS.hurt; fps = 1; }
+        else if (e.state === 'wind') { clip = BOSS_CLIPS.wind; fps = 9; }
+        else if (e.state === 'strike') { clip = BOSS_CLIPS.strike; fps = 12; }
+        else { clip = enraged ? BOSS_CLIPS.rage : BOSS_CLIPS.hunt; fps = 1.6; }
+        // Death is the one clip that plays through instead of looping: cracked
+        // open first, then broken, and it holds broken while it fades.
+        const frame = e.state === 'dying'
+          ? BOSS_CLIPS.dying[e.deathT < 0.4 ? 0 : 1]
+          : clip[frameAt(e.animT || 0, fps, clip.length)];
 
-      drawParallaxBamboo(ctx, speed, color, alpha, baseHeight) {
-        ctx.save();
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = color;
-        const scrollX = camera.x * speed;
-        const w = camera.viewportW;
-        const h = camera.viewportH;
-        const stalkSpacing = 90;
-        const startIdx = Math.floor(scrollX / stalkSpacing) - 1;
-        const endIdx = startIdx + Math.ceil(w / stalkSpacing) + 2;
-        for (let i = startIdx; i <= endIdx; i++) {
-          const bx = i * stalkSpacing - scrollX;
-          const bh = baseHeight + (i % 3) * 40;
-          ctx.fillRect(bx, h - bh, 6, bh);
-          // Bamboo leaves
+        const dw = Math.round(CELL * art.scale), dh = dw;
+        const x = Math.round(e.curX), y = Math.round(e.curY);
+        const dying = e.state === 'dying';
+        const fade = dying ? Math.max(0, 1 - e.deathT / 1.5) : 1;
+
+        // Ground shadow, so the hover reads as height and not as a decal
+        if (!dying) {
+          ctx.save();
+          ctx.globalAlpha = 0.28;
+          ctx.fillStyle = CONFIG.INK_BLACK;
           ctx.beginPath();
-          ctx.ellipse(bx + 12, h - bh + 20, 14, 4, 0.3, 0, Math.PI * 2);
+          ctx.ellipse(x, (e.floorY || e.homeY + 96) - 4, 52, 12, 0, 0, Math.PI * 2);
           ctx.fill();
+          ctx.restore();
+        }
+
+        // The aura swells through the wind-up and snaps on the strike, which is
+        // the same information as the sprite change, one glance earlier.
+        const tell = e.state === 'wind' ? e.stateT / 0.55
+                   : e.state === 'strike' ? 1.2 : 0;
+        glow(ctx, x, y, 92 + tell * 46, art.glow,
+             (0.20 + tell * 0.34) * fade);
+
+        const smooth = ctx.imageSmoothingEnabled;
+        ctx.imageSmoothingEnabled = false;
+        ctx.save();
+        if (fade < 1) ctx.globalAlpha = fade;
+        ctx.translate(x, y);
+        // The boss art faces LEFT like the enemy sheets, so +1 is the flip
+        ctx.scale(e.facing < 0 ? 1 : -1, 1);
+        if (!drawFrame(ctx, art.img, frame, CELL, CELL,
+                       Math.round(-dw / 2), Math.round(-dh / 2), dw, dh)) {
+          ctx.fillStyle = CONFIG.CRIMSON;
+          ctx.fillRect(-44, -52, 88, 104);
         }
         ctx.restore();
+
+        // Hit flash: the same sprite drawn again, blown out to white
+        if (e.invulnT > 0 && !dying) {
+          ctx.save();
+          ctx.globalAlpha = Math.min(0.85, e.invulnT * 1.9);
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.translate(x, y);
+          ctx.scale(e.facing < 0 ? 1 : -1, 1);
+          drawFrame(ctx, art.img, frame, CELL, CELL,
+                    Math.round(-dw / 2), Math.round(-dh / 2), dw, dh);
+          ctx.restore();
+        }
+        ctx.imageSmoothingEnabled = smooth;
+      }
+
+      // The floating crystal: it drifts, so it never needs a ground contact
+      drawLanternEnemy(ctx, e) {
+        const f = frameAt(e.animT || 0, 9, 6);
+        const smooth = ctx.imageSmoothingEnabled;
+        ctx.imageSmoothingEnabled = false;
+        if (!drawFrame(ctx, 'crystal', f, 160, 128,
+                       Math.round(e.curX - 40), Math.round(e.curY - 32), 80, 64)) {
+          ctx.fillStyle = CONFIG.CRIMSON;
+          ctx.beginPath(); ctx.arc(e.curX, e.curY, 14, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.imageSmoothingEnabled = smooth;
+      }
+
+      // Scenery seeded off the map so it is stable between frames and runs
+      drawScenery(ctx, viewL, viewR) {
+        if (!this.sceneryProps) return;
+        for (const s of this.sceneryProps) {
+          if (s.x < viewL - 120 || s.x > viewR + 120) continue;
+          drawProp(ctx, s.key, s.x, s.y, s.scale, s.alpha);
+        }
       }
     }
 
     // =====================================================================
     // 9. BOOTSTRAP INITIALIZATION
     // =====================================================================
-    // Preload sprite sheets before Play button activates
-    loadSprites();
+    // Tiles, sheets and parallax plates all have to be decoded before the
+    // first frame can draw; the Play button stays disabled until they are.
+    loadArt();
 
-    // Instantiate game immediately so Play overlay is functional with 0 delay
+    // Instantiate game immediately so the overlay is up while art streams in
     const game = new Game();
     window.game = game;
     requestAnimationFrame((t) => game.loop(t));
@@ -3388,6 +5426,16 @@
         game.highScore = Math.max(game.highScore, Save.get('highScore') || 0);
         game.updateHUD();
       }
+
+      // Signed-in CrazyGames players get their own name on the board without
+      // having to type one. Anything here is best-effort: it must never throw.
+      try {
+        const u = window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.user;
+        if (sdkInitSuccess && u && typeof u.getUser === 'function') {
+          const profile = await u.getUser();
+          if (profile && profile.username) cgUserName = String(profile.username).slice(0, 10).toUpperCase();
+        }
+      } catch (e) {}
 
       if (Save.get('seenControlHint')) {
         const hint = document.getElementById('controlsHint');
