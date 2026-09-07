@@ -197,28 +197,161 @@
       margin-left: 0.9em; opacity: 0.6; max-width: 520px; line-height: 1.6; margin-bottom: 36px;
     }
 
-    /* Circular Ink Ring Play Button */
+    /* ---------------------------------------------------------------
+       Splash art background.
+       The title screen is the one overlay that shows a picture instead
+       of a flat scrim: the game's own parallax layers, restacked as a
+       still so the menu looks like the world you are about to enter.
+       --------------------------------------------------------------- */
+    /* The art sits in its own layer under the menu content. Both are
+       positioned, so the stack is spelled out rather than left to DOM order. */
+    #menu-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; display: none; }
+    /* max-width keeps an over-long child from widening the centred column
+       past the viewport, which would shove the whole screen off-centre */
+    #overlay > *:not(#menu-bg) { position: relative; z-index: 1; max-width: 100%; }
+    #overlay.splash {
+      background: #7C8CB4; backdrop-filter: none; -webkit-backdrop-filter: none;
+    }
+    #overlay.splash #menu-bg { display: block; }
+    .menu-layer { position: absolute; left: 0; right: 0; pointer-events: none; }
+    .menu-sky {
+      top: 0; bottom: 0;
+      background: url('assets/bg/sky.png') center center / cover no-repeat;
+    }
+    .menu-clouds {
+      top: 0; height: 52%;
+      background: url('assets/bg/clouds.png') 0 0 repeat-x;
+      background-size: 1700px auto; opacity: 0.55;
+      /* Fades out before the wordmark so the sky reads as depth, not clutter */
+      -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 34%, transparent 88%);
+      mask-image: linear-gradient(180deg, #000 0%, #000 34%, transparent 88%);
+      animation: menu-drift 150s linear infinite;
+    }
+    /* flora1 is the hazy far treeline, flora2 the darker near one. Both are
+       parallax strips the game already tiles, so they are sized to the band's
+       height and repeated across — scaling them to width instead would push
+       the crowns out of the band and clip them on a hard line. */
+    .menu-far {
+      bottom: 0; height: 58%;
+      background: url('assets/bg/flora1.png') left bottom / auto 100% repeat-x;
+      opacity: 0.95;
+    }
+    .menu-near {
+      bottom: 0; height: 40%;
+      background: url('assets/bg/flora2.png') left bottom / auto 100% repeat-x;
+    }
+    /* Keeps the wordmark and the buttons readable over any part of the art,
+       with a warm glow sitting just above the treeline */
+    .menu-scrim {
+      top: 0; bottom: 0;
+      background:
+        radial-gradient(78% 42% at 50% 74%, rgba(242, 193, 78, 0.2), rgba(242, 193, 78, 0) 70%),
+        linear-gradient(180deg, rgba(21, 20, 31, 0.6) 0%, rgba(21, 20, 31, 0.12) 26%,
+                                rgba(21, 20, 31, 0.3) 62%, rgba(21, 20, 31, 0.88) 100%),
+        radial-gradient(110% 70% at 50% 44%, rgba(21, 20, 31, 0) 36%, rgba(21, 20, 31, 0.45) 100%);
+    }
+    @keyframes menu-drift {
+      from { background-position-x: 0; }
+      to   { background-position-x: -1700px; }  /* one whole tile, so it loops */
+    }
+    @media (prefers-reduced-motion: reduce) { .menu-clouds { animation: none; } }
+
+    /* ---------------------------------------------------------------
+       The front door. One wide button with the word PLAY on it — the
+       thing a first-time player should be able to find without reading
+       anything else on the screen.
+       --------------------------------------------------------------- */
     .btn-action {
-      width: 76px; height: 76px; border: 1px solid #B7D94A; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center; cursor: pointer;
-      background: transparent; color: #B7D94A; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      outline: none; margin: 0 auto;
+      min-width: 250px; height: 66px; padding: 0 38px;
+      border: 2px solid #C8E85C; border-radius: 999px;
+      background: #B7D94A; color: #15141F;
+      display: flex; align-items: center; justify-content: center; gap: 14px;
+      cursor: pointer; outline: none; margin: 0 auto;
+      font-family: inherit; font-size: 23px; font-weight: 800;
+      letter-spacing: 0.28em; text-indent: 0.28em; text-transform: uppercase;
+      box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5), 0 0 0 7px rgba(183, 217, 74, 0.14);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                  box-shadow 0.25s ease, background 0.25s ease;
     }
     @media (hover: hover) and (pointer: fine) {
       .btn-action:hover {
-        background: #B7D94A; color: #15141F; transform: scale(1.05);
+        background: #C8E85C; transform: scale(1.04);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 11px rgba(183, 217, 74, 0.18);
       }
     }
-    .btn-action:active { background: #B7D94A; color: #15141F; transform: scale(0.96); }
+    .btn-action:active { transform: scale(0.97); }
     .play-triangle {
-      width: 0; height: 0; border-top: 9px solid transparent;
-      border-left: 16px solid currentColor; border-bottom: 9px solid transparent;
-      margin-left: 4px;
+      width: 0; height: 0; border-top: 11px solid transparent;
+      border-left: 19px solid currentColor; border-bottom: 11px solid transparent;
+      flex: none;
     }
     .play-caption {
-      font-size: 10px; text-transform: uppercase; letter-spacing: 0.4em;
-      opacity: 0.4; margin-top: 14px; margin-left: 0.4em; font-weight: 600;
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.28em;
+      opacity: 0.72; margin-top: 14px; margin-left: 0.28em; font-weight: 700;
     }
+    /* On the splash the badge above already says what Play does, so the
+       caption empties out rather than repeating it */
+    .play-caption:empty { display: none; }
+
+    /* ---- Main-menu button row: everything else the splash offers ---- */
+    .menu-row {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px; margin: 26px auto 0; width: 100%; max-width: 520px;
+    }
+    .menu-row.hidden { display: none; }
+    .menu-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 13px 6px 12px; cursor: pointer; font-family: inherit;
+      background: rgba(21, 20, 31, 0.62); color: #E9E5D6;
+      border: 1px solid rgba(233, 229, 214, 0.28); border-radius: 12px;
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .menu-btn-ico { font-size: 21px; line-height: 1; color: #B7D94A; }
+    .menu-btn-lbl {
+      font-size: 10px; font-weight: 800; letter-spacing: 0.18em;
+      text-indent: 0.18em; text-transform: uppercase;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .menu-btn:hover {
+        background: rgba(183, 217, 74, 0.9); border-color: #B7D94A;
+        color: #15141F; transform: translateY(-2px);
+      }
+      .menu-btn:hover .menu-btn-ico { color: #15141F; }
+    }
+    .menu-btn:active { background: #B7D94A; border-color: #B7D94A; color: #15141F; }
+    .menu-btn:active .menu-btn-ico { color: #15141F; }
+
+    /* ---- Settings ---- */
+    #settingsPanel { width: 30%; max-width: 100px; margin: 0 auto 20px; }
+    #settingsPanel.hidden { display: none; }
+    .set-row {
+      display: grid; grid-template-columns: 30px 1fr auto; gap: 12px;
+      align-items: center; width: 100%; text-align: left; font-family: inherit;
+      background: rgba(43, 42, 61, 0.5); color: #E9E5D6;
+      border: 1px solid rgba(233, 229, 214, 0.15); border-radius: 10px;
+      padding: 13px 15px; margin-bottom: 8px; cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .set-row:not(.static):hover { background: rgba(183, 217, 74, 0.14); border-color: rgba(183, 217, 74, 0.6); }
+    }
+    .set-row.static { cursor: default; align-items: start; }
+    .set-ico { font-size: 18px; text-align: center; color: #B7D94A; }
+    .set-name { display: block; font-size: 12px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; }
+    .set-note { display: block; font-size: 10px; letter-spacing: 0.05em; opacity: 0.5; margin-top: 3px; line-height: 1.5; }
+    .set-val {
+      font-size: 11px; font-weight: 800; letter-spacing: 0.18em; color: #B7D94A;
+      border: 1px solid rgba(183, 217, 74, 0.5); border-radius: 999px; padding: 5px 12px;
+    }
+    .set-val.off { color: #8E8CA8; border-color: rgba(142, 140, 168, 0.45); }
+    .set-row.danger { border-color: rgba(224, 69, 59, 0.4); }
+    .set-row.danger .set-ico, .set-row.danger .set-val { color: #E0453B; border-color: rgba(224, 69, 59, 0.5); }
+    .set-keys {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 5px 14px; font-size: 10px; letter-spacing: 0.08em; opacity: 0.72; margin-top: 4px;
+    }
+    .set-keys b { color: #B7D94A; font-weight: 800; }
 
     .controls-hint {
       margin-top: 32px; font-size: 11px; text-transform: uppercase;
@@ -240,7 +373,9 @@
     /* Kept out of the tag as an inline style so `.hidden` can actually win —
        inline display would otherwise override it and leak the play button
        onto the map and result screens */
-    #overlayActions { display: flex; flex-direction: column; align-items: center; }
+    /* Full width so the menu row below the play button can size to the screen
+       rather than shrink-wrapping to the width of the button above it */
+    #overlayActions { display: flex; flex-direction: column; align-items: center; width: 100%; }
     #mapSelect.hidden, #resultPanel.hidden, #overlayActions.hidden,
     #overlayBtnRow.hidden, #boardPanel.hidden { display: none; }
 
@@ -463,6 +598,16 @@
       .board-row { grid-template-columns: 22px 1fr 62px 70px; font-size: 10px; letter-spacing: 0.06em; }
       .overlay-btn-row { gap: 8px; }
       .btn-text { padding: 12px 14px 12px 18px; letter-spacing: 0.16em; font-size: 10px; }
+
+      .story-badge { font-size: 8px; letter-spacing: 0.16em; margin-left: 0.16em; }
+      .btn-action { min-width: 210px; height: 58px; font-size: 19px; padding: 0 26px; }
+      .menu-row { gap: 8px; margin: 20px auto 0; max-width: 380px; }
+      .menu-btn { padding: 11px 4px 10px; }
+      .menu-btn-ico { font-size: 18px; }
+      .menu-btn-lbl { font-size: 9px; letter-spacing: 0.1em; text-indent: 0.1em; }
+      .set-row { padding: 11px 12px; gap: 10px; grid-template-columns: 24px 1fr auto; }
+      .set-name { font-size: 11px; }
+      .set-keys { grid-template-columns: 1fr; }
     }
 
     /* --- Very narrow (≤380px): hold two columns, shrink the type instead --- */
@@ -500,8 +645,15 @@
       .map-card-seal { top: 4px; right: 5px; font-size: 9px; }
       .map-foot { font-size: 8px; letter-spacing: 0.14em; margin-left: 0.14em; line-height: 1.5; }
 
-      .btn-action { width: 58px; height: 58px; }
+      .btn-action { min-width: 190px; height: 50px; font-size: 17px; padding: 0 24px; }
       .play-caption { margin-top: 8px; }
+      .menu-row { margin-top: 12px; gap: 8px; max-width: 460px; }
+      .menu-btn { padding: 8px 4px 7px; gap: 3px; }
+      .menu-btn-ico { font-size: 16px; }
+      .menu-btn-lbl { font-size: 9px; letter-spacing: 0.1em; text-indent: 0.1em; }
+      #settingsPanel { margin-bottom: 10px; }
+      .set-row { padding: 8px 12px; margin-bottom: 6px; }
+      .set-note { display: none; }
       .controls-hint { margin-top: 14px; padding-top: 10px; line-height: 1.7; }
       #resultPanel, #boardPanel { margin-bottom: 12px; }
       .map-extra { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; max-width: 620px; margin-bottom: 10px; }
@@ -667,6 +819,9 @@
       font-size: 9px; letter-spacing: 0.34em; text-transform: uppercase;
       font-weight: 700; color: #B7D94A; opacity: 0.9; margin-bottom: 10px;
       margin-left: 0.34em;
+      /* Chapter names run long; left unbounded the badge widens the centred
+         column past the viewport and drags the whole splash off-centre */
+      max-width: 100%; text-align: center; line-height: 1.6;
     }
     .story-badge.hidden { display: none; }
 
@@ -761,11 +916,7 @@
     <!-- Start / Pause / Win / Game Over Overlay -->
     <div id="overlay">
       <div class="overlay-kanji" id="overlayKanji">墨</div>
-      <h1 class="overlay-title" id="overlayTitle">SUMI</h1>
-      <p class="overlay-subtitle" id="overlaySubtitle">
-        Shadow of the Brush
-      </p>
-
+      <h1 class="overlay-title" id="overlayTitle">SUMI rain</h1>
       <!-- Story: the ordered chapter list. Progress here is the game's spine;
            the map grid below is the same levels off the leash. -->
       <div id="storyPanel" class="hidden"></div>
@@ -798,12 +949,74 @@
         <p class="result-verdict" id="resultVerdict"></p>
       </div>
 
+      <!-- Settings: sound, fullscreen, the controls, and the one way back
+           to a clean save. Reachable from the splash in a single tap. -->
+      <div id="settingsPanel" class="hidden">
+        <button class="set-row" id="setSound" type="button">
+          <span class="set-ico">♪</span>
+          <span>
+            <span class="set-name">Sound</span>
+            <span class="set-note">Music and effects</span>
+          </span>
+          <span class="set-val" id="setSoundVal">ON</span>
+        </button>
+        <button class="set-row" id="setFull" type="button">
+          <span class="set-ico">⛶</span>
+          <span>
+            <span class="set-name">Fullscreen</span>
+            <span class="set-note">Fill the whole screen</span>
+          </span>
+          <span class="set-val off" id="setFullVal">OFF</span>
+        </button>
+        <div class="set-row static">
+          <span class="set-ico">⌨</span>
+          <span>
+            <span class="set-name">Controls</span>
+            <span class="set-keys">
+              <span><b>A</b> / <b>D</b> — Move</span>
+              <span><b>SPACE</b> — Jump</span>
+              <span><b>J</b> — Slash</span>
+              <span><b>K</b> — Dash</span>
+              <span><b>S</b> — Slide</span>
+              <span><b>P</b> — Pause</span>
+            </span>
+          </span>
+          <span></span>
+        </div>
+        <button class="set-row danger" id="setReset" type="button">
+          <span class="set-ico">✖</span>
+          <span>
+            <span class="set-name" id="setResetName">Reset progress</span>
+            <span class="set-note" id="setResetNote">Wipes chapters, maps and scores</span>
+          </span>
+          <span class="set-val" id="setResetVal">RESET</span>
+        </button>
+      </div>
+
       <div id="overlayActions">
         <div class="story-badge hidden" id="storyBadge"></div>
         <button class="btn-action" id="startBtn" aria-label="Play">
           <div class="play-triangle"></div>
+          <span id="startBtnLabel">Play</span>
         </button>
-        <div class="play-caption" id="playCaption">Click to Play</div>
+        <div class="play-caption" id="playCaption">Press to start</div>
+
+        <!-- The rest of the main menu. Everything the splash offers is one
+             tap away and labelled in plain words. -->
+        <div class="menu-row hidden" id="menuRow">
+          <button class="menu-btn" id="mbStory" type="button">
+            <span class="menu-btn-ico">巻</span><span class="menu-btn-lbl">Story</span>
+          </button>
+          <button class="menu-btn" id="mbMaps" type="button">
+            <span class="menu-btn-ico">図</span><span class="menu-btn-lbl">Maps</span>
+          </button>
+          <button class="menu-btn" id="mbBoard" type="button">
+            <span class="menu-btn-ico">札</span><span class="menu-btn-lbl">Scores</span>
+          </button>
+          <button class="menu-btn" id="mbSettings" type="button">
+            <span class="menu-btn-ico">⚙</span><span class="menu-btn-lbl">Settings</span>
+          </button>
+        </div>
       </div>
 
       <div class="overlay-btn-row hidden" id="overlayBtnRow">
@@ -812,6 +1025,17 @@
         <button class="btn-text hidden" id="btnStory">Chapters</button>
         <button class="btn-text hidden" id="btnBoard">Run Board</button>
         <button class="btn-text hidden" id="btnMaps">Free Play</button>
+        <button class="btn-text hidden" id="btnBack">Main Menu</button>
+      </div>
+
+      <!-- Splash art. Absolutely positioned and last so it neither takes a
+           slot in the centring flex column nor steals `:first-child`. -->
+      <div id="menu-bg" aria-hidden="true">
+        <div class="menu-layer menu-sky"></div>
+        <div class="menu-layer menu-clouds"></div>
+        <div class="menu-layer menu-far"></div>
+        <div class="menu-layer menu-near"></div>
+        <div class="menu-layer menu-scrim"></div>
       </div>
     </div>
 
@@ -846,9 +1070,77 @@
     'use strict';
 
     // =====================================================================
+    // 0a. SITELOCK
+    // =====================================================================
+    // CrazyGames asks that a published build refuse to run off a domain
+    // nobody authorised, so a scraped copy of the bundle is worth nothing.
+    // The host test is theirs verbatim (docs.crazygames.com/resources/html5/
+    // sitelock): "crazygames" has to be one of the last three labels, which
+    // covers crazygames.com, crazygames.fr, www.crazygames.com.br and every
+    // other regional domain, plus their app's capacitor:// WebView.
+    //
+    // To publish somewhere else as well, add the host here. To turn the lock
+    // off entirely, set ENABLED to false.
+    const SITELOCK = {
+      ENABLED: true,
+      // Local development, plus anywhere else this build is allowed to live
+      EXTRA_HOSTS: ['localhost', '127.0.0.1', '0.0.0.0', '']
+    };
+
+    function originIsAllowed() {
+      if (!SITELOCK.ENABLED) return true;
+      const host = window.location.hostname || '';
+      if (SITELOCK.EXTRA_HOSTS.indexOf(host) !== -1) return true;
+      // Opened straight off disk — a developer, not a thief
+      if (window.location.protocol === 'file:') return true;
+      // A private address is somebody's own machine or phone on the same
+      // wifi, never a site hosting a stolen build
+      if (/^10\.|^192\.168\.|^172\.(1[6-9]|2\d|3[01])\.|\.local$/.test(host)) return true;
+      const parts = host.split('.');
+      const idx = parts.indexOf('crazygames');
+      return idx !== -1 && idx >= parts.length - 3;
+    }
+
+    if (!originIsAllowed()) {
+      document.body.innerHTML =
+        '<div style="position:fixed;inset:0;display:flex;flex-direction:column;' +
+        'align-items:center;justify-content:center;gap:18px;background:#15141F;' +
+        'color:#E9E5D6;font-family:-apple-system,BlinkMacSystemFont,sans-serif;' +
+        'text-align:center;padding:24px">' +
+        '<div style="font-size:40px;color:#B7D94A;letter-spacing:.2em">墨</div>' +
+        '<div style="font-size:13px;letter-spacing:.3em;text-transform:uppercase;' +
+        'opacity:.65">This copy of Sumi is not hosted where it should be</div>' +
+        '<a href="https://www.crazygames.com" style="color:#B7D94A;font-size:12px;' +
+        'letter-spacing:.2em;text-transform:uppercase">Play it on CrazyGames</a>' +
+        '</div>';
+      return;
+    }
+
+    // =====================================================================
     // 0. PORTAL SDK CONTRACT & GAME EVENTS SEAM
     // =====================================================================
     window.GameEvents = {
+      // The portal measures the initial download from page open until the
+      // first gameplay event; loadingStart/Stop tell it which part of that
+      // window was the art preload rather than the player reading the splash.
+      loadingStart: function() {
+        try {
+          if (window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.game) {
+            if (typeof window.CrazyGames.SDK.game.loadingStart === 'function') {
+              window.CrazyGames.SDK.game.loadingStart();
+            }
+          }
+        } catch (e) {}
+      },
+      loadingStop: function() {
+        try {
+          if (window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.game) {
+            if (typeof window.CrazyGames.SDK.game.loadingStop === 'function') {
+              window.CrazyGames.SDK.game.loadingStop();
+            }
+          }
+        } catch (e) {}
+      },
       gameplayStart: function() {
         try {
           if (window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.game) {
@@ -1093,6 +1385,7 @@
     let saveReady = false;
 
     function loadArt() {
+      window.GameEvents.loadingStart();
       const startBtn = document.getElementById('startBtn');
       const playCaption = document.getElementById('playCaption');
       if (startBtn) {
@@ -1126,12 +1419,13 @@
         img.src = ART[name];
       }))).then(() => {
         artReady = true;
+        window.GameEvents.loadingStop();
         if (startBtn) {
           startBtn.disabled = false;
           startBtn.style.opacity = '1';
           startBtn.style.pointerEvents = 'auto';
         }
-        if (playCaption) playCaption.textContent = 'Click to Play';
+        if (playCaption) playCaption.textContent = 'Press to start';
         // The splash caption says which chapter Play resumes, and it can only
         // say so once the art is in — until then it is a progress readout.
         if (window.game && window.game.overlayMode === 'title') window.game.showTitle();
@@ -4966,6 +5260,41 @@
           audio.init();
           this.showStorySelect();
         });
+        document.getElementById('btnBack').addEventListener('click', () => {
+          audio.init();
+          this.showTitle();
+        });
+
+        // ---- Main menu row (splash only) ----
+        const menu = {
+          mbStory: () => this.showStorySelect(),
+          mbMaps: () => this.showMapSelect(),
+          mbBoard: () => this.showRunBoard(null, 0),
+          mbSettings: () => this.showSettings()
+        };
+        for (const id in menu) {
+          document.getElementById(id).addEventListener('click', () => {
+            audio.init();
+            menu[id]();
+          });
+        }
+
+        // ---- Settings rows ----
+        document.getElementById('setSound').addEventListener('click', () => {
+          audio.init();
+          this.toggleMute();
+          this.syncSettings();
+        });
+        document.getElementById('setFull').addEventListener('click', () => {
+          this.toggleFullscreen();
+        });
+        document.getElementById('setReset').addEventListener('click', () => {
+          this.resetProgress();
+        });
+        // The browser can leave fullscreen without going through our button
+        document.addEventListener('fullscreenchange', () => {
+          if (this.overlayMode === 'settings') this.syncSettings();
+        });
       }
 
       toggleMute() {
@@ -4985,9 +5314,9 @@
             kanji: '憩',
             title: 'PAUSED',
             subtitle: 'The wind pauses in the bamboo grove.',
-            caption: 'Click to Resume'
+            caption: 'Press to continue'
           });
-          this.setOverlayButtons({ maps: true, story: this.mode === 'story' });
+          this.setOverlayButtons({ maps: true, story: this.mode === 'story', back: true });
         } else {
           window.GameEvents.gameplayStart();
           overlay.classList.add('hidden');
@@ -5088,43 +5417,135 @@
       // OVERLAY SCREENS: TITLE -> MAP SELECT -> PLAY -> RESULT
       // ===================================================================
       setOverlayMode(mode, { kanji, title, subtitle, caption } = {}) {
-        const el = (id) => document.getElementById(id);
+        // Every piece of the splash is optional markup: dropping one from the
+        // HTML should cost you that piece, not throw halfway through and leave
+        // the screen half-dressed.
+        const setText = (id, value) => {
+          if (value === undefined) return;
+          const node = document.getElementById(id);
+          if (node) node.textContent = value;
+        };
+        const setFlag = (id, cls, on) => {
+          const node = document.getElementById(id);
+          if (node) node.classList.toggle(cls, on);
+        };
         // Any overlay means the run is not on screen; the boss bar goes with it
         // (a pause is the one case where it is worth leaving up).
         if (mode !== 'paused') this.hideBossBar();
-        if (kanji !== undefined) el('overlayKanji').textContent = kanji;
-        if (title !== undefined) el('overlayTitle').textContent = title;
-        if (subtitle !== undefined) el('overlaySubtitle').textContent = subtitle;
-        if (caption !== undefined) el('playCaption').textContent = caption;
+        setText('overlayKanji', kanji);
+        setText('overlayTitle', title);
+        setText('overlaySubtitle', subtitle);
+        setText('playCaption', caption);
 
-        // The round play button belongs to the splash and the pause screen only
+        // The play button belongs to the splash and the pause screen only
         const showPlay = (mode === 'title' || mode === 'paused');
-        el('overlayActions').classList.toggle('hidden', !showPlay);
-        el('mapSelect').classList.toggle('hidden', mode !== 'maps');
-        el('storyPanel').classList.toggle('hidden', mode !== 'story');
-        el('resultPanel').classList.toggle('hidden', mode !== 'result');
-        el('boardPanel').classList.toggle('hidden', mode !== 'board');
-        el('overlayTitle').classList.toggle('compact',
-          mode === 'maps' || mode === 'result' || mode === 'board' || mode === 'story');
-        // Only the splash advertises which chapter Play would resume
-        el('storyBadge').classList.toggle('hidden', mode !== 'title');
+        const resuming = mode === 'paused';
+        setFlag('overlayActions', 'hidden', !showPlay);
+        setText('startBtnLabel', resuming ? 'Resume' : 'Play');
+        const startBtn = document.getElementById('startBtn');
+        if (startBtn) startBtn.setAttribute('aria-label', resuming ? 'Resume' : 'Play');
+        setFlag('mapSelect', 'hidden', mode !== 'maps');
+        setFlag('storyPanel', 'hidden', mode !== 'story');
+        setFlag('resultPanel', 'hidden', mode !== 'result');
+        setFlag('boardPanel', 'hidden', mode !== 'board');
+        setFlag('settingsPanel', 'hidden', mode !== 'settings');
+        setFlag('overlayTitle', 'compact', mode !== 'title' && mode !== 'paused');
+        // Only the splash advertises which chapter Play would resume, carries
+        // the main-menu row, and shows the art instead of a flat scrim
+        setFlag('storyBadge', 'hidden', mode !== 'title');
+        setFlag('menuRow', 'hidden', mode !== 'title');
+        setFlag('overlay', 'splash', mode === 'title');
 
-        el('overlay').classList.remove('hidden');
+        document.getElementById('overlay').classList.remove('hidden');
         this.overlayMode = mode;
       }
 
       setOverlayButtons({ retry = false, next = false, maps = false, board = false,
-                          story = false, retryLabel = 'Retry Map',
+                          story = false, back = false, retryLabel = 'Retry Map',
                           nextLabel = 'Next Map' } = {}) {
         const pairs = { btnRetry: retry, btnNext: next, btnStory: story,
-                        btnBoard: board, btnMaps: maps };
+                        btnBoard: board, btnMaps: maps, btnBack: back };
         for (const id in pairs) {
           document.getElementById(id).classList.toggle('hidden', !pairs[id]);
         }
         document.getElementById('btnRetry').textContent = retryLabel;
         document.getElementById('btnNext').textContent = nextLabel;
         document.getElementById('overlayBtnRow')
-          .classList.toggle('hidden', !(retry || next || maps || board || story));
+          .classList.toggle('hidden', !(retry || next || maps || board || story || back));
+      }
+
+      // ===================================================================
+      // SETTINGS
+      // ===================================================================
+      showSettings() {
+        this.isRunning = false;
+        this.isPaused = false;
+        Bark.clear();
+        audio.setMuted(false);
+        window.GameEvents.gameplayStop();
+        this.resetArmed = false;
+        this.syncSettings();
+        this.setOverlayMode('settings', {
+          kanji: '調',
+          title: 'SETTINGS',
+          subtitle: 'Sound, screen and controls'
+        });
+        this.setOverlayButtons({ back: true });
+      }
+
+      // Paints the current value onto every settings row
+      syncSettings() {
+        const soundOn = !audio.muted;
+        const sv = document.getElementById('setSoundVal');
+        sv.textContent = soundOn ? 'ON' : 'OFF';
+        sv.classList.toggle('off', !soundOn);
+
+        const full = !!document.fullscreenElement || !!document.webkitFullscreenElement;
+        const fv = document.getElementById('setFullVal');
+        fv.textContent = full ? 'ON' : 'OFF';
+        fv.classList.toggle('off', !full);
+
+        // The reset row is its own confirm: the first press only arms it
+        document.getElementById('setResetName').textContent =
+          this.resetArmed ? 'Press again to erase' : 'Reset progress';
+        document.getElementById('setResetNote').textContent =
+          this.resetArmed ? 'This cannot be undone' : 'Wipes chapters, maps and scores';
+        document.getElementById('setResetVal').textContent =
+          this.resetArmed ? 'SURE?' : 'RESET';
+      }
+
+      toggleFullscreen() {
+        const root = document.documentElement;
+        const active = document.fullscreenElement || document.webkitFullscreenElement;
+        const done = () => setTimeout(() => this.syncSettings(), 120);
+        try {
+          if (active) {
+            (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+          } else {
+            (root.requestFullscreen || root.webkitRequestFullscreen).call(root);
+          }
+          done();
+        } catch (e) { done(); }
+      }
+
+      // Two presses, because there is no undo on the other side of this
+      resetProgress() {
+        if (!this.resetArmed) {
+          this.resetArmed = true;
+          this.syncSettings();
+          clearTimeout(this.resetTimer);
+          this.resetTimer = setTimeout(() => {
+            this.resetArmed = false;
+            if (this.overlayMode === 'settings') this.syncSettings();
+          }, 5000);
+          return;
+        }
+        clearTimeout(this.resetTimer);
+        this.resetArmed = false;
+        // muted is a preference, not progress, so it survives the wipe
+        Save.write({ ...DEFAULT_SAVE, muted: audio.muted });
+        this.chapterIdx = 0;
+        this.showTitle();
       }
 
       // ===================================================================
@@ -5151,18 +5572,16 @@
         const ch = this.currentChapter();
         const done = Save.get('storyDone');
         const badge = document.getElementById('storyBadge');
-        badge.textContent = done
-          ? 'The road walked · Chapter ' + mapNo(ch) + ' — ' + STORY[ch].name
-          : (ch === 0 ? 'Story · Chapter 01 — ' + STORY[0].name
-                      : 'Continue · Chapter ' + mapNo(ch) + ' — ' + STORY[ch].name);
+        if (badge) badge.textContent = '';
         this.setOverlayMode('title', {
           kanji: '墨',
           title: 'SUMI',
           subtitle: 'Shadow of the Brush',
-          caption: artReady ? (ch === 0 && !done ? 'Begin the story' : 'Continue the story')
-                            : 'Loading'
+          // The badge above the button already names the chapter Play resumes
+          caption: artReady ? '' : 'Loading'
         });
-        this.setOverlayButtons({ story: true, maps: true, board: true });
+        // The splash carries its own menu row, so the text-button row stays down
+        this.setOverlayButtons({});
       }
 
       showStorySelect() {
@@ -5180,7 +5599,7 @@
             ? 'Every chapter open · walk any of them again'
             : 'Chapter ' + mapNo(ch) + ' of ' + mapNo(STORY.length - 1) + ' — reach the gate to open the next'
         });
-        this.setOverlayButtons({ maps: true, board: true });
+        this.setOverlayButtons({ maps: true, board: true, back: true });
       }
 
       renderStoryPanel() {
@@ -5364,7 +5783,7 @@
         });
         this.retryAction = () => this.startChapter(idx);
         this.setOverlayButtons({
-          retry: true, next: !isLast, story: true, maps: isLast,
+          retry: true, next: !isLast, story: true, maps: isLast, back: true,
           retryLabel: 'Walk It Again', nextLabel: 'Next Chapter'
         });
       }
@@ -5462,7 +5881,7 @@
           title: 'FREE PLAY',
           subtitle: 'Every map on its own, no story · par seals the next'
         });
-        this.setOverlayButtons({ story: true });
+        this.setOverlayButtons({ story: true, back: true });
       }
 
       // Fresh attempt at a map: score restarts, so par is always per-map.
@@ -5504,7 +5923,7 @@
         let done = false;
         const go = () => { if (!done) { done = true; next(); } };
         // Belt and braces: if the portal never calls back, start anyway
-        setTimeout(go, 8000);
+        setTimeout(go, 4000);
         window.GameEvents.requestAd(go, 'midgame');
       }
 
@@ -5576,14 +5995,17 @@
           document.getElementById('overlay').classList.add('hidden');
           this.isPaused = false;
           this.isRunning = true;
+          // Pausing ducks the mix; this path leaves a pause without going
+          // back through togglePause, so it has to undo the duck itself
+          audio.setMuted(false);
           input.clearPresses();
           window.GameEvents.gameplayStart();
           this.lastTime = performance.now();
           return;
         }
         // The front door is the story. Free play is one button away, but the
-        // default for someone who just pressed the big green triangle is the
-        // road the game was written around.
+        // default for someone who just pressed the big green Play button is
+        // the road the game was written around.
         this.startStory();
       }
 
@@ -5743,7 +6165,7 @@
           subtitle
         });
         this.retryAction = () => this.startEndless();
-        this.setOverlayButtons({ retry: true, maps: true, story: true,
+        this.setOverlayButtons({ retry: true, maps: true, story: true, back: true,
                                  retryLabel: 'Run Again' });
       }
 
@@ -5785,7 +6207,7 @@
         });
         this.retryAction = () => this.startStage(idx);
         this.setOverlayButtons({ retry: true, next: passed && !isLast,
-                                 maps: true, story: true });
+                                 maps: true, story: true, back: true });
       }
 
       // ===================================================================

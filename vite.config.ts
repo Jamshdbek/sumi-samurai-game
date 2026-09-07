@@ -5,6 +5,9 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
+    // CrazyGames serves the bundle from a nested path and rejects absolute
+    // asset URLs, so everything the build emits has to be relative.
+    base: './',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {

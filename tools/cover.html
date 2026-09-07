@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Sumi — cover art</title>
+<!--
+  Source art for the three CrazyGames cover images. Rendered to PNG by
+  tools/make-covers.mjs; open it in a browser with ?format=landscape to tweak
+  the composition by hand.
+
+  Everything here is the game's own art, composed the way the game composes it:
+  the same four parallax plates, the same ground tiles off the day tileset, the
+  same samurai sheet. A cover that used different art would be selling a
+  different game.
+
+  Portal rules this file is built to satisfy
+  (docs.crazygames.com/requirements/game-covers):
+    - exact sizes 1920x1080, 800x1200, 800x800
+    - no borders, no store logos
+    - no text other than the game's title
+    - one visual identity across all three
+-->
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #15141F; overflow: hidden; }
+
+  .cover {
+    position: relative; overflow: hidden;
+    background: #7C8CB4;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                 "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif, sans-serif;
+    color: #F4F0E2;
+  }
+  /* The three formats are the same painting, re-cropped and re-balanced */
+  .cover.landscape { width: 1920px; height: 1080px; }
+  .cover.portrait  { width: 800px;  height: 1200px; }
+  .cover.square    { width: 800px;  height: 800px;  }
+
+  .layer { position: absolute; left: 0; right: 0; pointer-events: none; }
+
+  .sky    { top: 0; bottom: 0; background: url('../public/assets/bg/sky.png') center center / cover no-repeat; }
+  .clouds { top: 0; background: url('../public/assets/bg/clouds.png') left top repeat-x; opacity: 0.6; }
+  .far    { background: url('../public/assets/bg/flora1.png') left bottom / auto 100% repeat-x; opacity: 0.95; }
+  .near   { background: url('../public/assets/bg/flora2.png') left bottom / auto 100% repeat-x; }
+
+  /* Both treelines sit on the horizon, which is the top of the ground band */
+  .landscape .clouds { height: 46%; background-size: 1900px auto; }
+  .landscape .far    { bottom: 190px; height: 470px; }
+  .landscape .near   { bottom: 190px; height: 330px; }
+
+  .portrait .clouds { height: 36%; background-size: 1100px auto; }
+  .portrait .far    { bottom: 150px; height: 540px; }
+  .portrait .near   { bottom: 150px; height: 380px; }
+
+  .square .clouds { height: 40%; background-size: 1100px auto; }
+  .square .far    { bottom: 130px; height: 400px; }
+  .square .near   { bottom: 130px; height: 285px; }
+
+  /* Sunset behind the treeline, and a soft darkening at the edges so the
+     wordmark holds up when the cover is scaled down to a thumbnail */
+  .glow {
+    top: 0; bottom: 0;
+    background:
+      radial-gradient(64% 34% at 50% 62%, rgba(242, 193, 78, 0.44), rgba(242, 193, 78, 0) 74%),
+      linear-gradient(180deg, rgba(21, 20, 31, 0.46) 0%, rgba(21, 20, 31, 0.04) 32%,
+                              rgba(21, 20, 31, 0.16) 62%, rgba(21, 20, 31, 0.55) 100%),
+      radial-gradient(105% 66% at 50% 46%, rgba(21, 20, 31, 0) 42%, rgba(21, 20, 31, 0.38) 100%);
+  }
+
+  /* The ground the samurai stands on, blitted from the day tileset by the
+     script below so it is the same dirt the first map is built out of */
+  #ground { position: absolute; left: 0; bottom: 0; image-rendering: pixelated; }
+
+  /* The samurai, straight off the dash sheet: 4 frames of 96x96, and frame 3
+     is the one with the katana drawn. Nearest-neighbour keeps the pixels
+     square instead of smearing them into mush at this scale. */
+  .hero {
+    position: absolute;
+    width: 96px; height: 96px;
+    background: url('../public/assets/samurai_dash.png') -288px 0 no-repeat;
+    image-rendering: pixelated;
+    transform-origin: bottom left;
+    filter: drop-shadow(0 10px 16px rgba(21, 20, 31, 0.5));
+  }
+  .landscape .hero { left: 1135px; bottom: 178px; transform: scale(6.4); }
+  .portrait  .hero { left: 225px;  bottom: 140px; transform: scale(5.2); }
+  .square    .hero { left: 245px;  bottom: 122px; transform: scale(4.2); }
+
+  .title { position: absolute; }
+  .kanji {
+    color: #B7D94A; font-weight: 900; line-height: 1;
+    letter-spacing: 0.2em; margin-left: 0.2em;
+    text-shadow: 0 6px 22px rgba(21, 20, 31, 0.8);
+  }
+  .word {
+    font-weight: 300; line-height: 1; letter-spacing: 0.2em; margin-left: 0.2em;
+    text-shadow: 0 12px 40px rgba(21, 20, 31, 0.85), 0 3px 6px rgba(21, 20, 31, 0.6);
+  }
+
+  /* Landscape puts the wordmark beside the samurai rather than behind him */
+  .landscape .title { left: 150px; top: 372px; text-align: left; }
+  .landscape .kanji { font-size: 96px; margin-bottom: 26px; }
+  .landscape .word  { font-size: 236px; }
+
+  .portrait .title { left: 0; right: 0; top: 122px; text-align: center; }
+  .portrait .kanji { font-size: 62px; margin-bottom: 16px; }
+  .portrait .word  { font-size: 142px; }
+
+  .square .title { left: 0; right: 0; top: 84px; text-align: center; }
+  .square .kanji { font-size: 54px; margin-bottom: 14px; }
+  .square .word  { font-size: 130px; }
+</style>
+</head>
+<body>
+  <div class="cover" id="cover">
+    <div class="layer sky"></div>
+    <div class="layer clouds"></div>
+    <div class="layer far"></div>
+    <div class="layer near"></div>
+    <div class="layer glow"></div>
+    <canvas id="ground"></canvas>
+    <div class="hero"></div>
+    <div class="title">
+      <div class="kanji">墨</div>
+      <div class="word">SUMI</div>
+    </div>
+  </div>
+  <script>
+    const FORMATS = {
+      landscape: { w: 1920, h: 1080, ground: 190, scale: 5 },
+      portrait:  { w: 800,  h: 1200, ground: 150, scale: 4 },
+      square:    { w: 800,  h: 800,  ground: 130, scale: 4 }
+    };
+    const format = new URLSearchParams(location.search).get('format') || 'landscape';
+    const spec = FORMATS[format] || FORMATS.landscape;
+    document.getElementById('cover').classList.add(format);
+
+    // Ground, drawn the way the game draws it: one capped row of `topM` and
+    // `midM` body rows underneath, off the day theme's tileset.
+    const TILE = 32;
+    const TOP = [7, 0];   // THEMES.day.cells.topM
+    const MID = [7, 1];   // THEMES.day.cells.midM
+
+    const canvas = document.getElementById('ground');
+    const ctx = canvas.getContext('2d');
+    canvas.width = spec.w;
+    canvas.height = spec.ground;
+
+    const sheet = new Image();
+    sheet.onload = () => {
+      ctx.imageSmoothingEnabled = false;
+      const size = TILE * spec.scale;
+      const cols = Math.ceil(spec.w / size);
+      const rows = Math.ceil(spec.ground / size);
+      for (let r = 0; r < rows; r++) {
+        const [cx, cy] = r === 0 ? TOP : MID;
+        for (let c = 0; c < cols; c++) {
+          ctx.drawImage(sheet, cx * TILE, cy * TILE, TILE, TILE,
+                        c * size, r * size, size, size);
+        }
+      }
+      document.body.dataset.ready = '1';
+    };
+    sheet.src = '../public/assets/world/tileset.png';
+  </script>
+</body>
+</html>
