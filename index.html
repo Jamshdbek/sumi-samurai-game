@@ -118,6 +118,14 @@
       background: linear-gradient(90deg, #E0453B, #F2C14E);
       transition: width 0.22s ease;
     }
+    /* A warden's last third. The bar itself is the phase readout, so the
+       change has to be visible out of the corner of an eye mid-fight. */
+    .boss-bar.rage .boss-bar-fill { background: linear-gradient(90deg, #6E0E12, #E0453B); }
+    .boss-bar.rage .boss-bar-track { border-color: #E0453B; box-shadow: 0 0 12px rgba(224, 69, 59, 0.5); }
+    .boss-bar-phase {
+      font-size: 9px; letter-spacing: 0.28em; font-weight: 700; margin-left: 8px;
+      opacity: 0.65; color: #F2C14E;
+    }
 
     .hud-right {
       display: flex; flex-direction: column; align-items: flex-end;
@@ -504,6 +512,190 @@
       .result-verdict { margin-top: 10px; font-size: 10px; letter-spacing: 0.2em; }
       .btn-text { padding: 9px 14px 9px 18px; }
     }
+
+    /* =================================================================
+       STORY MODE
+       Three pieces: the chapter list on the overlay, the full-screen
+       cutscene card between chapters, and the in-run bark that never
+       stops the game. The bark is the one the story leans on — a line
+       the samurai runs straight through beats a line he has to dismiss.
+       ================================================================= */
+
+    /* ---- Chapter list ---- */
+    #storyPanel { width: 100%; max-width: 660px; margin: 0 auto 18px; }
+    #storyPanel.hidden { display: none; }
+    .chapter-row {
+      display: grid; grid-template-columns: 40px 1fr auto; gap: 14px;
+      align-items: center; width: 100%; text-align: left; cursor: pointer;
+      background: rgba(43, 42, 61, 0.5); color: #E9E5D6; font-family: inherit;
+      border: 1px solid rgba(233, 229, 214, 0.15);
+      border-left: 2px solid rgba(183, 217, 74, 0.55);
+      padding: 11px 15px; margin-bottom: 7px;
+      transition: background 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                  border-color 0.25s, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .chapter-row:hover:not(.locked) {
+        background: rgba(183, 217, 74, 0.16); border-left-color: #B7D94A;
+        transform: translateX(3px);
+      }
+    }
+    .chapter-row:active:not(.locked) { background: rgba(183, 217, 74, 0.22); }
+    .chapter-row.locked {
+      cursor: not-allowed; opacity: 0.4; background: transparent;
+      border-left-color: rgba(233, 229, 214, 0.2);
+    }
+    .chapter-row.cleared { border-left-color: #F2C14E; }
+    .chapter-row.current { border-left-width: 3px; background: rgba(183, 217, 74, 0.1); }
+    /* A boss chapter has to look like one before it is opened */
+    .chapter-row.boss { border-left-color: #E0453B; }
+    .chapter-row.boss.locked { border-left-color: rgba(224, 69, 59, 0.3); }
+    .chapter-kanji { font-size: 26px; font-weight: 900; line-height: 1; opacity: 0.8; text-align: center; }
+    .chapter-no {
+      font-size: 8px; letter-spacing: 0.3em; opacity: 0.45; font-weight: 700;
+      display: block; margin-bottom: 3px;
+    }
+    /* Blocks, not inline: the row is built out of spans (a <button> may not
+       contain a <div>) so each one has to be told to take its own line. */
+    .chapter-name {
+      display: block; font-size: 12px; letter-spacing: 0.12em;
+      font-weight: 700; line-height: 1.3;
+    }
+    .chapter-line {
+      display: block; font-size: 9.5px; letter-spacing: 0.05em; opacity: 0.5;
+      line-height: 1.5; margin-top: 4px; font-weight: 600; font-style: italic;
+    }
+    .chapter-mark { font-size: 11px; color: #F2C14E; letter-spacing: 0.1em; }
+    .chapter-mark.boss { color: #E0453B; font-weight: 700; font-size: 9px; }
+
+    /* ---- Cutscene ---- */
+    #dialogue {
+      position: absolute; inset: 0; z-index: 60; display: flex;
+      align-items: flex-end; justify-content: center; cursor: pointer;
+      background: rgba(12, 11, 20, 0.86);
+      backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+      padding: 24px 24px max(8vh, 40px); touch-action: none;
+    }
+    #dialogue.hidden { display: none; }
+    .dlg-card {
+      display: flex; gap: 20px; align-items: flex-end;
+      width: 100%; max-width: 760px;
+    }
+    .dlg-portrait {
+      width: 128px; height: 128px; flex: 0 0 128px; overflow: hidden;
+      background: #1E1D2B; border: 1px solid rgba(233, 229, 214, 0.3);
+      /* The portraits are pixel art; the browser must not smooth them */
+      image-rendering: pixelated;
+    }
+    .dlg-portrait img {
+      display: block; width: 100%; height: 100%;
+      object-fit: cover; image-rendering: pixelated;
+    }
+    /* No portrait: the narration card, which speaks in the world's own voice */
+    .dlg-card.narration .dlg-portrait { display: none; }
+    .dlg-card.narration .dlg-text { font-style: italic; opacity: 0.82; }
+    /* A cutscene owns the screen: the health dots and the score have nothing
+       to say during one, and the run they belong to is not moving. */
+    body.in-scene #hud, body.in-scene #touch-controls { display: none; }
+    .dlg-body {
+      flex: 1 1 auto; min-width: 0; text-align: left;
+      /* The portrait is framed, so the text needs an edge of its own or the
+         card reads as two unrelated things sitting near each other. */
+      border-left: 2px solid rgba(183, 217, 74, 0.55);
+      padding: 4px 0 6px 18px;
+    }
+    .dlg-card.narration .dlg-body { border-left-color: rgba(233, 229, 214, 0.28); }
+    .dlg-name {
+      font-size: 10px; letter-spacing: 0.35em; font-weight: 700;
+      text-transform: uppercase; color: #B7D94A; margin-bottom: 10px;
+    }
+    .dlg-name .dlg-title {
+      color: #E9E5D6; opacity: 0.4; letter-spacing: 0.2em; margin-left: 10px;
+      font-size: 9px;
+    }
+    .dlg-text {
+      font-size: clamp(15px, 2.1vw, 21px); line-height: 1.65; color: #F4F0E2;
+      letter-spacing: 0.02em; min-height: 3.3em;
+    }
+    /* The caret sits on the end of the typed line and stops when it is done */
+    .dlg-caret {
+      display: inline-block; width: 0.5em; color: #B7D94A;
+      animation: dlgBlink 0.9s steps(1) infinite;
+    }
+    @keyframes dlgBlink { 50% { opacity: 0; } }
+    .dlg-foot {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 14px; font-size: 9px; letter-spacing: 0.3em;
+      text-transform: uppercase; font-weight: 700; opacity: 0.4;
+    }
+    .dlg-skip { pointer-events: auto; }
+    .dlg-progress { letter-spacing: 0.2em; }
+
+    /* ---- In-run bark ---- */
+    /* Deliberately not a modal: no button, no pause, no input. It fades in
+       over the run, holds for a beat and leaves. */
+    #bark {
+      position: absolute; left: 50%; bottom: 19%; z-index: 44;
+      transform: translate(-50%, 8px); pointer-events: none;
+      display: flex; align-items: center; gap: 11px;
+      max-width: min(560px, 86vw);
+      background: rgba(18, 17, 28, 0.86); border: 1px solid rgba(233, 229, 214, 0.2);
+      border-left: 2px solid #B7D94A;
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      padding: 9px 15px 9px 12px; text-align: left;
+      opacity: 0; transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #bark.show { opacity: 1; transform: translate(-50%, 0); }
+    #bark.hidden { display: none; }
+    .bark-face {
+      width: 34px; height: 34px; flex: 0 0 34px; overflow: hidden;
+      border: 1px solid rgba(233, 229, 214, 0.25); background: #1E1D2B;
+    }
+    .bark-face img {
+      display: block; width: 100%; height: 100%; object-fit: cover;
+      image-rendering: pixelated;
+    }
+    #bark.no-face .bark-face { display: none; }
+    .bark-who {
+      font-size: 8px; letter-spacing: 0.3em; font-weight: 700; color: #B7D94A;
+      text-transform: uppercase; margin-bottom: 3px;
+    }
+    .bark-text { font-size: 13px; line-height: 1.45; color: #F4F0E2; }
+
+    /* ---- Story badge on the splash ---- */
+    .story-badge {
+      font-size: 9px; letter-spacing: 0.34em; text-transform: uppercase;
+      font-weight: 700; color: #B7D94A; opacity: 0.9; margin-bottom: 10px;
+      margin-left: 0.34em;
+    }
+    .story-badge.hidden { display: none; }
+
+    @media (max-width: 640px) {
+      .chapter-row { grid-template-columns: 32px 1fr auto; gap: 10px; padding: 9px 11px; }
+      .chapter-kanji { font-size: 21px; }
+      .chapter-name { font-size: 11px; letter-spacing: 0.06em; }
+      .chapter-line { font-size: 9px; letter-spacing: 0; }
+      .dlg-card { gap: 14px; }
+      .dlg-portrait { width: 84px; height: 84px; flex-basis: 84px; }
+      .dlg-name { margin-bottom: 7px; letter-spacing: 0.25em; }
+      .dlg-name .dlg-title { display: none; }
+      .dlg-text { min-height: 4.2em; }
+      #dialogue { padding: 20px 18px max(6vh, 28px); }
+      .bark-text { font-size: 12px; }
+      #bark { bottom: 23%; padding: 8px 12px 8px 10px; }
+    }
+
+    @media (max-height: 500px) and (orientation: landscape) {
+      .chapter-row { padding: 7px 11px; margin-bottom: 5px; }
+      .chapter-kanji { font-size: 19px; }
+      .chapter-line { display: none; }
+      #dialogue { align-items: center; padding: 12px 18px; }
+      .dlg-portrait { width: 76px; height: 76px; flex-basis: 76px; }
+      .dlg-text { font-size: 14px; min-height: 2.8em; }
+      .dlg-foot { margin-top: 8px; }
+      #bark { bottom: 30%; }
+      .story-badge { margin-bottom: 6px; }
+    }
   </style>
 </head>
 <body>
@@ -573,6 +765,11 @@
       <p class="overlay-subtitle" id="overlaySubtitle">
         Shadow of the Brush
       </p>
+
+      <!-- Story: the ordered chapter list. Progress here is the game's spine;
+           the map grid below is the same levels off the leash. -->
+      <div id="storyPanel" class="hidden"></div>
+
       <!-- Map select: one card per stage, locked until the previous is cleared at par -->
       <div id="mapSelect" class="hidden" style="width: 100%;">
         <div class="map-grid" id="mapGrid"></div>
@@ -602,6 +799,7 @@
       </div>
 
       <div id="overlayActions">
+        <div class="story-badge hidden" id="storyBadge"></div>
         <button class="btn-action" id="startBtn" aria-label="Play">
           <div class="play-triangle"></div>
         </button>
@@ -611,8 +809,34 @@
       <div class="overlay-btn-row hidden" id="overlayBtnRow">
         <button class="btn-text hidden" id="btnRetry">Retry Map</button>
         <button class="btn-text hidden" id="btnNext">Next Map</button>
+        <button class="btn-text hidden" id="btnStory">Chapters</button>
         <button class="btn-text hidden" id="btnBoard">Run Board</button>
-        <button class="btn-text hidden" id="btnMaps">Map Select</button>
+        <button class="btn-text hidden" id="btnMaps">Free Play</button>
+      </div>
+    </div>
+
+    <!-- Cutscene card. Sits above the overlay so a chapter can open on a
+         line of dialogue with nothing else on screen. -->
+    <div id="dialogue" class="hidden">
+      <div class="dlg-card" id="dlgCard">
+        <div class="dlg-portrait"><img id="dlgFace" alt="" /></div>
+        <div class="dlg-body">
+          <div class="dlg-name" id="dlgName"></div>
+          <p class="dlg-text" id="dlgText"></p>
+          <div class="dlg-foot">
+            <span class="dlg-skip" id="dlgHint">Click or [SPACE] to continue</span>
+            <span class="dlg-progress" id="dlgProgress"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- In-run bark: story spoken over live gameplay, never blocking it -->
+    <div id="bark" class="hidden">
+      <div class="bark-face"><img id="barkFace" alt="" /></div>
+      <div>
+        <div class="bark-who" id="barkWho"></div>
+        <div class="bark-text" id="barkText"></div>
       </div>
     </div>
   </div>
@@ -810,11 +1034,63 @@
       // ---- bosses (96x96 cells, one expression per cell) ----------------
       b_mech:   'assets/boss/mech.png',       // 1152x96, 12 frames
       b_ooze:   'assets/boss/ooze.png',
-      b_bear:   'assets/boss/bear.png'
+      b_bear:   'assets/boss/bear.png',
+      // ---- wardens: the three story bosses -----------------------------
+      // Unlike the boss portraits above these are fully animated characters,
+      // so each one gets a real move list. Cells are square and the artwork is
+      // bottom-aligned in the cell, same contract as the samurai sheets — but
+      // these face RIGHT, which is why drawWarden flips on facing -1 and the
+      // enemy sheets flip on +1.
+      // kani: 96px cells. hano and mon: 128px cells.
+      k_idle:   'assets/person/kani/Idle.png',        // 672x96,  7 frames
+      k_walk:   'assets/person/kani/Walk.png',        // 672x96,  7
+      k_run:    'assets/person/kani/Run.png',         // 768x96,  8
+      k_jump:   'assets/person/kani/Jump.png',        // 864x96,  9
+      k_atk1:   'assets/person/kani/Attack_1.png',    // 480x96,  5
+      k_atk2:   'assets/person/kani/Attack_2.png',    // 480x96,  5
+      k_blade:  'assets/person/kani/Blade.png',       // 576x96,  6
+      k_cast:   'assets/person/kani/Cast.png',        // 480x96,  5
+      k_hurt:   'assets/person/kani/Hurt.png',        // 384x96,  4
+      k_dead:   'assets/person/kani/Dead.png',        // 480x96,  5
+      k_kunai:  'assets/person/kani/Kunai.png',       // 48x16,   3 frames of 16
+      m_idle:   'assets/person/mon/Idle.png',         // 1152x128, 9 frames
+      m_walk:   'assets/person/mon/Walk.png',         // 1024x128, 8
+      m_run:    'assets/person/mon/Run.png',          // 1024x128, 8
+      m_jump:   'assets/person/mon/Jump.png',         // 1280x128, 10
+      m_atk1:   'assets/person/mon/Attack_1.png',     // 768x128,  6
+      m_atk2:   'assets/person/mon/Attack_2.png',     // 1024x128, 8
+      m_cast:   'assets/person/mon/Cast.png',         // 768x128,  6
+      m_eat:    'assets/person/mon/Eating.png',       // 1152x128, 9
+      m_hurt:   'assets/person/mon/Hurt.png',         // 256x128,  2
+      m_dead:   'assets/person/mon/Dead.png',         // 640x128,  5
+      h_idle:   'assets/person/hano/Idle.png',        // 768x128,  6 frames
+      h_walk:   'assets/person/hano/Walk.png',        // 1152x128, 9
+      h_run:    'assets/person/hano/Run.png',         // 1024x128, 8
+      h_jump:   'assets/person/hano/Jump.png',        // 1152x128, 9
+      h_atk1:   'assets/person/hano/Attack_1.png',    // 512x128,  4
+      h_atk2:   'assets/person/hano/Attack_2.png',    // 640x128,  5
+      h_atk3:   'assets/person/hano/Attack_3.png',    // 512x128,  4
+      h_guard:  'assets/person/hano/Protection.png',  // 256x128,  2
+      h_hurt:   'assets/person/hano/Hurt.png',        // 384x128,  3
+      h_dead:   'assets/person/hano/Dead.png'         // 768x128,  6
+    };
+
+    // Dialogue portraits. Loaded as <img> by the cutscene card rather than
+    // through IMG, so they are listed apart from the canvas art: they must not
+    // hold the Play button hostage while they decode.
+    const FACE = {
+      ren:  'assets/face/rain.jpeg',
+      kani: 'assets/face/kani.jpeg',
+      mon:  'assets/face/mon.png',
+      hano: 'assets/face/hano.jpeg'
     };
 
     const IMG = {};
     let artReady = false;
+    // False until the boot sequence has settled which storage tier is the
+    // authority and re-read the save from it. preLoad's guess is good enough
+    // to draw a screen with, but not to decide which chapter to resume.
+    let saveReady = false;
 
     function loadArt() {
       const startBtn = document.getElementById('startBtn');
@@ -856,6 +1132,9 @@
           startBtn.style.pointerEvents = 'auto';
         }
         if (playCaption) playCaption.textContent = 'Click to Play';
+        // The splash caption says which chapter Play resumes, and it can only
+        // say so once the art is in — until then it is a progress readout.
+        if (window.game && window.game.overlayMode === 'title') window.game.showTitle();
       });
     }
 
@@ -1067,6 +1346,244 @@
     // killed by a drip is not a fair death.
     const bossBox = (e) => ({ x: e.curX - 44, y: (e.curY || e.y) - 52, w: 88, h: 104 });
 
+    // =====================================================================
+    // 2B. WARDENS — the three story bosses
+    // =====================================================================
+    // The hovering bosses above are one loop (close in, telegraph, fan of
+    // bolts) dressed three ways. A warden is a character instead: it stands on
+    // the floor, it has a move list, and every move is built out of the same
+    // three windows so all three fights can be read with one pair of eyes:
+    //
+    //   WIND   the telegraph. Nothing can hurt you yet. The clip plays, an ink
+    //          ring swells, a horn rises.
+    //   ACTIVE the hitbox / the projectile / the guard. This is the part that
+    //          costs a heart.
+    //   REST   recovery. The warden cannot act, cannot block and cannot turn.
+    //          Every one of these fights is won inside this window.
+    //
+    // Body contact does NOT damage the player — only the ACTIVE window does.
+    // That is the whole difference in feel: you are allowed to stand next to
+    // a warden and read it, which is what makes learning one possible.
+    //
+    // A clip is [sheet, frames, fps, ox]. `ox` is a horizontal nudge in
+    // SOURCE-CELL pixels, applied inside the facing flip so it mirrors with
+    // the body. It exists because these sheets are not consistently centred:
+    // the artwork's foot line sits anywhere from 30px left of the cell centre
+    // (hano idling) to 8px right of it (hano flinching). Left uncorrected the
+    // character visibly slides sideways whenever the clip changes, and his
+    // hurtbox stops agreeing with the body the player is aiming at. Each ox
+    // is the measured distance from that sheet's average foot centre to the
+    // centre of its cell, so one number per clip lines them all up while
+    // leaving the within-clip stride alone.
+    //
+    // A move declares its own kind, so one state machine drives all three:
+    //   melee   a hitbox in front, optionally lunging into it
+    //   dash    crosses the arena with the hitbox live (jump it)
+    //   leap    an arc that lands on the player, hitbox on touchdown
+    //   ranged  spawns projectiles at the start of ACTIVE
+    //   guard   blocks the katana for the whole window (hano)
+    //   heal    gives health back unless it is interrupted (mon)
+    //
+    // Art: three fully animated CraftPix character sets under public/assets/
+    // person/. Cells are square with the artwork bottom-aligned, and unlike
+    // the enemy sheets these are drawn facing RIGHT.
+    const WARDEN_ART = {
+      // ---- CHAPTER 11 · the friend who has to be beaten -----------------
+      // Fast, close, honest. Teaches spacing and re-teaches the parry: his
+      // kunai are the same deflectable projectile the caster taught in map 03.
+      kani: {
+        cell: 96, scale: 1.30,        // 71px of art -> ~92px tall on screen
+        kanji: '戒', name: 'KANI', title: 'THE OATHKEEPER', face: 'kani',
+        hp: 12, boxW: 38, boxH: 78,
+        glow: '242, 193, 78',
+        speed: 96, runSpeed: 210, hold: 68,
+        // [sheet, frames, fps, ox] — see the note on ox above the table
+        clips: {
+          idle: ['k_idle', 7, 8, -5],  walk: ['k_walk', 7, 10, 4],
+          run:  ['k_run', 8, 15, -3],  jump: ['k_jump', 9, 11, -4],
+          hurt: ['k_hurt', 4, 13, 4],  dead: ['k_dead', 5, 7, 5],
+          atk1: ['k_atk1', 5, 15, 3],  atk2: ['k_atk2', 5, 11, 3],
+          blade: ['k_blade', 6, 13, -3], cast: ['k_cast', 5, 11, 2]
+        },
+        moves: [
+          // The bread and butter. Short, quick, safe to trade against.
+          { id: 'jab', kind: 'melee', clip: 'atk1', wind: 0.26, active: 0.14, rest: 0.30,
+            reach: 62, boxH: 56, boxY: -62, lunge: 130, range: [0, 108],
+            weight: 4, cool: 0.9, phase: 1 },
+          // Wider and slower, so it is the one to punish.
+          { id: 'sweep', kind: 'melee', clip: 'atk2', wind: 0.36, active: 0.18, rest: 0.44,
+            reach: 88, boxH: 40, boxY: -40, lunge: 60, range: [0, 130],
+            weight: 3, cool: 1.5, phase: 1 },
+          // Crosses the whole arena with the staff out. Jump it. The range
+          // band starts close on purpose: it is also his answer to a samurai
+          // glued to his chest trading jabs, since it runs straight through
+          // him and comes out the other side.
+          { id: 'blade', kind: 'dash', clip: 'blade', wind: 0.40, active: 0.34, rest: 0.42,
+            reach: 58, boxH: 46, boxY: -50, dash: 620, range: [70, 620],
+            weight: 4, cool: 2.4, phase: 1 },
+          // Three kunai, parryable. Ranged answer to a player who camps far.
+          { id: 'kunai', kind: 'ranged', clip: 'cast', wind: 0.34, active: 0.12, rest: 0.34,
+            range: [150, 900], weight: 4, cool: 2.0, phase: 1,
+            fire: 'kunai' },
+          // Phase 3 only: he stops pretending and leads with the leap.
+          { id: 'leap', kind: 'leap', clip: 'jump', wind: 0.24, active: 0.16, rest: 0.40,
+            reach: 74, boxH: 60, boxY: -60, launchY: -470, range: [90, 460],
+            weight: 4, cool: 2.2, phase: 3 }
+        ]
+      },
+
+      // ---- CHAPTER 12 · the one who cannot stop eating ------------------
+      // Barely moves. Fights with the floor and with her own health bar, so
+      // the fight is about where the player stands and how fast they punish.
+      mon: {
+        cell: 128, scale: 1.42,       // 64px of art -> ~91px tall on screen
+        kanji: '灯', name: 'MON', title: 'THE LANTERN-EATER', face: 'mon',
+        hp: 15, boxW: 36, boxH: 76,
+        glow: '224, 122, 205',
+        speed: 62, runSpeed: 150, hold: 150,
+        clips: {
+          idle: ['m_idle', 9, 8, 3],   walk: ['m_walk', 8, 9, 2],
+          run:  ['m_run', 8, 14, -3],  jump: ['m_jump', 10, 12, 2],
+          hurt: ['m_hurt', 2, 10, 5],  dead: ['m_dead', 5, 6, -2],
+          atk1: ['m_atk1', 6, 13, 7],  atk2: ['m_atk2', 8, 13, 4],
+          cast: ['m_cast', 6, 9, 4],   eat:  ['m_eat', 9, 9, 2]
+        },
+        moves: [
+          // Stakes erupt out of the floor around the player's last position.
+          // The rise animation IS the telegraph, so it is always dodgeable —
+          // and in phase 1 they only flank him, so standing still is the
+          // right answer before the phase-2 version starts landing on him.
+          { id: 'spines', kind: 'ranged', clip: 'cast', wind: 0.44, active: 0.14, rest: 0.46,
+            range: [0, 900], weight: 5, cool: 2.6, phase: 1, fire: 'spines' },
+          // Close-range wall of ink. Punishes standing under her.
+          { id: 'ward', kind: 'melee', clip: 'atk1', wind: 0.34, active: 0.20, rest: 0.40,
+            reach: 84, boxH: 74, boxY: -78, range: [0, 118],
+            weight: 4, cool: 1.5, phase: 1 },
+          // Hops clean over the samurai to reset the fight.
+          { id: 'hop', kind: 'leap', clip: 'jump', wind: 0.26, active: 0.14, rest: 0.34,
+            reach: 66, boxH: 54, boxY: -56, launchY: -520, over: true,
+            range: [0, 300], weight: 3, cool: 3.0, phase: 1 },
+          // Two heartbeats of health back, unless the player interrupts it.
+          // Hitting her here does double damage and cancels the meal — the
+          // fight is unwinnable by turtling and that is the lesson.
+          { id: 'feast', kind: 'heal', clip: 'eat', wind: 0.30, active: 1.30, rest: 0.40,
+            heal: 2, range: [140, 900], weight: 5, cool: 7.0, phase: 1 },
+          // Phase 2: a long sweep of lanternfire either side of her.
+          { id: 'flare', kind: 'melee', clip: 'atk2', wind: 0.46, active: 0.26, rest: 0.52,
+            reach: 116, boxH: 64, boxY: -68, both: true, range: [0, 160],
+            weight: 4, cool: 2.6, phase: 2 },
+          // Phase 3: three volleys of stakes with no room to breathe.
+          { id: 'grove', kind: 'ranged', clip: 'atk2', wind: 0.42, active: 0.16, rest: 0.40,
+            range: [0, 900], weight: 5, cool: 3.4, phase: 3, fire: 'grove' }
+        ]
+      },
+
+      // ---- CHAPTER 13 · the blue armor at the gate ----------------------
+      // The hardest thing in the game, and hard in a specific way: it guards.
+      // Mashing the katana into a raised guard is punished, so the last fight
+      // is the one that asks the player to wait — and then to be fast.
+      hano: {
+        cell: 128, scale: 1.46,       // 69px of art -> ~101px tall on screen
+        kanji: '蒼', name: 'HANO', title: 'THE BLUE ARMOR', face: 'hano',
+        hp: 26, boxW: 46, boxH: 88,
+        glow: '150, 170, 255',
+        speed: 78, runSpeed: 250, hold: 92,
+        // What makes him the hardest thing in the game, and the two fields no
+        // other warden has. `punish`: three hits in quick succession and the
+        // guard comes up whether he was going to act or not — standing in
+        // front of him and holding the attack button is not a strategy.
+        // `counterMove`: the swing that rings off that guard is answered by
+        // the lunge, immediately, with no telegraph left to read. The answer
+        // to both is to stop, walk around him, and hit the back plate.
+        punish: 4, counterMove: 'riposte',
+        // hano's source sheets are the worst offenders: Idle and Run sit
+        // nearly 30px left of their cell centre while Walk is centred, so
+        // without ox he slides sideways every time he stops moving.
+        clips: {
+          idle: ['h_idle', 6, 7, 30],  walk: ['h_walk', 9, 9, 3],
+          run:  ['h_run', 8, 14, 24],  jump: ['h_jump', 9, 11, -2],
+          hurt: ['h_hurt', 3, 11, -8], dead: ['h_dead', 6, 6, 0],
+          atk1: ['h_atk1', 4, 11, 10], atk2: ['h_atk2', 5, 11, 5],
+          atk3: ['h_atk3', 4, 12, 10], guard: ['h_guard', 2, 5, -7]
+        },
+        moves: [
+          // The overhead. Slow, enormous, and it sends a wave along the floor
+          // that cannot be parried — the one thing in the game you must jump.
+          { id: 'slam', kind: 'melee', clip: 'atk1', wind: 0.52, active: 0.20, rest: 0.52,
+            reach: 84, boxH: 62, boxY: -66, range: [0, 150],
+            weight: 4, cool: 1.8, phase: 1, fire: 'wave' },
+          // Raises the guard. The katana rings off it; the player has to stop.
+          // Note the creep: he walks INTO the samurai behind it, in the
+          // direction he was facing when it went up — so backing off works and
+          // circling works, but staying put does not.
+          { id: 'guard', kind: 'guard', clip: 'guard', wind: 0.16, active: 1.05, rest: 0.30,
+            creep: 108, range: [0, 560], weight: 3, cool: 3.4, phase: 1 },
+          // Full-arena charge, shoulder first.
+          { id: 'charge', kind: 'dash', clip: 'run', wind: 0.44, active: 0.44, rest: 0.50,
+            reach: 56, boxH: 70, boxY: -74, dash: 540, range: [150, 700],
+            weight: 3, cool: 3.0, phase: 1 },
+          // The riposte off a blocked swing. Never chosen on its own: no
+          // distance can satisfy a range band that ends below zero, so it is
+          // unreachable through pickWardenMove and the only way to ever see
+          // it is to put the katana into a raised guard.
+          { id: 'riposte', kind: 'melee', clip: 'atk3', wind: 0.16, active: 0.16, rest: 0.44,
+            reach: 116, boxH: 48, boxY: -54, lunge: 210, range: [-1, -1],
+            weight: 0, cool: 0, phase: 1 },
+          // Phase 2: the long lunge. Covers the distance a player thinks is safe.
+          { id: 'lunge', kind: 'melee', clip: 'atk3', wind: 0.34, active: 0.18, rest: 0.40,
+            reach: 128, boxH: 46, boxY: -50, lunge: 260, range: [60, 260],
+            weight: 5, cool: 1.6, phase: 2 },
+          // Phase 2: comes down on top of the player, two waves out of the crater.
+          { id: 'drop', kind: 'leap', clip: 'atk2', wind: 0.34, active: 0.20, rest: 0.46,
+            reach: 92, boxH: 70, boxY: -74, launchY: -560, range: [80, 520],
+            weight: 4, cool: 2.8, phase: 2, fire: 'wave2' },
+          // Phase 3, the empty armour: the same overhead, twice, back to back,
+          // with three waves out of it. Nothing is held back any more.
+          { id: 'ruin', kind: 'melee', clip: 'atk1', wind: 0.30, active: 0.18, rest: 0.34,
+            reach: 90, boxH: 66, boxY: -70, lunge: 150, range: [0, 300],
+            weight: 6, cool: 1.1, phase: 3, fire: 'wave3', chain: 'lunge' }
+        ]
+      }
+    };
+
+    // Feet-anchored, unlike the hovering bosses: curY IS the floor line the
+    // warden stands on, so the hurtbox hangs above it.
+    const wardenBox = (e) => {
+      const a = WARDEN_ART[e.kind] || WARDEN_ART.kani;
+      return { x: e.curX - a.boxW / 2, y: e.curY - a.boxH, w: a.boxW, h: a.boxH };
+    };
+
+    // Which third of its health the warden is in. Every move list gates at
+    // least one move behind phase 2 or 3, so a fight visibly escalates.
+    const wardenPhase = (e) => {
+      const f = e.hp / e.maxHp;
+      return f > 0.66 ? 1 : (f > 0.33 ? 2 : 3);
+    };
+
+    // Runtime state an authored warden entry gets on top of the shared enemy
+    // fields, kept beside the art the same way bossRuntime is.
+    function wardenRuntime(e, floorY) {
+      const art = WARDEN_ART[e.kind] || WARDEN_ART.kani;
+      const hp = e.hp || art.hp;
+      return {
+        hp, maxHp: hp,
+        state: 'idle', invulnT: 0, deathT: 0, hurtT: 0,
+        phase: 1,
+        move: null, moveT: 0, didHit: false, guarding: false, healed: false,
+        vy: 0, airborne: false, leapVx: 0, launched: false, firedAt: false,
+        // Every one of these clocks has to start at a number: `gap` in
+        // particular gates the first attack, and `undefined <= 0` is false.
+        gap: 0.9, clangT: 0,
+        gait: 'idle',
+        hitStreak: 0, streakT: 0, counter: false,
+        cools: {},                  // move id -> seconds until it can be used
+        floorY,                     // the arena floor; curY is clamped to it
+        facing: -1,
+        animT: 0,
+        greeted: false              // the one line he says as the fight opens
+      };
+    }
+
     // ---------------------------------------------------------------------
     // THREE-TIER PERSISTENCE SYSTEM (CrazyGames SDK.data -> localStorage -> Memory)
     // ---------------------------------------------------------------------
@@ -1158,7 +1675,11 @@
       seenControlHint: false,
       runBoard: [],        // top endless runs, newest merged in on each death
       endlessBest: 0,
-      playerName: ''
+      playerName: '',
+      // ---- story mode ----
+      storyChapter: 0,     // highest chapter index the player has reached
+      storyDone: false,    // the road has been walked to its end at least once
+      storySeen: []        // chapter indices whose opening scene has played
     };
 
     // Single unified Save wrapper
@@ -1460,6 +1981,96 @@
           osc.start(now); osc.stop(now + 1.7);
         });
       }
+
+      // Picking up a charm/zanshin/edge. A short rising perfect fifth: the one
+      // unambiguously "good news" sound in the mix.
+      playPowerup() {
+        if (!this.ctx || this.muted) return;
+        const now = this.ctx.currentTime;
+        [523.25, 783.99].forEach((f, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(f, now + i * 0.07);
+          gain.gain.setValueAtTime(0.0001, now + i * 0.07);
+          gain.gain.exponentialRampToValueAtTime(0.16, now + i * 0.07 + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.07 + 0.30);
+          osc.connect(gain); gain.connect(this.masterGain);
+          osc.start(now + i * 0.07); osc.stop(now + i * 0.07 + 0.32);
+        });
+      }
+
+      // A warden's telegraph. Shorter and drier than the hovering bosses'
+      // horn, because a warden telegraphs several times a second in phase 3.
+      playWardenTell() {
+        if (!this.ctx || this.muted) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(160, now);
+        osc.frequency.exponentialRampToValueAtTime(420, now + 0.20);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.10, now + 0.10);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.26);
+        osc.connect(gain); gain.connect(this.masterGain);
+        osc.start(now); osc.stop(now + 0.28);
+      }
+
+      // The katana ringing off hano's raised guard. Metallic, unrewarding,
+      // and pitched well above the hit sound so it can never be mistaken for
+      // damage — the player has to be able to hear that nothing landed.
+      playGuardClang() {
+        if (!this.ctx || this.muted) return;
+        const now = this.ctx.currentTime;
+        [1860, 2480].forEach((f, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(f, now);
+          osc.frequency.exponentialRampToValueAtTime(f * 0.72, now + 0.18);
+          gain.gain.setValueAtTime(0.075 / (i + 1), now);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+          osc.connect(gain); gain.connect(this.masterGain);
+          osc.start(now); osc.stop(now + 0.24);
+        });
+      }
+
+      // A warden crossing into its next phase: the tell horn an octave down,
+      // held. Long enough that the player looks up from their own feet.
+      playWardenRoar() {
+        if (!this.ctx || this.muted) return;
+        const now = this.ctx.currentTime;
+        [55, 82.4, 110].forEach((f, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = i === 2 ? 'sawtooth' : 'triangle';
+          osc.frequency.setValueAtTime(f * 1.5, now);
+          osc.frequency.exponentialRampToValueAtTime(f, now + 0.9);
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.exponentialRampToValueAtTime(0.2 / (i + 1), now + 0.12);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+          osc.connect(gain); gain.connect(this.masterGain);
+          osc.start(now); osc.stop(now + 1.25);
+        });
+      }
+
+      // Mon drinking a lantern dry. A slow upward slide, so a player who
+      // cannot see her still knows her health bar is going the wrong way.
+      playFeast() {
+        if (!this.ctx || this.muted) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.linearRampToValueAtTime(560, now + 1.2);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.13, now + 0.2);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.35);
+        osc.connect(gain); gain.connect(this.masterGain);
+        osc.start(now); osc.stop(now + 1.4);
+      }
     }
     const audio = new SoundEngine();
 
@@ -1484,6 +2095,20 @@
         window.addEventListener('keydown', (e) => {
           audio.init();
           if (e.repeat) return;
+          // A cutscene owns the keyboard while it is up. Advancing it must not
+          // also queue a jump for the run waiting behind it.
+          if (Dialogue.active) {
+            if (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyJ' ||
+                e.code === 'KeyX' || e.code === 'ArrowRight' || e.code === 'KeyD') {
+              e.preventDefault();
+              Dialogue.advance();
+            } else if (e.code === 'Escape') {
+              e.preventDefault();
+              // Escape ends the scene outright rather than pausing behind it
+              while (Dialogue.active) Dialogue.advance();
+            }
+            return;
+          }
           switch (e.code) {
             case 'KeyA': case 'ArrowLeft': this.left = true; break;
             case 'KeyD': case 'ArrowRight': this.right = true; break;
@@ -1597,6 +2222,15 @@
         const p = this.dashPressed;
         this.dashPressed = false;
         return p;
+      }
+
+      // Drop every buffered press and every held direction. Called whenever
+      // the game hands control back to the player after a menu or a cutscene,
+      // so the first frame of a chapter is never a jump nobody asked for.
+      clearPresses() {
+        this.left = this.right = false;
+        this.jumpPressed = this.jumpHeld = false;
+        this.slashPressed = this.dashPressed = false;
       }
     }
     const keysDown = {};
@@ -2510,6 +3144,213 @@
           { x: 5280, y: 570 }
         ],
         torii: { x: 5860, y: 620 }
+      },
+
+      // -----------------------------------------------------------------
+      // MAPS 11-13 — the warden chapters.
+      //
+      // These are built the opposite way round to maps 01-10. Those are a
+      // long road with a boss at the end; these are a short, sharp approach
+      // that exists only to get the player warm, and then a FLAT ARENA with
+      // nothing in it but the warden. No spikes on the arena floor, no
+      // patrols, no saws, no moving platforms: when a fight has this many
+      // moves to read, anything else on screen is noise that kills the
+      // player instead of the boss doing it.
+      //
+      // Each arena does give the samurai two things: a checkpoint on its
+      // threshold (so a death costs the fight and not the approach) and a
+      // pair of ledges, because every warden's answer to a cornered player
+      // is a ground move.
+      // -----------------------------------------------------------------
+      {
+        id: 11,
+        kanji: '戒',
+        name: "THE BROKEN OATH",
+        title: "MAP 11: THE BROKEN OATH",
+        // The approach pays 1150; KANI pays 1200 + the coins he drops. Par is
+        // set just under "cleared the approach and won", so a win is a pass.
+        requiredScore: 2100,
+        width: 3400,
+        height: 660,
+        spawn: { x: 70, y: 460 },
+        platforms: [
+          { x: 0, y: 520, w: 620, h: 140 },
+          // A. three ledges over a spiked gully — the warm-up, nothing more
+          { x: 740, y: 450, w: 130, h: 24 },
+          { x: 960, y: 390, w: 130, h: 24 },
+          { x: 1180, y: 450, w: 130, h: 24 },
+          { x: 1400, y: 520, w: 420, h: 140 },
+          // B. the wall pinch
+          { x: 1900, y: 300, w: 45, h: 220 },
+          { x: 2080, y: 260, w: 45, h: 260 },
+          { x: 1945, y: 260, w: 135, h: 24 },
+          // C. the stone circle. Flat, wide, and two ledges to get airborne.
+          { x: 2200, y: 520, w: 1200, h: 140 },
+          { x: 2440, y: 380, w: 150, h: 22 },
+          { x: 3010, y: 380, w: 150, h: 22 }
+        ],
+        hazards: [
+          { type: 'spike', x: 620, y: 620, w: 780, h: 40 },
+          { type: 'spike', x: 1820, y: 620, w: 380, h: 40 }
+        ],
+        enemies: [
+          { type: 'oni', x: 300, y: 480, minX: 140, maxX: 580 },
+          { type: 'lantern', x: 1050, y: 300, amp: 45, freq: 2.2 },
+          { type: 'archer', x: 1500, y: 480 },
+          { type: 'oni', x: 1700, y: 480, minX: 1560, maxX: 1800 },
+          // The warden. minX/maxX are the walls of the stone circle: he is
+          // fast enough to leave it and the fight falls apart if he does.
+          { type: 'warden', kind: 'kani', x: 2900, y: 520, minX: 2280, maxX: 3330 }
+        ],
+        destructibles: [
+          { x: 1860, y: 450, w: 30, h: 70 }
+        ],
+        coins: [
+          { x: 220, y: 480 }, { x: 285, y: 480 }, { x: 350, y: 480 },
+          { x: 800, y: 400 }, { x: 1020, y: 340 }, { x: 1240, y: 400 },
+          { x: 1480, y: 480 }, { x: 1545, y: 480 },
+          { x: 1990, y: 300 }, { x: 1990, y: 210 },
+          { x: 2300, y: 480 }, { x: 2500, y: 330 }, { x: 3070, y: 330 }
+        ],
+        koban: { x: 1990, y: 150 },
+        powerups: [
+          { type: 'charm', x: 1450, y: 480 },
+          // On the threshold, so the fight can be entered with a hit in hand
+          { type: 'charm', x: 2250, y: 480 }
+        ],
+        checkpoints: [
+          { x: 1420, y: 470 },
+          { x: 2230, y: 470 }
+        ],
+        torii: { x: 3330, y: 520 }
+      },
+      {
+        id: 12,
+        theme: 'night',
+        kanji: '灯',
+        name: "THE HUNGRY SHRINE",
+        title: "MAP 12: THE HUNGRY SHRINE",
+        requiredScore: 2500,
+        width: 3600,
+        height: 700,
+        spawn: { x: 70, y: 480 },
+        platforms: [
+          { x: 0, y: 540, w: 560, h: 160 },
+          // A. the lantern stair, climbing to the shrine terrace
+          { x: 680, y: 470, w: 120, h: 24 },
+          { x: 880, y: 400, w: 120, h: 24 },
+          { x: 1080, y: 330, w: 120, h: 24 },
+          { x: 1290, y: 400, w: 120, h: 24 },
+          { x: 1500, y: 540, w: 460, h: 160 },
+          // B. two crumbling steps over the offering pit
+          { x: 2020, y: 480, w: 110, h: 20, crumbling: true },
+          { x: 2190, y: 440, w: 110, h: 20, crumbling: true },
+          // C. the shrine floor. Mon summons stakes out of THIS slab, so it
+          // is one unbroken piece — a stake rising out of a gap is unreadable.
+          { x: 2360, y: 540, w: 1240, h: 160 },
+          { x: 2600, y: 390, w: 160, h: 22 },
+          { x: 3180, y: 390, w: 160, h: 22 }
+        ],
+        hazards: [
+          { type: 'spike', x: 560, y: 660, w: 940, h: 40 },
+          { type: 'spike', x: 1960, y: 660, w: 400, h: 40 },
+          { type: 'saw', x: 1700, y: 480, startX: 1560, endX: 1900, speed: 190 }
+        ],
+        enemies: [
+          { type: 'lantern', x: 780, y: 380, amp: 50, freq: 2.4 },
+          { type: 'archer', x: 1120, y: 320 },
+          { type: 'oni', x: 1600, y: 500, minX: 1540, maxX: 1920 },
+          { type: 'lantern', x: 2100, y: 360, amp: 55, freq: 2.0 },
+          { type: 'warden', kind: 'mon', x: 3100, y: 540, minX: 2440, maxX: 3520 }
+        ],
+        destructibles: [
+          { x: 2330, y: 470, w: 30, h: 70 }
+        ],
+        coins: [
+          { x: 200, y: 500 }, { x: 265, y: 500 },
+          { x: 740, y: 420 }, { x: 940, y: 350 }, { x: 1140, y: 280 }, { x: 1350, y: 350 },
+          { x: 1580, y: 500 }, { x: 1645, y: 500 },
+          { x: 2065, y: 430 }, { x: 2235, y: 390 },
+          { x: 2450, y: 500 }, { x: 2660, y: 340 }, { x: 3240, y: 340 }
+        ],
+        koban: { x: 1140, y: 220 },
+        powerups: [
+          { type: 'zanshin', x: 1560, y: 500 },
+          { type: 'charm', x: 2410, y: 500 }
+        ],
+        checkpoints: [
+          { x: 1530, y: 490 },
+          { x: 2390, y: 490 }
+        ],
+        torii: { x: 3520, y: 540 }
+      },
+      {
+        id: 13,
+        theme: 'night',
+        kanji: '解',
+        name: "THE LAST CHAIN",
+        title: "MAP 13: THE LAST CHAIN",
+        requiredScore: 3400,
+        width: 4200,
+        height: 720,
+        spawn: { x: 70, y: 500 },
+        platforms: [
+          { x: 0, y: 560, w: 520, h: 160 },
+          // A. the causeway: every mechanic once, quickly, as a last check
+          { x: 640, y: 490, w: 110, h: 22 },
+          { x: 830, y: 420, w: 110, h: 22 },
+          { x: 1030, y: 350, w: 110, h: 22 },
+          { x: 1230, y: 560, w: 380, h: 160 },
+          { x: 1700, y: 470, w: 130, h: 22, moving: true, moveX: 190, moveSpeed: 1.3 },
+          { x: 2050, y: 560, w: 360, h: 160 },
+          // B. the shaft up to the gate mouth
+          { x: 2500, y: 240, w: 45, h: 320 },
+          { x: 2680, y: 190, w: 45, h: 370 },
+          { x: 2545, y: 190, w: 135, h: 24 },
+          // C. the gate. The largest flat floor in the game — hano's charge
+          // crosses 540px/s and he needs room to be readable at that speed.
+          { x: 2800, y: 560, w: 1400, h: 160 },
+          { x: 3020, y: 410, w: 150, h: 22 },
+          { x: 3820, y: 410, w: 150, h: 22 }
+        ],
+        hazards: [
+          { type: 'spike', x: 520, y: 680, w: 710, h: 40 },
+          { type: 'spike', x: 1610, y: 680, w: 440, h: 40 },
+          { type: 'spike', x: 2410, y: 680, w: 390, h: 40 },
+          { type: 'saw', x: 1350, y: 500, startX: 1250, endX: 1580, speed: 210 }
+        ],
+        enemies: [
+          { type: 'oni', x: 280, y: 520, minX: 130, maxX: 480 },
+          { type: 'lantern', x: 930, y: 320, amp: 55, freq: 2.6 },
+          { type: 'archer', x: 1300, y: 520 },
+          { type: 'oni', x: 2150, y: 520, minX: 2090, maxX: 2370 },
+          { type: 'archer', x: 2570, y: 200 },
+          { type: 'warden', kind: 'hano', x: 3650, y: 560, minX: 2880, maxX: 4120 }
+        ],
+        destructibles: [
+          { x: 2460, y: 490, w: 30, h: 70 },
+          { x: 2770, y: 490, w: 30, h: 70 }
+        ],
+        coins: [
+          { x: 200, y: 520 }, { x: 265, y: 520 },
+          { x: 690, y: 440 }, { x: 880, y: 370 }, { x: 1080, y: 300 },
+          { x: 1310, y: 520 }, { x: 1760, y: 420 },
+          { x: 2590, y: 520 }, { x: 2590, y: 400 }, { x: 2590, y: 280 },
+          { x: 2900, y: 520 }, { x: 3080, y: 360 }, { x: 3880, y: 360 }
+        ],
+        koban: { x: 2590, y: 130 },
+        powerups: [
+          { type: 'edge', x: 1290, y: 510 },
+          { type: 'charm', x: 2580, y: 150 },
+          // The last thing before the gate. Take it.
+          { type: 'charm', x: 2850, y: 520 }
+        ],
+        checkpoints: [
+          { x: 1260, y: 510 },
+          { x: 2100, y: 510 },
+          { x: 2830, y: 510 }
+        ],
+        torii: { x: 4120, y: 560 }
       }
     ];
 
@@ -2874,6 +3715,453 @@
       const typed = (Save.get('playerName') || '').trim();
       return (typed || cgUserName || 'RONIN').slice(0, 10).toUpperCase();
     }
+
+    // =====================================================================
+    // 6C. THE STORY — CAST, CHAPTERS, DIALOGUE
+    // =====================================================================
+    // Rule this is written against: less text, more play. Every line is one
+    // breath long, and the plot is carried by three things instead of prose —
+    // who blocks the road, what they want, and the fact that all three of them
+    // came this way before Ren did.
+    //
+    // Two delivery channels, and the split matters:
+    //   SCENE  a card between chapters. The game is not running. Used once at
+    //          the top of a chapter and once at the end. Two to four lines.
+    //   BARK   a line that floats up during play and leaves on its own. Nothing
+    //          pauses, nothing has to be dismissed. Everything mid-level, and
+    //          everything a warden says mid-fight, is a bark.
+    const CAST = {
+      ren:  { name: 'REN',  title: 'THE RONIN',         face: 'ren',
+              // Portrait crops: each of these is a head in a differently
+              // shaped image, so the focal point is set per character.
+              crop: '50% 22%' },
+      kani: { name: 'KANI', title: 'THE OATHKEEPER',    face: 'kani', crop: '50% 24%' },
+      mon:  { name: 'MON',  title: 'THE LANTERN-EATER', face: 'mon',  crop: '46% 30%' },
+      hano: { name: 'HANO', title: 'THE BLUE ARMOR',    face: 'hano', crop: '50% 30%' },
+      // No portrait: the world's own voice, used for the three time-passes
+      // and the last card. Rendered italic with the frame removed.
+      none: { name: '', title: '', face: null, crop: '50% 50%' }
+    };
+
+    const line = (who, text) => ({ who, text });
+
+    // One entry per chapter, index-aligned to STAGE_CONFIGS. `open` plays
+    // before the map loads, `close` after the gate is reached, and `beats` are
+    // barks fired the first time the samurai runs past that x.
+    const STORY = [
+      {
+        kanji: '歩', name: 'THE FIRST STEP', epigraph: 'The chain was long enough to walk.',
+        open: [
+          line('none', 'A chain. A sword. A road going one way.'),
+          line('kani', 'You woke up. Bad luck.'),
+          line('ren',  'Where does the chain end?'),
+          line('kani', 'At the gate. Nobody walks that far.'),
+          line('ren',  'I will.')
+        ],
+        beats: [
+          { x: 900,  who: 'kani', text: 'Everything here has teeth. Even the ground.' },
+          { x: 1900, who: 'kani', text: 'Wide gap. Run at it, do not think at it.' }
+        ],
+        close: [ line('kani', 'One step. Only the rest to go.') ]
+      },
+      {
+        kanji: '竹', name: 'THE BAMBOO PATH', epigraph: 'Someone had already cut the path.',
+        open: [
+          line('kani', 'The bamboo remembers footsteps.'),
+          line('ren',  'Whose?'),
+          line('kani', 'Yours. From the last time.')
+        ],
+        beats: [
+          { x: 1700, who: 'ren',  text: 'These cuts are fresh. Someone is ahead of me.' }
+        ],
+        close: [
+          line('ren',  'I have never been here before.'),
+          line('kani', 'That is what you said then, too.')
+        ]
+      },
+      {
+        kanji: '霧', name: 'THE MIST RAVINE', epigraph: 'Do not trust the ground here.',
+        open: [
+          line('kani', 'Do not trust the ground here.'),
+          line('ren',  'Then what do I trust?'),
+          line('kani', 'Your feet. Keep them moving.')
+        ],
+        beats: [
+          { x: 1500, who: 'ren',  text: 'A campfire. Still warm.' },
+          { x: 2900, who: 'kani', text: 'She never waits. Not for me either.' }
+        ],
+        close: [ line('ren', 'Someone is walking my road faster than I am.') ]
+      },
+      {
+        kanji: '城', name: 'THE FORTRESS GATES', epigraph: 'Iron rusts.', boss: 'TETSU-DOKURO',
+        open: [
+          line('kani', 'The first gate is guarded by iron.'),
+          line('ren',  'Iron rusts.'),
+          line('kani', 'Not this one. It has had help.')
+        ],
+        beats: [
+          { x: 4100, who: 'kani', text: 'It hovers. So take its knees away — jump and cut down.' }
+        ],
+        close: [
+          line('ren',  'That was a lock, not a soldier.'),
+          line('kani', 'Now you are asking the right question.'),
+          line('ren',  'Who holds the key?'),
+          line('kani', 'The one in blue. Do not meet him yet.')
+        ]
+      },
+      {
+        kanji: '紅', name: 'THE CRIMSON MAPLE', epigraph: 'Food left on a rock, still warm.',
+        open: [
+          line('none', 'Rice on a flat stone. Nobody in sight.'),
+          line('ren',  'This was left for me.'),
+          line('mon',  'For whoever survives. That is not the same thing.'),
+          line('ren',  'Who are you?'),
+          line('mon',  'Someone who stopped walking.')
+        ],
+        beats: [
+          { x: 2200, who: 'mon', text: 'The chain gets shorter, ronin. Never longer.' }
+        ],
+        close: [ line('ren', 'She was gone before I could thank her.') ]
+      },
+      {
+        kanji: '滝', name: 'THE FALLING WATER', epigraph: 'Water forgets nothing.',
+        open: [
+          line('kani', 'Water forgets nothing.'),
+          line('ren',  'It forgot me.'),
+          line('kani', 'No. It is waiting to see how you end.')
+        ],
+        beats: [
+          { x: 2400, who: 'none', text: 'For one second, the reflection wears blue armour.' }
+        ],
+        close: [ line('ren', 'The man in the water was wearing his armour.') ]
+      },
+      {
+        kanji: '雪', name: 'THE SNOW PASS', epigraph: 'Cold keeps the old ones.', boss: 'KOORI-NUSHI',
+        open: [
+          line('kani', 'Cold keeps the old ones.'),
+          line('ren',  'Keeps them alive?'),
+          line('kani', 'Keeps them from leaving.')
+        ],
+        beats: [
+          { x: 2600, who: 'ren', text: 'Small footprints. Ahead of mine. Always ahead.' }
+        ],
+        close: [
+          line('ren',  'It was frozen mid-step. Like it was trying to go.'),
+          line('kani', 'They all were.')
+        ]
+      },
+      {
+        kanji: '嵐', name: 'THE STORM ROOF', epigraph: 'Roofs are for people with homes.',
+        open: [
+          line('kani', 'Roofs are for people with homes.'),
+          line('ren',  'I am only borrowing one.')
+        ],
+        beats: [
+          { x: 2600, who: 'kani', text: 'You are getting harder to stop.' },
+          { x: 3900, who: 'ren',  text: 'Good.' }
+        ],
+        close: [ line('kani', 'Two gates left. Then me.') ]
+      },
+      {
+        kanji: '影', name: 'THE SHADOW MARKET', epigraph: 'Everything here is for sale.',
+        open: [
+          line('kani', 'Everything here is for sale.'),
+          line('ren',  'Even freedom?'),
+          line('kani', 'Especially freedom. It costs a name.')
+        ],
+        beats: [
+          { x: 1800, who: 'mon',  text: 'Do not buy anything. It is all your own things.' },
+          { x: 3400, who: 'none', text: 'A hundred straw hats hang from the stalls. All old. All torn.' }
+        ],
+        close: [
+          line('ren',  'I kept my name.'),
+          line('kani', 'For now.')
+        ]
+      },
+      {
+        kanji: '鬼', name: 'THE ONI KEEP', epigraph: 'Past this keep, no more advice.', boss: 'ONI-GUMA',
+        open: [
+          line('kani', 'Past this keep, no more advice.'),
+          line('ren',  'Why?'),
+          line('kani', 'Because past it, I am the thing in your way.')
+        ],
+        beats: [
+          { x: 5300, who: 'kani', text: 'Last one that is only a beast. Enjoy it.' }
+        ],
+        close: [
+          line('none', 'He walks off down the road you were about to take.'),
+          line('kani', 'Bring your sword tomorrow. Bring all of it.')
+        ]
+      },
+      // ---- the three wardens -------------------------------------------
+      {
+        kanji: '戒', name: 'THE BROKEN OATH', epigraph: 'He swore no one leaves.',
+        boss: 'KANI', warden: true,
+        open: [
+          line('kani', 'I swore that no one leaves.'),
+          line('ren',  'You brought me here yourself.'),
+          line('kani', 'Then I owe you a real fight, not a warning.'),
+          line('ren',  'Move.'),
+          line('kani', 'Make me.')
+        ],
+        beats: [
+          { x: 800,  who: 'kani', text: 'Come on then. The staff is faster than the sword.' },
+          { x: 1600, who: 'none', text: 'The road ends in a flat stone circle. He is standing in it.' }
+        ],
+        close: [
+          line('kani', 'Good. Now you can lose properly.'),
+          line('ren',  'To whom?'),
+          line('kani', 'To the woman who eats the lanterns. Say nothing to her.')
+        ]
+      },
+      {
+        kanji: '灯', name: 'THE HUNGRY SHRINE', epigraph: 'One more lantern. One more year.',
+        boss: 'MON', warden: true,
+        open: [
+          line('mon',  'You again. I am sorry — I do not keep faces.'),
+          line('ren',  'You left me food. Twice.'),
+          line('mon',  'I feed the road. Not the walker.'),
+          line('ren',  'Then let me pass.'),
+          line('mon',  'I cannot. I am what the shrine eats with.')
+        ],
+        beats: [
+          { x: 900, who: 'mon', text: 'The lanterns are memories. Mine ran out first.' }
+        ],
+        close: [
+          line('mon',  '...Ren. I remember your name.'),
+          line('ren',  'Come with me.'),
+          line('mon',  'Someone has to hold the light for the next one. Go.')
+        ]
+      },
+      {
+        kanji: '解', name: 'THE LAST CHAIN', epigraph: 'Everyone says that. Then they wear it.',
+        boss: 'HANO', warden: true, last: true,
+        open: [
+          line('none', 'The gate. Blue armour standing in it, bored.'),
+          line('hano', 'You came a long way to stand still.'),
+          line('ren',  'I came to break it.'),
+          line('hano', 'Everyone says that. Then they wear it.'),
+          line('ren',  'Not me.'),
+          line('hano', 'That is also what they say.')
+        ],
+        beats: [
+          { x: 1000, who: 'hano', text: 'Your guard is a habit. Mine is a wall.' }
+        ],
+        close: [
+          line('ren',  'The helmet is empty. There is no one in there.'),
+          line('hano', 'There has not been for a long time.'),
+          line('ren',  'Then whose armour is it?'),
+          line('hano', 'The next one who wins. That was always the rule.'),
+          line('ren',  'I am not putting it on.'),
+          line('hano', 'No. You are not, are you.'),
+          line('none', 'Scratched inside the helmet, small and deep: a straw hat.'),
+          line('hano', 'Somebody carved that to remember himself. Walk, ronin.')
+        ],
+        // Plays once, after the close, the first time the game is finished.
+        epilogue: [
+          line('none', 'The chain lies open on the stones. Nobody picks it up.'),
+          line('kani', 'He actually walked out.'),
+          line('mon',  'He forgot to take the light.'),
+          line('kani', 'He will be back for it.'),
+          line('none', 'SEVEN GATES. ONE ROAD. NO KEEPER.')
+        ]
+      }
+    ];
+
+    // STORY is index-aligned to STAGE_CONFIGS: chapter N is map N. Adding a
+    // map without a chapter (or the other way round) would silently give the
+    // story a hole, so say so loudly at load rather than at the gate.
+    if (STORY.length !== STAGE_CONFIGS.length) {
+      console.warn('[story] ' + STORY.length + ' chapters for ' +
+                   STAGE_CONFIGS.length + ' maps — they must be index-aligned');
+    }
+
+    // Lines a warden says mid-fight, keyed by warden and by what just
+    // happened. Barks, always — the fight never stops for them.
+    const WARDEN_LINES = {
+      kani: {
+        start: 'No holding back. You would only resent it.',
+        phase2: 'Faster. The gate is watching us both.',
+        phase3: 'There. Now you are worth the oath.',
+        down:  'Enough. My knee says you win.'
+      },
+      mon: {
+        start: 'Stand where you like. The floor is mine.',
+        phase2: 'Do not let me eat. That is the only advice I have.',
+        phase3: 'I am nearly out of years, ronin.',
+        heal:  'One more lantern. One more year.',
+        down:  'Oh. It is quiet again.'
+      },
+      hano: {
+        start: 'Show me the habit you brought.',
+        phase2: 'The armour is not mine either. It was handed to me.',
+        phase3: 'Look inside the helmet. Look properly.',
+        down:  'Thank you.'
+      }
+    };
+
+    // ---------------------------------------------------------------------
+    // CUTSCENE CARD
+    // ---------------------------------------------------------------------
+    // Types the line out, then waits. A second press while it is still typing
+    // finishes the line instead of skipping it — the one interaction rule
+    // every player already knows from every other game with a text box.
+    const Dialogue = {
+      lines: [], idx: 0, onDone: null, active: false,
+      shown: '', full: '', typing: false, typeT: 0,
+
+      el(id) { return document.getElementById(id); },
+
+      play(lines, onDone) {
+        if (!lines || !lines.length) { if (onDone) onDone(); return; }
+        this.lines = lines;
+        this.idx = 0;
+        this.onDone = onDone || null;
+        this.active = true;
+        this.el('dialogue').classList.remove('hidden');
+        document.body.classList.add('in-scene');
+        this.render();
+      },
+
+      render() {
+        const l = this.lines[this.idx];
+        const who = CAST[l.who] || CAST.none;
+        const card = this.el('dlgCard');
+        const face = this.el('dlgFace');
+
+        card.classList.toggle('narration', !who.face);
+        if (who.face) {
+          const src = FACE[who.face];
+          // Only reassign on a change: writing the same src restarts the
+          // decode and flashes the portrait between two lines by one speaker.
+          if (face.getAttribute('src') !== src) face.src = src;
+          face.style.objectPosition = who.crop;
+        }
+        this.el('dlgName').innerHTML = who.name
+          ? escapeText(who.name) + '<span class="dlg-title">' + escapeText(who.title) + '</span>'
+          : '';
+        this.el('dlgProgress').textContent = (this.idx + 1) + ' / ' + this.lines.length;
+        // touchActive only turns on after a first touch, and the opening scene
+        // of the game happens before one — so ask the device as well.
+        let coarse = false;
+        try { coarse = window.matchMedia('(pointer: coarse)').matches; } catch (e) {}
+        this.el('dlgHint').textContent = (input.touchActive || coarse)
+          ? 'Tap to continue' : 'Click or [SPACE] to continue';
+
+        this.full = l.text;
+        this.shown = '';
+        this.typing = true;
+        this.typeT = 0;
+      },
+
+      // Driven off the render loop rather than a timer, so it slows down with
+      // a backgrounded tab instead of finishing invisibly.
+      tick(dt) {
+        if (!this.active || !this.typing) return;
+        this.typeT += dt;
+        const n = Math.floor(this.typeT / 0.022);
+        if (n >= this.full.length) {
+          this.shown = this.full;
+          this.typing = false;
+        } else {
+          this.shown = this.full.slice(0, n);
+        }
+        this.el('dlgText').innerHTML = escapeText(this.shown) +
+          (this.typing ? '<span class="dlg-caret">▍</span>' : '');
+      },
+
+      // One press: finish the line. Another: take the next one.
+      advance() {
+        if (!this.active) return;
+        if (this.typing) {
+          this.typing = false;
+          this.shown = this.full;
+          this.el('dlgText').textContent = this.full;
+          return;
+        }
+        this.idx++;
+        if (this.idx >= this.lines.length) { this.finish(); return; }
+        this.render();
+      },
+
+      finish() {
+        this.active = false;
+        this.el('dialogue').classList.add('hidden');
+        document.body.classList.remove('in-scene');
+        const cb = this.onDone;
+        this.onDone = null;
+        // Space and J both advance a scene and both do something in the run
+        // that follows. Without this the samurai jumps the instant it ends.
+        input.clearPresses();
+        if (cb) cb();
+      }
+    };
+
+    // ---------------------------------------------------------------------
+    // IN-RUN BARK
+    // ---------------------------------------------------------------------
+    // Queued rather than replaced: two barks landing in the same second (a
+    // level beat and a phase change) must not eat each other.
+    const Bark = {
+      queue: [], holdT: 0, showing: false,
+
+      say(who, text, hold = 3.2) {
+        if (!text) return;
+        this.queue.push({ who, text, hold });
+        if (!this.showing) this.next();
+      },
+
+      next() {
+        const b = this.queue.shift();
+        const el = document.getElementById('bark');
+        if (!b) {
+          this.showing = false;
+          el.classList.remove('show');
+          // Left in the tree until the fade finishes, then taken out of it
+          setTimeout(() => { if (!this.showing) el.classList.add('hidden'); }, 320);
+          return;
+        }
+        const who = CAST[b.who] || CAST.none;
+        el.classList.toggle('no-face', !who.face);
+        if (who.face) {
+          const img = document.getElementById('barkFace');
+          const src = FACE[who.face];
+          if (img.getAttribute('src') !== src) img.src = src;
+          img.style.objectPosition = who.crop;
+        }
+        document.getElementById('barkWho').textContent = who.name;
+        document.getElementById('barkText').textContent = b.text;
+        el.classList.remove('hidden');
+        // One frame of layout before the transition, or it snaps in
+        requestAnimationFrame(() => el.classList.add('show'));
+        this.showing = true;
+        this.holdT = b.hold;
+      },
+
+      tick(dt) {
+        if (!this.showing) return;
+        this.holdT -= dt;
+        if (this.holdT <= 0) {
+          if (this.queue.length) {
+            this.next();
+          } else {
+            this.showing = false;
+            const el = document.getElementById('bark');
+            el.classList.remove('show');
+            setTimeout(() => { if (!this.showing) el.classList.add('hidden'); }, 320);
+          }
+        }
+      },
+
+      // Leaving a run must not leave a line hanging over the menu
+      clear() {
+        this.queue.length = 0;
+        this.showing = false;
+        const el = document.getElementById('bark');
+        el.classList.remove('show');
+        el.classList.add('hidden');
+      }
+    };
 
     // =====================================================================
     // 7. ENTITIES & LOGIC
@@ -3532,7 +4820,9 @@
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
         this.stageIdx = 0;
-        this.mode = 'stage';           // 'stage' | 'endless'
+        this.mode = 'stage';           // 'stage' | 'story' | 'endless'
+        this.chapterIdx = 0;           // which STORY entry is being walked
+        this.runtimeBeats = [];        // this chapter's barks, armed by x
         this.lastAdAt = 0;
         this.endless = new EndlessWorld(this);
         this.endlessDist = 0;
@@ -3573,6 +4863,9 @@
         this.setupWindow();
         this.loadStage(0);
         this.updateHUD();
+        // The splash is already in the markup; this fills in the chapter the
+        // Play button would resume and puts the secondary paths beside it.
+        this.showTitle();
       }
 
       setupWindow() {
@@ -3612,6 +4905,16 @@
           audio.init();
           this.startOrResume();
         });
+
+        // A cutscene is advanced by clicking it anywhere. The keyboard path
+        // lives in InputSystem.setupKeyboard, which shorts out while one is up.
+        const dlg = document.getElementById('dialogue');
+        dlg.addEventListener('click', () => { audio.init(); Dialogue.advance(); });
+        dlg.addEventListener('touchstart', (ev) => {
+          ev.preventDefault();
+          audio.init();
+          Dialogue.advance();
+        }, { passive: false });
         document.getElementById('muteBtn').addEventListener('click', () => {
           audio.init();
           this.toggleMute();
@@ -3645,12 +4948,23 @@
         });
         document.getElementById('btnNext').addEventListener('click', () => {
           audio.init();
+          // In the story the button means the next chapter, with its scene;
+          // in free play it means the next map and nothing else.
+          if (this.mode === 'story') {
+            const next = Math.min(this.chapterIdx + 1, STORY.length - 1);
+            this.withAdBreak(() => this.startChapter(next));
+            return;
+          }
           const nextIdx = Math.min(this.stageIdx + 1, STAGE_CONFIGS.length - 1);
           this.withAdBreak(() => this.startStage(nextIdx));
         });
         document.getElementById('btnMaps').addEventListener('click', () => {
           audio.init();
           this.showMapSelect();
+        });
+        document.getElementById('btnStory').addEventListener('click', () => {
+          audio.init();
+          this.showStorySelect();
         });
       }
 
@@ -3673,7 +4987,7 @@
             subtitle: 'The wind pauses in the bamboo grove.',
             caption: 'Click to Resume'
           });
-          this.setOverlayButtons({ maps: true });
+          this.setOverlayButtons({ maps: true, story: this.mode === 'story' });
         } else {
           window.GameEvents.gameplayStart();
           overlay.classList.add('hidden');
@@ -3726,6 +5040,14 @@
           // Bosses hover, so they keep their authored y and carry a fight state.
           ...(e.type === 'boss'
               ? bossRuntime(e, standOn(e.x, e.y, this.runtimePlatforms) + 20)
+              : null),
+          // A warden stands on the arena floor, so its curY is snapped to that
+          // surface and its whole fight is clamped to it.
+          ...(e.type === 'warden'
+              ? (() => {
+                  const floor = standOn(e.x, e.y, this.runtimePlatforms) + 20;
+                  return { curY: floor, ...wardenRuntime(e, floor) };
+                })()
               : null)
         }));
 
@@ -3779,24 +5101,272 @@
         const showPlay = (mode === 'title' || mode === 'paused');
         el('overlayActions').classList.toggle('hidden', !showPlay);
         el('mapSelect').classList.toggle('hidden', mode !== 'maps');
+        el('storyPanel').classList.toggle('hidden', mode !== 'story');
         el('resultPanel').classList.toggle('hidden', mode !== 'result');
         el('boardPanel').classList.toggle('hidden', mode !== 'board');
         el('overlayTitle').classList.toggle('compact',
-          mode === 'maps' || mode === 'result' || mode === 'board');
+          mode === 'maps' || mode === 'result' || mode === 'board' || mode === 'story');
+        // Only the splash advertises which chapter Play would resume
+        el('storyBadge').classList.toggle('hidden', mode !== 'title');
 
         el('overlay').classList.remove('hidden');
         this.overlayMode = mode;
       }
 
       setOverlayButtons({ retry = false, next = false, maps = false, board = false,
-                          retryLabel = 'Retry Map' } = {}) {
-        const pairs = { btnRetry: retry, btnNext: next, btnBoard: board, btnMaps: maps };
+                          story = false, retryLabel = 'Retry Map',
+                          nextLabel = 'Next Map' } = {}) {
+        const pairs = { btnRetry: retry, btnNext: next, btnStory: story,
+                        btnBoard: board, btnMaps: maps };
         for (const id in pairs) {
           document.getElementById(id).classList.toggle('hidden', !pairs[id]);
         }
         document.getElementById('btnRetry').textContent = retryLabel;
+        document.getElementById('btnNext').textContent = nextLabel;
         document.getElementById('overlayBtnRow')
-          .classList.toggle('hidden', !(retry || next || maps || board));
+          .classList.toggle('hidden', !(retry || next || maps || board || story));
+      }
+
+      // ===================================================================
+      // STORY MODE
+      // ===================================================================
+      // The splash Play button lands here, so this is the game's front door.
+      // A chapter is one authored map plus the scene that opens it, the barks
+      // that run over it and the scene that closes it. Progress is by reaching
+      // the gate — par still exists, but it seals free play, never the story.
+      // Nobody should be stopped from finding out what happens next.
+
+      // The chapter Play would resume: the furthest reached, clamped to what
+      // actually exists in case a save outlives a shorter chapter list.
+      currentChapter() {
+        return Math.max(0, Math.min(STORY.length - 1, Save.get('storyChapter') || 0));
+      }
+
+      showTitle() {
+        this.mode = 'stage';
+        this.isRunning = false;
+        this.isPaused = false;
+        Bark.clear();
+        audio.setMuted(false);
+        const ch = this.currentChapter();
+        const done = Save.get('storyDone');
+        const badge = document.getElementById('storyBadge');
+        badge.textContent = done
+          ? 'The road walked · Chapter ' + mapNo(ch) + ' — ' + STORY[ch].name
+          : (ch === 0 ? 'Story · Chapter 01 — ' + STORY[0].name
+                      : 'Continue · Chapter ' + mapNo(ch) + ' — ' + STORY[ch].name);
+        this.setOverlayMode('title', {
+          kanji: '墨',
+          title: 'SUMI',
+          subtitle: 'Shadow of the Brush',
+          caption: artReady ? (ch === 0 && !done ? 'Begin the story' : 'Continue the story')
+                            : 'Loading'
+        });
+        this.setOverlayButtons({ story: true, maps: true, board: true });
+      }
+
+      showStorySelect() {
+        this.isRunning = false;
+        this.isPaused = false;
+        Bark.clear();
+        audio.setMuted(false);
+        window.GameEvents.gameplayStop();
+        this.renderStoryPanel();
+        const ch = this.currentChapter();
+        this.setOverlayMode('story', {
+          kanji: '道',
+          title: 'THE ROAD',
+          subtitle: Save.get('storyDone')
+            ? 'Every chapter open · walk any of them again'
+            : 'Chapter ' + mapNo(ch) + ' of ' + mapNo(STORY.length - 1) + ' — reach the gate to open the next'
+        });
+        this.setOverlayButtons({ maps: true, board: true });
+      }
+
+      renderStoryPanel() {
+        const reached = this.currentChapter();
+        const done = Save.get('storyDone');
+        const best = Save.get('stageBest') || [];
+        const panel = document.getElementById('storyPanel');
+        panel.innerHTML = '';
+
+        STORY.forEach((ch, i) => {
+          // Finishing the game opens the whole road for replay
+          const open = done || i <= reached;
+          const cleared = done || i < reached;
+          const row = document.createElement('button');
+          row.className = 'chapter-row'
+            + (open ? '' : ' locked')
+            + (ch.warden ? ' boss' : '')
+            + (cleared ? ' cleared' : '')
+            + (i === reached && !done ? ' current' : '');
+          row.setAttribute('aria-label',
+            'Chapter ' + mapNo(i) + (open ? ': ' + ch.name : ': sealed'));
+          row.type = 'button';
+          row.disabled = !open;
+          row.innerHTML =
+            '<span class="chapter-kanji">' + ch.kanji + '</span>' +
+            '<span>' +
+              '<span class="chapter-no">CHAPTER ' + mapNo(i) + '</span>' +
+              '<span class="chapter-name">' + escapeText(open ? ch.name : '— SEALED —') + '</span>' +
+              '<span class="chapter-line">' +
+                escapeText(open ? ch.epigraph : 'Walk the chapter before it') +
+              '</span>' +
+            '</span>' +
+            '<span class="chapter-mark' + (ch.boss ? ' boss' : '') + '">' +
+              (!open ? '鎖' : ch.boss ? escapeText(ch.boss) : (best[i] ? '極' : '')) +
+            '</span>';
+          if (open) {
+            row.addEventListener('click', () => {
+              audio.init();
+              this.startChapter(i);
+            });
+          }
+          panel.appendChild(row);
+        });
+      }
+
+      // Resume the story from the splash. Replaying a chapter already seen
+      // skips straight to the map; the scene is only forced the first time.
+      startStory() {
+        // The portal's storage tier can take up to three seconds to win the
+        // race in the boot sequence, and until it does `currentChapter()` is
+        // reading preLoad's guess. The Play button is deliberately never
+        // disabled, so a player who presses it inside that window waits here
+        // for half a second instead of being dropped back into chapter one.
+        if (!saveReady) {
+          // Pressing Play twice inside the window must not queue two chapters
+          if (this.storyPending) return;
+          this.storyPending = true;
+          document.getElementById('playCaption').textContent = 'Finding the road';
+          saveSettled.then(() => {
+            this.storyPending = false;
+            // They may have gone to the chapter list or free play meanwhile
+            if (this.isRunning || Dialogue.active || this.overlayMode !== 'title') return;
+            this.startChapter(this.currentChapter());
+          });
+          return;
+        }
+        this.startChapter(this.currentChapter());
+      }
+
+      startChapter(idx) {
+        const ch = STORY[Math.max(0, Math.min(STORY.length - 1, idx))];
+        this.chapterIdx = Math.max(0, Math.min(STORY.length - 1, idx));
+        Bark.clear();
+        document.getElementById('overlay').classList.add('hidden');
+        window.GameEvents.gameplayStop();
+        this.isRunning = false;
+
+        const seen = Save.get('storySeen') || [];
+        const first = seen.indexOf(this.chapterIdx) < 0;
+        const begin = () => {
+          // The chapter's own barks, armed and unfired
+          this.runtimeBeats = (ch.beats || []).map(b => ({ ...b, fired: false }));
+          this.startStage(this.chapterIdx, 'story');
+        };
+
+        if (first) {
+          const nextSeen = seen.concat([this.chapterIdx]);
+          Save.write({ storySeen: nextSeen });
+          Dialogue.play(ch.open, begin);
+        } else {
+          begin();
+        }
+      }
+
+      // Barks fire once, the first time the samurai gets past their x. They
+      // never block: he keeps running and the line floats up over the top.
+      updateBeats() {
+        if (!this.runtimeBeats || !this.runtimeBeats.length) return;
+        for (const b of this.runtimeBeats) {
+          if (b.fired || this.player.x < b.x) continue;
+          b.fired = true;
+          Bark.say(b.who, b.text, 3.6);
+        }
+      }
+
+      // The gate has been reached in story mode: bank the chapter, play the
+      // closing scene, then put up the result.
+      onChapterComplete(earned) {
+        const idx = this.chapterIdx;
+        const ch = STORY[idx];
+        const isLast = idx >= STORY.length - 1;
+
+        const reached = Save.get('storyChapter') || 0;
+        const nextChapter = isLast ? reached : Math.max(reached, idx + 1);
+        const wasDone = Save.get('storyDone');
+
+        // Free play unlocks alongside the story, so a player who only ever
+        // presses Play still ends up with every map open in the grid.
+        const wasUnlocked = Save.get('stagesUnlocked') || 1;
+        const best = (Save.get('stageBest') || []).slice();
+        best[idx] = Math.max(best[idx] || 0, earned);
+
+        Save.write({
+          storyChapter: nextChapter,
+          storyDone: wasDone || isLast,
+          stageBest: best,
+          stagesUnlocked: Math.max(wasUnlocked, Math.min(STAGE_CONFIGS.length, idx + 2)),
+          coinsTotal: (Save.get('coinsTotal') || 0) + this.runCoins,
+          highScore: Math.max(Save.get('highScore') || 0, this.highScore),
+          seenControlHint: true
+        });
+        this.runCoins = 0;
+
+        // Close, then the epilogue on the very first finish, then the card
+        const after = () => this.showChapterResult(idx, earned, isLast);
+        const closing = (ch.close || []).slice();
+        if (isLast && ch.epilogue && !wasDone) {
+          Dialogue.play(closing.concat(ch.epilogue), after);
+        } else {
+          Dialogue.play(closing, after);
+        }
+      }
+
+      showChapterResult(idx, earned, isLast) {
+        const ch = STORY[idx];
+        const stage = STAGE_CONFIGS[idx];
+        const par = stage.requiredScore;
+        const best = (Save.get('stageBest') || [])[idx] || 0;
+        const mastered = earned >= par;
+
+        document.getElementById('resultRows').innerHTML =
+          `<div class="result-row"><span>This run</span><span>${earned.toLocaleString()}</span></div>` +
+          `<div class="result-row is-goal"><span>Mastery par</span><span>${par.toLocaleString()}</span></div>` +
+          `<div class="result-row"><span>Best here</span><span>${best.toLocaleString()}</span></div>`;
+
+        const fill = document.getElementById('resultGaugeFill');
+        fill.classList.toggle('pass', mastered);
+        fill.style.width = '0%';
+        requestAnimationFrame(() => {
+          fill.style.width = Math.min(100, Math.round(earned / par * 100)) + '%';
+        });
+
+        // Par is not a wall in the story — it is a seal worth collecting. The
+        // verdict says which of the two happened without implying a failure.
+        const verdict = document.getElementById('resultVerdict');
+        verdict.classList.toggle('pass', mastered);
+        verdict.classList.toggle('fail', false);
+        if (isLast) {
+          verdict.textContent = 'The chain is open. The road belongs to no one.';
+        } else if (mastered) {
+          verdict.textContent = `Walked and mastered. ${STORY[idx + 1].name} lies ahead.`;
+        } else {
+          verdict.textContent =
+            `${(par - earned).toLocaleString()} short of the mastery seal — the road opens anyway.`;
+        }
+
+        this.setOverlayMode('result', {
+          kanji: isLast ? '解' : (mastered ? '極' : '道'),
+          title: isLast ? 'THE ROAD ENDS' : 'CHAPTER CLEARED',
+          subtitle: 'Chapter ' + mapNo(idx) + ' — ' + ch.name
+        });
+        this.retryAction = () => this.startChapter(idx);
+        this.setOverlayButtons({
+          retry: true, next: !isLast, story: true, maps: isLast,
+          retryLabel: 'Walk It Again', nextLabel: 'Next Chapter'
+        });
       }
 
       renderMapSelect() {
@@ -3884,29 +5454,36 @@
         this.isPaused = false;
         // Pausing ducks the mix; leaving a paused run this way must undo that
         audio.setMuted(false);
+        Bark.clear();
         window.GameEvents.gameplayStop();
         this.renderMapSelect();
         this.setOverlayMode('maps', {
-          kanji: '道',
-          title: 'CHOOSE A PATH',
-          subtitle: 'Each map seals the next until its par is met'
+          kanji: '選',
+          title: 'FREE PLAY',
+          subtitle: 'Every map on its own, no story · par seals the next'
         });
-        this.setOverlayButtons({});
+        this.setOverlayButtons({ story: true });
       }
 
-      // Fresh attempt at a map: score restarts, so par is always per-map
-      startStage(idx) {
-        this.mode = 'stage';
+      // Fresh attempt at a map: score restarts, so par is always per-map.
+      // `mode` is 'stage' for free play and 'story' for a chapter — the map
+      // geometry is identical either way, only what clearing it means differs.
+      startStage(idx, mode = 'stage') {
+        this.mode = mode;
         this.stageIdx = idx;
         this.score = 0;
         this.combo = 1.0;
         this.comboTimer = 0;
         this.activeCheckpoint = null;
+        this.runCoins = 0;
+        if (mode !== 'story') this.runtimeBeats = [];
         this.loadStage(idx);
         this.player.health = CONFIG.MAX_HEALTH;
         this.updateHUD();
 
         document.getElementById('overlay').classList.add('hidden');
+        Bark.clear();
+        input.clearPresses();
         this.isRunning = true;
         this.isPaused = false;
         audio.setMuted(false);
@@ -3948,6 +5525,8 @@
           checkpoints: [], torii: null
         };
         setTheme('day');   // the road is the daylit world, forever
+        Bark.clear();
+        input.clearPresses();
         this.endless.begin();
         this.player.reset(200, 420);
         this.player.health = CONFIG.MAX_HEALTH;
@@ -3997,11 +5576,15 @@
           document.getElementById('overlay').classList.add('hidden');
           this.isPaused = false;
           this.isRunning = true;
+          input.clearPresses();
           window.GameEvents.gameplayStart();
           this.lastTime = performance.now();
           return;
         }
-        this.showMapSelect();
+        // The front door is the story. Free play is one button away, but the
+        // default for someone who just pressed the big green triangle is the
+        // road the game was written around.
+        this.startStory();
       }
 
       // Distance is earned by surviving, not by chaining, so it must not feed
@@ -4076,6 +5659,15 @@
         particles.burstInk(this.stage.torii.x, this.stage.torii.y, 40, CONFIG.GOLD);
         window.GameEvents.gameplayStop();
         this.isRunning = false;
+        Bark.clear();
+
+        // The story has its own bookkeeping: it advances on reaching the gate
+        // rather than on meeting par, and it has a scene to play first.
+        if (this.mode === 'story') {
+          const earned = this.score;
+          setTimeout(() => this.onChapterComplete(earned), 700);
+          return;
+        }
 
         const idx = this.stageIdx;
         const par = STAGE_CONFIGS[idx].requiredScore;
@@ -4151,7 +5743,8 @@
           subtitle
         });
         this.retryAction = () => this.startEndless();
-        this.setOverlayButtons({ retry: true, maps: true, retryLabel: 'Run Again' });
+        this.setOverlayButtons({ retry: true, maps: true, story: true,
+                                 retryLabel: 'Run Again' });
       }
 
       showResult(idx, earned, par, passed, isLast, justUnlocked) {
@@ -4191,7 +5784,8 @@
           subtitle: stage.name
         });
         this.retryAction = () => this.startStage(idx);
-        this.setOverlayButtons({ retry: true, next: passed && !isLast, maps: true });
+        this.setOverlayButtons({ retry: true, next: passed && !isLast,
+                                 maps: true, story: true });
       }
 
       // ===================================================================
@@ -4234,12 +5828,26 @@
           }
         }
 
-        // 3. Moving Hazards (Saws)
-        for (const h of this.runtimeHazards) {
+        // 3. Moving Hazards (Saws) and summoned ones (mon's stakes)
+        for (let i = this.runtimeHazards.length - 1; i >= 0; i--) {
+          const h = this.runtimeHazards[i];
           if (h.type === 'saw') {
             h.curX += h.dir * h.speed * worldDt;
             if (h.curX > h.endX) { h.curX = h.endX; h.dir = -1; }
             if (h.curX < h.startX) { h.curX = h.startX; h.dir = 1; }
+          } else if (h.temp) {
+            // Rise, bite, sink, gone. `armed` is the only thing that can hurt
+            // the player, and it is false for the whole of the rise — so the
+            // animation the player is watching IS the fair warning.
+            if (h.warn > 0) {
+              h.warn -= worldDt;
+              h.rise = Math.max(0, Math.min(1, 1 - h.warn / h.warnMax));
+              if (h.warn <= 0) { h.armed = true; h.rise = 1; }
+            } else {
+              h.life -= worldDt;
+              if (h.life <= 0.25) h.rise = Math.max(0, h.life / 0.25);
+              if (h.life <= 0) { this.runtimeHazards.splice(i, 1); continue; }
+            }
           }
         }
 
@@ -4283,6 +5891,9 @@
           }
         }
 
+        // Story beats: a line floats up the first time he passes its mark
+        if (this.mode === 'story') this.updateBeats();
+
         // Textless onboarding: a glyph fades in as he reaches it and is gone
         // for good the moment the matching input is used.
         if (this.runtimePrompts.length) this.updatePrompts(dt);
@@ -4313,6 +5924,10 @@
           // a volley. Everything past this point is the one-slash-kill path.
           if (e.type === 'boss') {
             this.updateBoss(e, worldDt, slashBox, playerBox);
+            continue;
+          }
+          if (e.type === 'warden') {
+            this.updateWarden(e, worldDt, slashBox, playerBox);
             continue;
           }
 
@@ -4386,8 +6001,10 @@
           const r = arr.big ? 18 : 12;
           const arrowBox = { x: arr.x - r, y: arr.y - r / 3, w: r * 2, h: r / 1.5 };
 
-          // Slash deflects arrow
-          if (slashBox && testAABB(slashBox, arrowBox)) {
+          // Slash deflects arrow. A shockwave is the one thing it cannot
+          // touch: hano's waves have to be jumped, and a player who has
+          // learned to parry everything needs one thing that says otherwise.
+          if (slashBox && !arr.noParry && testAABB(slashBox, arrowBox)) {
             arr.vx = -arr.vx * 1.5; // reflect backwards
             arr.deflected = true;   // drives the gold tint, see the render pass
             audio.playDeflect();
@@ -4411,15 +6028,21 @@
           for (const e of this.runtimeEnemies) {
             if (!e.active || e === arr.owner) continue;
             const boss = e.type === 'boss';
-            if (boss && (e.state === 'dying' || e.invulnT > 0)) continue;
-            const eb = boss
-              ? bossBox(e)
-              : { x: e.curX - 16, y: (e.curY || e.y) - 20, w: 32, h: 40 };
+            const warden = e.type === 'warden';
+            if ((boss || warden) && (e.state === 'dying' || e.invulnT > 0)) continue;
+            const eb = boss ? bossBox(e)
+                     : warden ? wardenBox(e)
+                     : { x: e.curX - 16, y: (e.curY || e.y) - 20, w: 32, h: 40 };
             if (testAABB(arrowBox, eb)) {
               if (boss) {
                 // A parried bolt is worth one slash. It is the only ranged
                 // answer the samurai has, so it has to actually count.
                 this.damageBoss(e, 1);
+              } else if (warden) {
+                // Kani's own kunai, sent back at him. Worth exactly one
+                // slash, which makes parrying his volley the fastest way
+                // through the fight rather than merely the safest.
+                this.damageWarden(e, 1);
               } else {
                 e.active = false;
                 audio.playHit();
@@ -4434,6 +6057,8 @@
 
         // 7. Hazard collisions (Spikes & Saws)
         for (const h of this.runtimeHazards) {
+          // A summoned stake is scenery until it is all the way out
+          if (h.temp && !h.armed) continue;
           const hBox = (h.type === 'saw')
             ? { x: h.curX - 18, y: h.y - 18, w: 36, h: 36 }
             : { x: h.x, y: h.y, w: h.w, h: h.h };
@@ -4523,10 +6148,12 @@
       // Every clock here is on `worldDt`, so hitstop and Zanshin slow a boss
       // exactly as much as they slow everything else.
 
-      // Any boss still fighting on this map. Cheap enough to call per frame.
+      // Any boss or warden still fighting on this map — the gate stays sealed
+      // while this is true. Cheap enough to call per frame.
       bossAlive() {
         for (const e of this.runtimeEnemies) {
-          if (e.type === 'boss' && e.active && e.state !== 'dying') return true;
+          if ((e.type === 'boss' || e.type === 'warden') &&
+              e.active && e.state !== 'dying') return true;
         }
         return false;
       }
@@ -4661,14 +6288,496 @@
         }
       }
 
+      // ===================================================================
+      // WARDEN FIGHTS (CHAPTERS 11-13)
+      // ===================================================================
+      // One state machine, three move lists. See WARDEN_ART for the contract;
+      // the short version is that a warden is only dangerous inside the ACTIVE
+      // window of a move it has already telegraphed, so every death in these
+      // three fights is a window the player misread rather than a body they
+      // stood too close to.
+
+      // How far into the current move we are, by name. Kept in one place so
+      // the update and the renderer can never disagree about it.
+      wardenWindow(e) {
+        const m = e.move;
+        if (!m) return null;
+        const wind = m.wind * (e.phase === 3 ? 0.78 : e.phase === 2 ? 0.9 : 1);
+        if (e.moveT < wind) return 'wind';
+        if (e.moveT < wind + m.active) return 'active';
+        return 'rest';
+      }
+
+      // The live hitbox of a melee/dash/leap move. Null unless it is ACTIVE.
+      wardenHitBox(e) {
+        const m = e.move;
+        if (!m || !m.reach || this.wardenWindow(e) !== 'active') return null;
+        const top = e.curY + (m.boxY || -60);
+        if (m.both) {
+          return { x: e.curX - m.reach, y: top, w: m.reach * 2, h: m.boxH || 50 };
+        }
+        // Starts a little inside the body so a move cannot connect behind him
+        return {
+          x: e.facing > 0 ? e.curX - 8 : e.curX - m.reach + 8,
+          y: top, w: m.reach, h: m.boxH || 50
+        };
+      }
+
+      // Pick the next move: in phase, off cooldown, and the player standing in
+      // its range band. Weighted, so a warden has favourites without being a
+      // fixed loop the player can recite.
+      pickWardenMove(e, art, dist) {
+        const pool = [];
+        let total = 0;
+        for (const m of art.moves) {
+          if ((m.phase || 1) > e.phase) continue;
+          if ((e.cools[m.id] || 0) > 0) continue;
+          const lo = m.range ? m.range[0] : 0;
+          const hi = m.range ? m.range[1] : 9999;
+          if (dist < lo || dist > hi) continue;
+          // Never heal at full health: it would read as the boss wasting a turn
+          if (m.kind === 'heal' && e.hp >= e.maxHp) continue;
+          pool.push(m); total += (m.weight || 1);
+        }
+        if (!pool.length) return null;
+        let r = Math.random() * total;
+        for (const m of pool) {
+          r -= (m.weight || 1);
+          if (r <= 0) return m;
+        }
+        return pool[pool.length - 1];
+      }
+
+      startWardenMove(e, m) {
+        e.state = 'move';
+        e.move = m;
+        e.moveT = 0;
+        e.didHit = false;
+        e.firedAt = false;
+        e.launched = false;
+        e.guarding = false;
+        // Facing is locked in for the whole move. A charge that re-aims itself
+        // mid-flight is not a telegraph, it is a homing missile.
+        e.facing = (this.player.x < e.curX) ? -1 : 1;
+        audio.playWardenTell();
+      }
+
+      endWardenMove(e) {
+        const art = WARDEN_ART[e.kind] || WARDEN_ART.kani;
+        const m = e.move;
+        e.cools[m.id] = m.cool || 1.2;
+        e.move = null;
+        e.guarding = false;
+        e.state = 'idle';
+
+        // Two ways a move runs straight into another one with no gap and no
+        // fresh telegraph, both of them punishments for a specific habit:
+        //   the counter — the samurai swung into a raised guard
+        //   the chain   — phase 3, where nothing is held back any more
+        let follow = null;
+        if (e.counter && art.counterMove) {
+          e.counter = false;
+          follow = art.counterMove;
+        } else if (m.chain && e.phase === 3) {
+          follow = m.chain;
+        }
+        if (follow) {
+          const nextMove = art.moves.find(x => x.id === follow);
+          // Only if it is actually unlocked — a counter must not smuggle a
+          // phase-2 move into phase 1.
+          if (nextMove && (nextMove.phase || 1) <= e.phase) {
+            this.startWardenMove(e, nextMove);
+            return;
+          }
+        }
+        e.counter = false;
+        e.gap = e.phase === 3 ? 0.28 : e.phase === 2 ? 0.5 : 0.78;
+      }
+
+      updateWarden(e, dt, slashBox, playerBox) {
+        const art = WARDEN_ART[e.kind] || WARDEN_ART.kani;
+
+        // Death: he stays on the floor and fades. Not interactive.
+        if (e.state === 'dying') {
+          e.deathT += dt;
+          if (e.deathT > 2.4) e.active = false;
+          return;
+        }
+
+        if (e.invulnT > 0) e.invulnT -= dt;
+        if (e.gap > 0) e.gap -= dt;
+        if (e.clangT > 0) e.clangT -= dt;
+        // The mashing counter forgets quickly, so it measures a flurry rather
+        // than a whole fight's worth of damage.
+        if (e.streakT > 0) {
+          e.streakT -= dt;
+          if (e.streakT <= 0) e.hitStreak = 0;
+        }
+        for (const k in e.cools) {
+          if (e.cools[k] > 0) e.cools[k] -= dt;
+        }
+
+        // The fight opens on a line, once, the first time the samurai is close
+        // enough that the warden is actually on screen with him.
+        if (!e.greeted && Math.abs(this.player.x - e.curX) < 620) {
+          e.greeted = true;
+          const say = WARDEN_LINES[e.kind];
+          if (say) Bark.say(e.kind, say.start, 3.6);
+        }
+
+        // Phase escalation. Each threshold is a hard beat: a roar, a second of
+        // immunity so it cannot be skipped through, a line, and a charm on the
+        // floor — the fight gets harder and the player gets a hit back.
+        const ph = wardenPhase(e);
+        if (ph > e.phase) {
+          e.phase = ph;
+          e.invulnT = Math.max(e.invulnT, 0.9);
+          e.move = null;
+          e.guarding = false;
+          e.state = 'idle';
+          e.gap = 0.9;
+          e.cools = {};
+          audio.playWardenRoar();
+          camera.shake(7, 0.45);
+          particles.burstInk(e.curX, e.curY - 40, 34, CONFIG.CRIMSON);
+          const say = WARDEN_LINES[e.kind];
+          if (say) Bark.say(e.kind, ph === 3 ? say.phase3 : say.phase2, 3.4);
+          this.runtimePowerups.push({
+            type: 'charm', x: e.curX + (this.player.x < e.curX ? 120 : -120),
+            y: e.floorY - 40, collected: false
+          });
+        }
+
+        // Airborne: the leap arc. moveT is held at the end of the wind-up
+        // while he is in the air, so the ACTIVE window always begins on
+        // touchdown however long the arc happens to take.
+        if (e.airborne) {
+          e.vy += CONFIG.GRAVITY * 0.9 * dt;
+          e.curY += e.vy * dt;
+          e.curX += (e.leapVx || 0) * dt;
+          if (e.curY >= e.floorY && e.vy > 0) {
+            e.curY = e.floorY;
+            e.vy = 0;
+            e.airborne = false;
+            camera.shake(4, 0.18);
+            particles.dust(e.curX, e.curY, 0);
+          }
+        }
+        e.curX = Math.max(e.minX, Math.min(e.maxX, e.curX));
+
+        const toPlayer = this.player.x - e.curX;
+        const dist = Math.abs(toPlayer);
+
+        if (e.state === 'hurt') {
+          e.hurtT -= dt;
+          if (e.hurtT <= 0) e.state = 'idle';
+        } else if (e.state === 'move') {
+          this.runWardenMove(e, dt, art, toPlayer);
+        } else {
+          // Idle / approach. He faces the samurai and holds his preferred
+          // distance: too far and there is no fight, too close and every move
+          // he has would land before the telegraph could be read.
+          e.facing = toPlayer < 0 ? -1 : 1;
+          const speedMult = 1 + 0.12 * (e.phase - 1);
+          const want = art.hold;
+          if (dist > want + 260) {
+            e.curX += Math.sign(toPlayer) * art.runSpeed * speedMult * dt;
+            e.gait = 'run';
+          } else if (dist > want + 26) {
+            e.curX += Math.sign(toPlayer) * art.speed * speedMult * dt;
+            e.gait = 'walk';
+          } else if (dist < want - 40) {
+            e.curX -= Math.sign(toPlayer) * art.speed * 0.8 * dt;
+            e.gait = 'walk';
+          } else {
+            e.gait = 'idle';
+          }
+          e.curX = Math.max(e.minX, Math.min(e.maxX, e.curX));
+
+          // Punished for a flurry: the guard comes up out of turn, ignoring
+          // the gap that would otherwise have given the player another swing.
+          // hano is the only warden with this, and it is the reason his fight
+          // cannot be brute-forced from directly in front of him.
+          let acted = false;
+          if (art.punish && e.hitStreak >= art.punish && e.invulnT <= 0) {
+            const g = art.moves.find(x => x.kind === 'guard');
+            if (g && (e.cools[g.id] || 0) <= 0) {
+              e.hitStreak = 0;
+              this.startWardenMove(e, g);
+              acted = true;
+            }
+          }
+
+          if (!acted && e.gap <= 0 && e.invulnT <= 0) {
+            const m = this.pickWardenMove(e, art, dist);
+            if (m) this.startWardenMove(e, m);
+          }
+        }
+
+        // ---- the player's katana -----------------------------------------
+        const hurtBox = wardenBox(e);
+        if (slashBox && testAABB(slashBox, hurtBox)) {
+          this.damageWarden(e, 1);
+        }
+
+        // ---- the warden's hitbox -----------------------------------------
+        const hit = this.wardenHitBox(e);
+        if (hit && !e.didHit && testAABB(playerBox, hit)) {
+          e.didHit = true;
+          if (this.player.damage(1)) this.updateHUD();
+        }
+      }
+
+      // The inside of one move: advance the clock, fire on the ACTIVE edge,
+      // and drive whatever motion the move's kind implies.
+      runWardenMove(e, dt, art, toPlayer) {
+        const m = e.move;
+        // 'move' without a move is not a state this can recover into halfway.
+        // Nothing sets one without the other today; this is here so a future
+        // edit that does cannot take the whole frame down with it.
+        if (!m) {
+          e.state = 'idle';
+          e.guarding = false;
+          return;
+        }
+        const win = this.wardenWindow(e);
+        const wind = m.wind * (e.phase === 3 ? 0.78 : e.phase === 2 ? 0.9 : 1);
+
+        // Held on the wind/active boundary until he lands again
+        if (!e.airborne) e.moveT += dt;
+
+        if (win === 'wind') {
+          // Leaps launch at the end of the wind-up, and only once
+          if (m.kind === 'leap' && !e.launched && e.moveT >= wind * 0.92) {
+            e.launched = true;
+            e.airborne = true;
+            e.vy = m.launchY || -500;
+            // `over` clears the samurai instead of landing on him, which is
+            // how mon gets out of a corner without teleporting.
+            const span = m.over ? toPlayer * 1.75 : toPlayer;
+            // Time to come back down, so the arc actually reaches him
+            const flight = (-2 * (m.launchY || -500)) / (CONFIG.GRAVITY * 0.9);
+            e.leapVx = Math.max(-460, Math.min(460, span / Math.max(0.28, flight)));
+            audio.playJump(false);
+          }
+        } else if (win === 'active') {
+          if (!e.firedAt) {
+            e.firedAt = true;
+            if (m.fire) this.wardenFire(e, m.fire);
+            if (m.kind === 'guard') {
+              e.guarding = true;
+              audio.playWardenTell();
+            }
+            if (m.kind === 'heal') {
+              audio.playFeast();
+              const say = WARDEN_LINES[e.kind];
+              if (say && say.heal) Bark.say(e.kind, say.heal, 2.4);
+            }
+            if (m.kind === 'melee' || m.kind === 'dash' || m.kind === 'leap') {
+              audio.playSlash();
+            }
+          }
+          if (m.kind === 'dash') {
+            const before = e.curX;
+            e.curX += e.facing * m.dash * dt;
+            e.curX = Math.max(e.minX, Math.min(e.maxX, e.curX));
+            // Ran out of arena: drop straight into recovery rather than
+            // grinding against the wall with the hitbox still out.
+            if (Math.abs(e.curX - before) < 1) e.moveT = wind + m.active;
+          } else if (m.kind === 'melee' && m.lunge) {
+            e.curX += e.facing * m.lunge * dt;
+          } else if (m.kind === 'guard' && m.creep) {
+            e.curX += e.facing * m.creep * dt;
+          }
+          e.curX = Math.max(e.minX, Math.min(e.maxX, e.curX));
+        } else {
+          // REST. Guard is down, health goes on the board, and he is open.
+          if (e.guarding) e.guarding = false;
+          if (m.kind === 'heal' && !e.healed) {
+            e.healed = true;
+            e.hp = Math.min(e.maxHp, e.hp + (m.heal || 1));
+            particles.burstInk(e.curX, e.curY - 50, 22, CONFIG.LEAF);
+          }
+          if (e.moveT > wind + m.active + m.rest) {
+            e.healed = false;
+            this.endWardenMove(e);
+          }
+        }
+      }
+
+      // Everything a warden throws. All of it goes into the same two lists the
+      // rest of the game already uses — `arrows` for things in the air and
+      // `runtimeHazards` for things in the floor — so the parry, the culling
+      // and the hazard collision all keep working unchanged.
+      wardenFire(e, what) {
+        const dir = e.facing;
+        const px = this.player.x;
+
+        if (what === 'kunai') {
+          // A spread of three, parryable. Deliberately the same mechanic the
+          // caster taught in map 03, at twice the speed.
+          const n = e.phase >= 3 ? 3 : 2;
+          for (let i = 0; i < n; i++) {
+            this.arrows.push({
+              x: e.curX + dir * 34, y: e.curY - 52 + (i - (n - 1) / 2) * 26,
+              vx: dir * 330, active: true, owner: e,
+              art: 'k_kunai', frames: 3, cell: 16, spin: Math.random() * 6.28
+            });
+          }
+          return;
+        }
+
+        if (what === 'spines' || what === 'grove') {
+          // Stakes out of the shrine floor. They rise through their own
+          // animation first and only bite once they are all the way out, so
+          // the telegraph is the hazard itself.
+          //
+          // The pattern is the escalation. Phase 1 flanks him and leaves the
+          // ground he is standing on clear — the lesson, taught safely. Phase
+          // 2 puts one under his feet, so from there he has to move. Phase 3
+          // is the grove, five across, where only the gaps are safe.
+          const spots = what === 'grove'
+            ? [px - 280, px - 140, px, px + 140, px + 280]
+            : e.phase === 1 ? [px - 120, px + 120]
+                            : [px - 150, px, px + 150];
+          for (let i = 0; i < spots.length; i++) {
+            const sx = Math.max(e.minX - 120, Math.min(e.maxX + 120, spots[i]));
+            // A stagger across the row reads as a wave rather than a wall
+            const warn = 0.52 + i * 0.06;
+            this.runtimeHazards.push({
+              type: 'spike', temp: true,
+              x: Math.round(sx) - 32, y: e.floorY - 34, w: 64, h: 34,
+              warn, warnMax: warn, life: 1.5, armed: false, rise: 0
+            });
+          }
+          particles.burstInk(e.curX, e.curY - 40, 16, '#E07ACD');
+          return;
+        }
+
+        if (what === 'wave' || what === 'wave2' || what === 'wave3') {
+          // A shockwave along the floor. It CANNOT be parried — the katana
+          // passes straight through it — so the only answer is to leave the
+          // ground. It is the one attack in the game that says "jump".
+          const dirs = what === 'wave' ? [dir]
+                     : what === 'wave2' ? [dir, -dir]
+                     : [dir, -dir, dir];
+          dirs.forEach((d, i) => {
+            this.arrows.push({
+              x: e.curX + d * 40, y: e.floorY - 16,
+              vx: d * (280 + i * 70), active: true, owner: e,
+              wave: true, noParry: true, big: true
+            });
+          });
+          camera.shake(6, 0.24);
+          return;
+        }
+      }
+
+      damageWarden(e, amount) {
+        if (e.state === 'dying') return;
+
+        // The guard. The katana rings off it, the samurai is shoved back, and
+        // nothing else happens. Mashing through this is not an option, which
+        // is the whole reason the last fight is the hardest one.
+        //
+        // It only covers the side he is facing — the same side the plate is
+        // drawn on. Getting behind a guarding warden is the answer to it, and
+        // a player who works that out has earned the hit.
+        const covered = (this.player.x - e.curX) * e.facing >= -6;
+        if (e.guarding && covered) {
+          if ((e.clangT || 0) > 0) return;
+          e.clangT = 0.3;
+          // Armed here, spent in endWardenMove: the block is answered the
+          // instant the guard comes down.
+          e.counter = true;
+          audio.playGuardClang();
+          particles.burstInk(e.curX + e.facing * 30, e.curY - 54, 12, '#BFD4FF');
+          camera.shake(3, 0.12);
+          this.hitStopTimer = CONFIG.HITSTOP_TIME;
+          // Pushed out of his reach rather than damaged
+          this.player.vx = (this.player.x < e.curX ? -1 : 1) * 320;
+          return;
+        }
+        if (e.invulnT > 0) return;
+
+        const win = this.wardenWindow(e);
+        let dealt = amount;
+
+        // Interrupting a meal. Double damage, the heal is cancelled, and the
+        // player has learned the fight — so it pays like learning it.
+        if (e.move && e.move.kind === 'heal' && win !== 'rest') {
+          dealt = amount * 2;
+          e.move = null;
+          e.healed = false;
+          e.state = 'hurt';
+          e.hurtT = 0.34;
+          this.addScore(300);
+          Bark.say('ren', 'Not this time.', 2.0);
+        } else if (!e.move || win === 'rest') {
+          // Poise: he only staggers when he is not committed to a move. A hit
+          // landed into a wind-up still counts, it just does not stop him.
+          e.state = 'hurt';
+          e.hurtT = 0.26;
+          e.move = null;
+        }
+
+        e.hp -= dealt;
+        e.invulnT = 0.4;
+        // A flurry, for the wardens that answer one (see `punish`)
+        e.hitStreak = (e.hitStreak || 0) + 1;
+        e.streakT = 1.8;
+        audio.playHit();
+        particles.burstInk(e.curX, e.curY - 46, 24, CONFIG.CRIMSON);
+        this.hitStopTimer = CONFIG.HITSTOP_TIME * 1.5;
+        camera.shake(4.5, 0.15);
+        this.addScore(110);
+        // Nudged, never launched: he has to stay in his own arena.
+        e.curX = Math.max(e.minX, Math.min(e.maxX,
+                 e.curX + (this.player.x < e.curX ? 1 : -1) * 14));
+
+        // The aerial chain the rest of the game runs on works here too
+        if (!this.player.isGrounded) {
+          this.player.vy = CONFIG.SLASH_BOUNCE_Y;
+          this.player.hasAirDash = true;
+        }
+
+        if (e.hp <= 0) this.killWarden(e);
+      }
+
+      killWarden(e) {
+        e.hp = 0;
+        e.state = 'dying';
+        e.deathT = 0;
+        e.invulnT = 0;
+        e.move = null;
+        e.guarding = false;
+        e.airborne = false;
+        e.curY = e.floorY;
+        audio.playBossDown();
+        particles.burstInk(e.curX, e.curY - 50, 70, CONFIG.GOLD);
+        particles.burstInk(e.curX, e.curY - 50, 44, CONFIG.CRIMSON);
+        camera.shake(10, 0.6);
+        this.hitStopTimer = 0.22;
+        this.addScore(1200);
+        const say = WARDEN_LINES[e.kind];
+        if (say) Bark.say(e.kind, say.down, 4.0);
+        // Paid out where he fell, on the way to the gate he was standing in
+        for (let i = 0; i < 8; i++) {
+          this.runtimeCoins.push({
+            x: e.curX - 210 + i * 60, y: e.floorY - 40, collected: false
+          });
+        }
+      }
+
       // Nothing calls updateBossHUD while an overlay is up, so the bar has to
       // be taken down explicitly — otherwise a death mid-fight leaves a full
       // health bar sitting over the result screen.
       hideBossBar() {
         const bar = document.getElementById('bossBar');
-        if (bar) bar.classList.remove('active');
+        if (bar) { bar.classList.remove('active'); bar.classList.remove('rage'); }
         this._bossShown = false;
         this._bossHp = null;
+        this._bossPhase = null;
       }
 
       // The bar only exists while a boss does. Written straight to the DOM the
@@ -4678,19 +6787,30 @@
         if (!bar) return;
         let boss = null;
         for (const e of this.runtimeEnemies) {
-          if (e.type === 'boss' && e.active && e.state !== 'dying') { boss = e; break; }
+          if ((e.type === 'boss' || e.type === 'warden') &&
+              e.active && e.state !== 'dying') { boss = e; break; }
         }
         if (!boss) {
-          if (this._bossShown) { bar.classList.remove('active'); this._bossShown = false; }
+          if (this._bossShown) {
+            bar.classList.remove('active');
+            bar.classList.remove('rage');
+            this._bossShown = false;
+          }
           return;
         }
-        const art = BOSS_ART[boss.kind] || BOSS_ART.mech;
+        const warden = boss.type === 'warden';
+        const art = warden
+          ? (WARDEN_ART[boss.kind] || WARDEN_ART.kani)
+          : (BOSS_ART[boss.kind] || BOSS_ART.mech);
         if (this._bossShown !== boss) {
           document.getElementById('bossBarName').innerHTML =
-            '<span class="boss-kanji">' + art.kanji + '</span>' + art.name;
+            '<span class="boss-kanji">' + art.kanji + '</span>' + escapeText(art.name) +
+            (warden ? '<span class="boss-bar-phase" id="bossBarPhase"></span>' : '');
           bar.classList.add('active');
+          bar.classList.remove('rage');
           this._bossShown = boss;
           this._bossHp = null;   // force the fill to be written for this one
+          this._bossPhase = null;
         }
         // Only on a change: this runs every frame and the CSS transition on the
         // fill would otherwise be restarted 60 times a second.
@@ -4698,6 +6818,14 @@
           this._bossHp = boss.hp;
           document.getElementById('bossBarFill').style.width =
             Math.max(0, boss.hp / boss.maxHp * 100) + '%';
+        }
+        // A warden's phase is half of what the player needs to know, so it is
+        // on the bar in words as well as in the colour of the fill.
+        if (warden && this._bossPhase !== boss.phase) {
+          this._bossPhase = boss.phase;
+          const el = document.getElementById('bossBarPhase');
+          if (el) el.textContent = 'PHASE ' + boss.phase + ' / 3';
+          bar.classList.toggle('rage', boss.phase === 3);
         }
       }
 
@@ -4747,6 +6875,17 @@
       // Main RAF render loop with hit-stop freeze handling
       loop(currentTime) {
         requestAnimationFrame((t) => this.loop(t));
+
+        // Real elapsed time, needed by the two UI clocks below even on the
+        // frames where the world itself is not being stepped.
+        let uiDt = (currentTime - (this.uiLastTime || currentTime)) / 1000;
+        this.uiLastTime = currentTime;
+        if (!(uiDt > 0) || uiDt > 0.25) uiDt = 0.016;
+        // The typewriter and the bark run on their own clock: a cutscene plays
+        // with the world stopped, and a bark has to keep counting down through
+        // a hitstop freeze or it would hang on screen mid-combo.
+        Dialogue.tick(uiDt);
+        Bark.tick(uiDt);
 
         if (!this.isRunning || this.isPaused) {
           this.render();
@@ -4861,6 +7000,50 @@
         // Caster bolts. A deflected one turns gold, which is the whole tell
         // that the parry worked.
         for (const arr of this.arrows) {
+          // A thrown kunai is a real sprite rather than a bolt of light, so
+          // kani's volley reads as coming off a person.
+          if (arr.art) {
+            const f = frameAt(performance.now() / 1000 + arr.spin, 14, arr.frames || 3);
+            const d = arr.cell || 16;
+            ctx.save();
+            ctx.translate(Math.round(arr.x), Math.round(arr.y));
+            // Deflected: it comes back the other way round and glows gold
+            ctx.scale(arr.vx < 0 ? -1 : 1, 1);
+            if (arr.deflected) glow(ctx, 0, 0, 26, '242, 193, 78', 0.5);
+            if (!drawFrame(ctx, arr.art, f, d, d, -d, -d, d * 2, d * 2)) {
+              ctx.fillStyle = '#FF8A3D';
+              ctx.fillRect(-8, -3, 16, 6);
+            }
+            ctx.restore();
+            continue;
+          }
+
+          // A shockwave hugs the floor. Drawn as a low crescent of ink rather
+          // than a ball, because the shape is the instruction: it is wide, it
+          // is short, and there is clean air above it.
+          if (arr.wave) {
+            const t = performance.now() / 90;
+            const h = 26 + Math.sin(t) * 3;
+            ctx.save();
+            ctx.translate(Math.round(arr.x), Math.round(arr.y));
+            ctx.scale(Math.sign(arr.vx) || 1, 1);
+            glow(ctx, 0, 4, 54, '150, 170, 255', 0.34);
+            ctx.fillStyle = 'rgba(191, 212, 255, 0.9)';
+            ctx.beginPath();
+            ctx.moveTo(-30, 14);
+            ctx.quadraticCurveTo(-6, -h, 22, 12);
+            ctx.quadraticCurveTo(2, -h * 0.45, -30, 14);
+            ctx.fill();
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+            ctx.beginPath();
+            ctx.moveTo(-14, 12);
+            ctx.quadraticCurveTo(-2, -h * 0.55, 12, 11);
+            ctx.quadraticCurveTo(-1, -h * 0.2, -14, 12);
+            ctx.fill();
+            ctx.restore();
+            continue;
+          }
+
           // Boss bolts are half again as big and violet, so a fan of five is
           // never mistaken for a lone caster's shot.
           const hot = arr.deflected ? CONFIG.GOLD : (arr.big ? '#C77DFF' : '#FF8A3D');
@@ -4884,13 +7067,15 @@
         // Render Enemies
         for (const e of this.runtimeEnemies) {
           // A boss is drawn 150px wide, so it needs the wider cull box or it
-          // pops in with its head already past the screen edge.
-          const pad = e.type === 'boss' ? 110 : 60;
+          // pops in with its head already past the screen edge. A warden is
+          // drawn from a 128px cell at 1.46 — wider still.
+          const pad = (e.type === 'boss') ? 110 : (e.type === 'warden') ? 140 : 60;
           if (!e.active || !onScreen(e.curX - pad, pad * 2)) continue;
           if (e.type === 'oni') this.drawOni(ctx, e);
           else if (e.type === 'lantern') this.drawLanternEnemy(ctx, e);
           else if (e.type === 'archer') this.drawArcher(ctx, e);
           else if (e.type === 'boss') this.drawBoss(ctx, e);
+          else if (e.type === 'warden') this.drawWarden(ctx, e);
         }
 
         // Render the onboarding glyphs behind him, so he is never hidden by
@@ -5118,12 +7303,26 @@
 
       // The spike sheet is a rise-and-fall animation; frame 8 is fully out,
       // which is the only honest pose for a hazard that is always lethal.
+      //
+      // A summoned stake is the exception, and the reason the sheet's other
+      // frames finally get used: `rise` walks frame 0 -> 8 while it comes out
+      // of the floor and back down again while it sinks, so the animation is
+      // the telegraph rather than something drawn over the top of one.
       drawSpikes(ctx, hz) {
         if (!usable('spikes')) return;
-        const FW = 32, FH = 64, F = 8;
+        const FW = 32, FH = 64;
+        const F = hz.temp ? Math.round(Math.max(0, Math.min(1, hz.rise)) * 8) : 8;
         const cols = Math.ceil(hz.w / FW);
         ctx.save();
         ctx.beginPath(); ctx.rect(hz.x, hz.y - 24, hz.w, hz.h + 24); ctx.clip();
+        if (hz.temp) {
+          // Still coming up: drawn dimmer, and with a warning glow on the
+          // floor under it, so it reads at a glance in a busy fight.
+          if (!hz.armed) {
+            ctx.globalAlpha = 0.55 + hz.rise * 0.45;
+            glow(ctx, hz.x + hz.w / 2, hz.y + hz.h, 46, '224, 122, 205', 0.34);
+          }
+        }
         for (let c = 0; c < cols; c++) {
           // The spikes sit at the top of the 64px cell, so pull the cell up to
           // put the points at the top edge of the hazard box.
@@ -5355,6 +7554,156 @@
         ctx.imageSmoothingEnabled = smooth;
       }
 
+      // ---- Warden -----------------------------------------------------------
+      // Unlike the hovering bosses, whose "animation" is a cycle of stills,
+      // a warden has real clips — so the frame is driven off the move's own
+      // clock rather than a loop. The swing on screen therefore lands on the
+      // exact frame the hitbox goes live, which is the entire reason these
+      // fights can be read at all.
+      //
+      // These sheets face RIGHT (the enemy sheets face left), so it is
+      // facing -1 that gets the flip here.
+      drawWarden(ctx, e) {
+        const art = WARDEN_ART[e.kind] || WARDEN_ART.kani;
+        const cell = art.cell;
+        const dw = Math.round(cell * art.scale), dh = dw;
+        const x = Math.round(e.curX), y = Math.round(e.curY);
+        const dying = e.state === 'dying';
+        const fade = dying ? Math.max(0, 1 - Math.max(0, e.deathT - 1.2) / 1.2) : 1;
+
+        // Which clip, how far through it, and that clip's centring nudge
+        let key, frames, frame, ox = 0;
+        const pick = (name) => {
+          const c = art.clips[name] || art.clips.idle;
+          key = c[0]; frames = c[1]; ox = c[3] || 0;
+          return c;
+        };
+
+        if (dying) {
+          pick('dead');
+          frame = Math.min(frames - 1, Math.floor(e.deathT / 0.13));
+        } else if (e.state === 'hurt') {
+          pick('hurt');
+          // hurtT counts down from 0.26 (or 0.34 on an interrupted meal), so
+          // the elapsed time is clamped at both ends before it picks a cell.
+          frame = Math.max(0, Math.min(frames - 1,
+                  Math.floor((0.26 - Math.max(0, e.hurtT)) / 0.09)));
+        } else if (e.state === 'move' && e.move) {
+          const m = e.move;
+          // Mid-air on a leap: the jump sheet, held on its apex frames
+          if (e.airborne && art.clips.jump && m.kind === 'leap' && m.clip !== 'jump') {
+            pick('jump');
+            frame = Math.min(frames - 1, 3 + (e.vy > 0 ? 2 : 0));
+          } else {
+            pick(m.clip);
+            const wind = m.wind * (e.phase === 3 ? 0.78 : e.phase === 2 ? 0.9 : 1);
+            const total = wind + m.active + m.rest;
+            // The clip is stretched over the whole move, so the telegraph is
+            // literally the wind-up frames and the recovery the follow-through.
+            const p = Math.max(0, Math.min(0.9999, e.moveT / total));
+            frame = Math.min(frames - 1, Math.floor(p * frames));
+          }
+        } else {
+          const c = pick(e.gait === 'run' ? 'run' : e.gait === 'walk' ? 'walk' : 'idle');
+          frame = frameAt(e.animT || 0, c[2] || 8, frames);
+        }
+
+        // Ground shadow. He stands on the floor, so it goes under his feet and
+        // shrinks as he leaves it — the only cue for how high a leap is.
+        const lift = Math.max(0, (e.floorY - e.curY));
+        if (!dying) {
+          ctx.save();
+          ctx.globalAlpha = 0.3 * Math.max(0.25, 1 - lift / 260);
+          ctx.fillStyle = CONFIG.INK_BLACK;
+          ctx.beginPath();
+          ctx.ellipse(x, e.floorY - 3, 40 * Math.max(0.4, 1 - lift / 400), 9, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // The telegraph. An ink ring that closes as the wind-up runs out, plus
+        // the aura swelling under him — the same information twice, because a
+        // player watching their own feet still has to catch it.
+        const win = this.wardenWindow(e);
+        if (!dying && win === 'wind') {
+          const m = e.move;
+          const wind = m.wind * (e.phase === 3 ? 0.78 : e.phase === 2 ? 0.9 : 1);
+          const p = Math.max(0, Math.min(1, e.moveT / wind));
+          glow(ctx, x, y - 46, 70 + p * 40, art.glow, 0.16 + p * 0.3);
+          ctx.save();
+          ctx.strokeStyle = `rgba(${art.glow}, ${0.35 + p * 0.5})`;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          // Sweeps clockwise from the top and completes exactly on the strike
+          ctx.arc(x, y - 52, 62 - p * 18, -Math.PI / 2, -Math.PI / 2 + p * Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        } else if (!dying && win === 'active') {
+          glow(ctx, x, y - 46, 116, art.glow, 0.34);
+        } else if (!dying) {
+          glow(ctx, x, y - 46, 64, art.glow, e.phase === 3 ? 0.22 : 0.13);
+        }
+
+        // Applied inside the facing flip, so it mirrors with the body
+        const dx = Math.round(-dw / 2 + ox * art.scale);
+
+        const smooth = ctx.imageSmoothingEnabled;
+        ctx.imageSmoothingEnabled = false;
+        ctx.save();
+        if (fade < 1) ctx.globalAlpha = fade;
+        ctx.translate(x, y);
+        ctx.scale(e.facing < 0 ? -1 : 1, 1);
+        // Bottom-aligned artwork: the bottom of the drawn cell is the floor
+        if (!drawFrame(ctx, key, frame, cell, cell, dx, -dh, dw, dh)) {
+          ctx.fillStyle = CONFIG.CRIMSON;
+          ctx.fillRect(-art.boxW / 2, -art.boxH, art.boxW, art.boxH);
+        }
+        ctx.restore();
+
+        // The raised guard, drawn as a hard plate of light in front of him.
+        // It has to look like a wall or being pushed off it feels unfair.
+        if (e.guarding) {
+          const t = performance.now() / 220;
+          ctx.save();
+          ctx.translate(x + e.facing * 26, y - art.boxH / 2 - 6);
+          ctx.globalAlpha = 0.5 + Math.sin(t) * 0.12;
+          ctx.strokeStyle = '#BFD4FF';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, 20, art.boxH * 0.52, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.globalAlpha = 0.16;
+          ctx.fillStyle = '#BFD4FF';
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // Hit flash: the same frame again, blown out white
+        if (e.invulnT > 0 && !dying) {
+          ctx.save();
+          ctx.globalAlpha = Math.min(0.8, e.invulnT * 1.9);
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.translate(x, y);
+          ctx.scale(e.facing < 0 ? -1 : 1, 1);
+          drawFrame(ctx, key, frame, cell, cell, dx, -dh, dw, dh);
+          ctx.restore();
+        }
+        ctx.imageSmoothingEnabled = smooth;
+
+        if (CONFIG.DEBUG_HITBOX) {
+          const hb = wardenBox(e);
+          ctx.save();
+          ctx.strokeStyle = CONFIG.LEAF; ctx.lineWidth = 1;
+          ctx.strokeRect(hb.x, hb.y, hb.w, hb.h);
+          const hit = this.wardenHitBox(e);
+          if (hit) {
+            ctx.strokeStyle = CONFIG.CRIMSON;
+            ctx.strokeRect(hit.x, hit.y, hit.w, hit.h);
+          }
+          ctx.restore();
+        }
+      }
+
       // The floating crystal: it drifts, so it never needs a ground contact
       drawLanternEnemy(ctx, e) {
         const f = frameAt(e.animT || 0, 9, 6);
@@ -5391,7 +7740,7 @@
     requestAnimationFrame((t) => game.loop(t));
 
     // Parallel SDK Boot Sequence (never blocks the Play button)
-    (async function bootCrazyGamesAndStorage() {
+    const saveSettled = (async function bootCrazyGamesAndStorage() {
       let sdkInitSuccess = false;
       try {
         const initPromise = (async () => {
@@ -5411,6 +7760,7 @@
 
       // Resolve the single 3-tier Save wrapper
       await Save.init(sdkInitSuccess);
+      saveReady = true;
 
       // Sync state to audio and HUD
       if (Save.get('muted')) {
@@ -5425,6 +7775,14 @@
       if (game) {
         game.highScore = Math.max(game.highScore, Save.get('highScore') || 0);
         game.updateHUD();
+        // Until this point the save came from preLoad's synchronous
+        // localStorage read, which is NOT the authority when the portal SDK
+        // is up: Save.init has just re-read the real store and may have moved
+        // the player several chapters on. The splash advertises which chapter
+        // Play resumes and Play acts on it immediately, so both have to be
+        // rebuilt off the settled save rather than the guess.
+        if (game.overlayMode === 'title') game.showTitle();
+        else if (game.overlayMode === 'story') game.renderStoryPanel();
       }
 
       // Signed-in CrazyGames players get their own name on the board without

@@ -22,7 +22,26 @@
       "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --virtual-time-budget=9000 --window-size=900,520 --screenshot=/private/tmp/claude-501/-Users-o-Documents-my-games-sumi-samurai-game/e847978b-3ed4-4876-a89b-0d3264a2a6a1/scratchpad/night10b.png 'http://127.0.0.1:8878/preview.html?stage=9&cam=5560&camy=500')",
       "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --virtual-time-budget=9000 --window-size=900,520 --screenshot=/private/tmp/claude-501/-Users-o-Documents-my-games-sumi-samurai-game/e847978b-3ed4-4876-a89b-0d3264a2a6a1/scratchpad/night9.png 'http://127.0.0.1:8878/preview.html?stage=8&cam=1200&camy=430')",
       "Bash(npm run *)",
-      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --virtual-time-budget=20000 --window-size=900,560 --screenshot=/private/tmp/claude-501/-Users-o-Documents-my-games-sumi-samurai-game/e847978b-3ed4-4876-a89b-0d3264a2a6a1/scratchpad/a4.png 'http://127.0.0.1:8878/fixed.html?stage=6&px=3990&py=560&sim=4&god=1&stand=1&noslash=1')"
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --hide-scrollbars --virtual-time-budget=20000 --window-size=900,560 --screenshot=/private/tmp/claude-501/-Users-o-Documents-my-games-sumi-samurai-game/e847978b-3ed4-4876-a89b-0d3264a2a6a1/scratchpad/a4.png 'http://127.0.0.1:8878/fixed.html?stage=6&px=3990&py=560&sim=4&god=1&stand=1&noslash=1')",
+      "Bash(grep -n \"^\\\\s*\\\\\\(function\\\\|const\\\\|class\\\\|let\\\\|var\\\\\\)\\\\s\\\\+[A-Za-z_$]\" index.html)",
+      "Bash(python3 /private/tmp/claude-501/-Users-o-Documents-my-games-sumi-samurai-game/b4872504-4c8c-4c4f-8e2c-580514fbc61a/scratchpad/measure_person.py)",
+      "Bash(node -e ' *)",
+      "Bash(node --check /private/tmp/claude-501/-Users-o-Documents-my-games-sumi-samurai-game/b4872504-4c8c-4c4f-8e2c-580514fbc61a/scratchpad/game.js)",
+      "Bash(grep -n \"^      },$\" index.html)",
+      "Bash(awk 'NR>=5300 && NR<=5900 && /^      },$/ {print NR\": \"$0}' index.html)",
+      "Bash(awk -F: '$1>5300 && $1<6400 {print}')",
+      "Read(//Applications/**)",
+      "Bash(npx playwright *)",
+      "Bash(node drive.mjs)",
+      "Bash(npm init *)",
+      "Bash(npm i *)",
+      "Bash(node drive2.mjs)",
+      "Bash(node looks.mjs)",
+      "Bash(python3 zoom.py look-03-hano-wind.png z-hano-wind.png 560 330 300 170 2)",
+      "Bash(python3 zoom.py look-03-mon-wind.png z-mon-wind.png 560 330 300 170 2)",
+      "Bash(node flow.mjs)",
+      "Bash(node savebug.mjs)",
+      "Bash(node earlyclick.mjs)"
     ]
   }
 }
